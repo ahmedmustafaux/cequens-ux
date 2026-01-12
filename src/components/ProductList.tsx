@@ -7,7 +7,7 @@ interface Product {
   id: string
   name: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ElementType
 }
 
 const products: Product[] = [
@@ -53,7 +53,7 @@ export function ProductList({ className }: { className?: string }) {
                 <div className="w-10 h-10 rounded-md bg-orange-500 border border-orange-600 flex items-center justify-center flex-shrink-0">
                   <IconComponent className="w-5 h-5 text-white" strokeWidth={2.5} fill="currentColor" />
                 </div>
-                
+
                 {/* Text Content */}
                 <div className="flex flex-col min-w-0">
                   <h3 className="text-sm font-semibold font-sans tracking-wide text-foreground leading-tight mb-0.5">

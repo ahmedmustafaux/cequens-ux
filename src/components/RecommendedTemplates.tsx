@@ -23,6 +23,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /* ------------------------------------------------------------------ */
 /* Badge config */
@@ -119,8 +120,10 @@ const filterTemplatesByTab = (
 
 export function RecommendedTemplates({
   className,
+  isLoading
 }: {
   className?: string
+  isLoading?: boolean
 }) {
   const { onboardingData } = useOnboarding()
   const [activeTab, setActiveTab] = React.useState("for-you")
@@ -175,6 +178,31 @@ export function RecommendedTemplates({
 
     return (
       <span className={cn("text-sm font-bold", app.color)}>{app.icon}</span>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card className={cn("flex flex-col h-[280px]", className)}>
+        <CardHeader>
+          <Skeleton className="h-8 w-48 mb-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="w-[320px] flex-shrink-0">
+                <div className="h-32 rounded-lg border p-4">
+                  <div className="flex gap-2 mb-4">
+                    <Skeleton className="h-8 w-8 rounded-lg" />
+                    <Skeleton className="h-8 w-8 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
