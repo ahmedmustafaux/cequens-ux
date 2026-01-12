@@ -39,7 +39,7 @@ export default function AnalyticsPage() {
   return (
     <PageWrapper isLoading={isDataLoading}>
       <PageHeader
-        title="Analytics"
+        title="Analyticss"
         description="Analyze your communication platform performance"
         showBreadcrumbs={false}
         showFilters={true}
@@ -50,7 +50,7 @@ export default function AnalyticsPage() {
         }} isLoading={isDataLoading} mode="simple" />}
         isLoading={isDataLoading}
       />
-      
+
       <div className="flex flex-col">
         {isDataLoading ? (
           <>
@@ -59,16 +59,16 @@ export default function AnalyticsPage() {
           </>
         ) : (
           <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <FileQuestion />
-          </EmptyMedia>
-          <EmptyTitle>Coming Soon</EmptyTitle>
-          <EmptyDescription>
-            This feature is currently under development and will be available soon.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FileQuestion />
+              </EmptyMedia>
+              <EmptyTitle>Coming Soon</EmptyTitle>
+              <EmptyDescription>
+                This feature is currently under development and will be available soon.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </div>
     </PageWrapper>
