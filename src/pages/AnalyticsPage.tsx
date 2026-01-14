@@ -39,7 +39,7 @@ export default function AnalyticsPage() {
   return (
     <PageWrapper isLoading={isDataLoading}>
       <PageHeader
-        title="Analyticss"
+        title="Analytics"
         description="Analyze your communication platform performance"
         showBreadcrumbs={false}
         showFilters={true}
