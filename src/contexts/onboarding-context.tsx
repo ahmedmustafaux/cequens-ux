@@ -23,7 +23,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const { user } = useAuth()
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true)
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null)
-  
+
   // Check if user has completed onboarding
   useEffect(() => {
     if (user) {
@@ -31,7 +31,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Also check localStorage as fallback
       const localCompleted = localStorage.getItem("onboardingCompleted") === "true"
       const userCompleted = user.onboardingCompleted !== undefined ? user.onboardingCompleted : localCompleted
-      
+
       if (user.onboardingCompleted !== undefined) {
         setHasCompletedOnboarding(user.onboardingCompleted)
       } else if (localCompleted) {
@@ -40,7 +40,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         // Fallback: check localStorage for onboarding completion
         const completed = localStorage.getItem(`onboarding-completed-${user.email}`)
         setHasCompletedOnboarding(completed === "true")
-        
+
         // Load onboarding data
         const savedData = localStorage.getItem(`onboarding-data-${user.email}`)
         if (savedData) {
@@ -50,16 +50,26 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             console.error("Failed to parse onboarding data", e)
           }
         }
-        
+
         // Remove old "getting-started-seen" key if it exists (cleanup from previous version)
         localStorage.removeItem(`getting-started-seen-${user.email}`)
       } else {
         // Existing users don't need onboarding
         setHasCompletedOnboarding(true)
+
+        // Still try to load onboarding data for personalization
+        const savedData = localStorage.getItem(`onboarding-data-${user.email}`)
+        if (savedData) {
+          try {
+            setOnboardingData(JSON.parse(savedData))
+          } catch (e) {
+            console.error("Failed to parse onboarding data for existing user", e)
+          }
+        }
       }
     }
   }, [user])
-  
+
   // Function to mark onboarding as completed
   const completeOnboarding = async (data?: OnboardingData) => {
     if (user && user.id) {
@@ -68,13 +78,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         console.log("Updating onboarding in database for user:", user.id, "with data:", data)
         await updateUserOnboarding(user.id, true, data || null)
         console.log("Onboarding updated successfully in database")
-        
+
         // Update local storage
         localStorage.setItem(`onboarding-completed-${user.email}`, "true")
         localStorage.setItem("onboardingCompleted", "true")
         localStorage.setItem("userType", "existingUser")
         setHasCompletedOnboarding(true)
-        
+
         // Save onboarding data if provided
         if (data) {
           localStorage.setItem(`onboarding-data-${user.email}`, JSON.stringify(data))
@@ -94,17 +104,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Fallback to localStorage if no user ID
       localStorage.setItem(`onboarding-completed-${user.email}`, "true")
       setHasCompletedOnboarding(true)
-      
+
       if (data) {
         localStorage.setItem(`onboarding-data-${user.email}`, JSON.stringify(data))
         setOnboardingData(data)
       }
     }
   }
-  
+
   return (
-    <OnboardingContext.Provider value={{ 
-      hasCompletedOnboarding, 
+    <OnboardingContext.Provider value={{
+      hasCompletedOnboarding,
       completeOnboarding,
       onboardingData
     }}>

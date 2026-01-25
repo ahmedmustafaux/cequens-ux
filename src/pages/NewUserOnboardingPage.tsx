@@ -381,7 +381,7 @@ export default function NewUserOnboardingPage() {
     // Map selected options based on question IDs
     // Question IDs: 1=goals, 2=channels, 3=teamSize, 4=usage
     const onboardingDataToSave = {
-      industry: selectedTemplate?.industry || (customIndustryName ? "custom" : "none"),
+      industry: selectedTemplate?.id || (customIndustryName ? "custom" : "none"),
       customIndustryName: customIndustryName || undefined,
       channels: selectedOptions[2] || [],
       goals: selectedOptions[1] || [],

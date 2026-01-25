@@ -65,25 +65,40 @@ const APP_ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
 /* Helpers */
 /* ------------------------------------------------------------------ */
 
+const getTemplateScore = (template: WorkflowTemplate, onboardingData: any) => {
+  let score = 0
+
+  // Industry Match (High weight)
+  // If user has specific industry, matching it is very important
+  // If user has "custom" or "none", we don't penalize, but we don't boost either
+  if (template.industries && onboardingData.industry &&
+    onboardingData.industry !== "custom" && onboardingData.industry !== "none") {
+    if (template.industries.includes(onboardingData.industry)) {
+      score += 10
+    } else {
+      // If template is industry-specific but doesn't match user's industry, penalize heavily
+      // unless the template is marked as generic/all industries (empty industries array usually means all)
+      return -1 // Exclude this template
+    }
+  }
+
+  // Goal Matches
+  if (template.goals && onboardingData.goals) {
+    const matchingGoals = template.goals.filter(g => onboardingData.goals.includes(g))
+    score += matchingGoals.length * 2
+  }
+
+  // Channel Matches
+  if (template.channels && onboardingData.channels) {
+    const matchingChannels = template.channels.filter(c => onboardingData.channels.includes(c))
+    score += matchingChannels.length * 1
+  }
+
+  return score
+}
+
 const matchesOnboarding = (template: WorkflowTemplate, onboardingData: any) => {
-  const industry =
-    !template.industries ||
-    !onboardingData.industry ||
-    template.industries.includes(onboardingData.industry)
-
-  const goals =
-    !template.goals ||
-    !onboardingData.goals?.length ||
-    template.goals.some((g) => onboardingData.goals.includes(g))
-
-  const channels =
-    !template.channels ||
-    !onboardingData.channels?.length ||
-    template.channels.some((c) =>
-      onboardingData.channels.includes(c)
-    )
-
-  return industry && goals && channels
+  return getTemplateScore(template, onboardingData) > 0
 }
 
 const filterTemplatesByTab = (
@@ -135,11 +150,55 @@ export function RecommendedTemplates({
 
   const SCROLL_STEP = 256
 
+  // Fisher-Yates shuffle helper
+  const shuffleArray = (array: WorkflowTemplate[]) => {
+    const newArray = [...array]
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray
+  }
+
   const filteredTemplates = useMemo(() => {
     if (activeTab === "for-you" && onboardingData) {
-      return workflowTemplates.filter((t) =>
-        matchesOnboarding(t, onboardingData)
-      )
+      // Shuffle templates first to randomize order of items with equal scores
+      // distinct from the fixed array order
+      const shuffledTemplates = shuffleArray(workflowTemplates)
+
+      // Calculate scores for all templates
+      const scoredTemplates = shuffledTemplates.map(t => ({
+        template: t,
+        score: getTemplateScore(t, onboardingData)
+      }))
+
+      // Filter out non-matching (score <= 0) and sort by score descending
+      const filtered = scoredTemplates
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(item => item.template)
+
+      // If we found personalized matches, return them
+      if (filtered.length > 0) {
+        return filtered
+      }
+
+      // Fallback logic:
+      // If the user has a specific industry selected (not custom/none),
+      // but strict filtering returned nothing (maybe because of score calculation issues),
+      // we should still try to find templates for that industry specifically before falling back to everything.
+      if (onboardingData.industry && onboardingData.industry !== "custom" && onboardingData.industry !== "none") {
+        const userIndustry = onboardingData.industry
+        const industryFallback = workflowTemplates.filter(t =>
+          t.industries && t.industries.includes(userIndustry)
+        )
+        if (industryFallback.length > 0) {
+          return industryFallback
+        }
+      }
+
+      // Final Fallback: Return all templates if really nothing matches
+      return workflowTemplates
     }
     return filterTemplatesByTab(activeTab, workflowTemplates)
   }, [activeTab, onboardingData])
