@@ -211,6 +211,12 @@ export default function NewUserOnboardingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [buildingProgress, setBuildingProgress] = useState(0)
   const wizardCardRef = useRef<HTMLDivElement>(null)
+
+  // Use a ref to track if we are currently completing onboarding
+  // This prevents the useEffect below from redirecting to "/" when userType changes to "existingUser"
+  // during the completion process, allowing us to explicitly redirect to "/getting-started"
+  const isCompletingRef = useRef(false)
+
   const navigate = useNavigate()
   const { user, updateOnboardingStatus, logout } = useAuth()
   const { completeOnboarding: markOnboardingComplete } = useOnboarding()
@@ -250,7 +256,9 @@ export default function NewUserOnboardingPage() {
 
   // Redirect if not a new user
   useEffect(() => {
-    if (user && user.userType !== "newUser") {
+    // Only redirect if we are NOT in the middle of completing onboarding
+    // If isCompletingRef.current is true, we handle the redirect manually in handleCompleteOnboarding
+    if (user && user.userType !== "newUser" && !isCompletingRef.current) {
       navigate("/")
     }
   }, [user, navigate])
@@ -365,6 +373,7 @@ export default function NewUserOnboardingPage() {
   }
 
   const handleCompleteOnboarding = async () => {
+    isCompletingRef.current = true
     setIsCompleted(true)
     setIsLoading(true)
 
@@ -412,8 +421,8 @@ export default function NewUserOnboardingPage() {
               await new Promise(resolve => setTimeout(resolve, 100))
 
               setIsLoading(false)
-              // Redirect after completion - all users go to guide page
-              navigate("/getting-started")
+              // Redirect after completion - all users go to home page
+              navigate("/")
             } catch (error: any) {
               console.error("Error completing onboarding:", error)
               const errorMessage = error?.message || "An unknown error occurred"
