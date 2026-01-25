@@ -55,19 +55,19 @@ const CodeSnippetVisual = () => (
     preserveAspectRatio="xMidYMid meet"
   >
     {/* Code editor background */}
-    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2"/>
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2" />
     {/* Window controls */}
-    <circle cx="22" cy="25" r="4" fill="var(--visual-accent)"/>
-    <circle cx="35" cy="25" r="4" fill="var(--visual-accent)"/>
-    <circle cx="48" cy="25" r="4" fill="var(--visual-accent)"/>
+    <circle cx="22" cy="25" r="4" fill="var(--visual-accent)" />
+    <circle cx="35" cy="25" r="4" fill="var(--visual-accent)" />
+    <circle cx="48" cy="25" r="4" fill="var(--visual-accent)" />
     {/* Code lines */}
-    <rect x="20" y="40" width="60" height="4" rx="2" fill="var(--visual-border)"/>
-    <rect x="20" y="50" width="50" height="4" rx="2" fill="var(--visual-border)"/>
-    <rect x="20" y="60" width="65" height="4" rx="2" fill="var(--visual-border)"/>
-    <rect x="25" y="70" width="55" height="4" rx="2" fill="var(--visual-border)"/>
+    <rect x="20" y="40" width="60" height="4" rx="2" fill="var(--visual-border)" />
+    <rect x="20" y="50" width="50" height="4" rx="2" fill="var(--visual-border)" />
+    <rect x="20" y="60" width="65" height="4" rx="2" fill="var(--visual-border)" />
+    <rect x="25" y="70" width="55" height="4" rx="2" fill="var(--visual-border)" />
     {/* Syntax highlighting accents */}
-    <rect x="20" y="40" width="10" height="4" rx="2" fill="var(--visual-accent)"/>
-    <rect x="20" y="50" width="15" height="4" rx="2" fill="var(--visual-accent)"/>
+    <rect x="20" y="40" width="10" height="4" rx="2" fill="var(--visual-accent)" />
+    <rect x="20" y="50" width="15" height="4" rx="2" fill="var(--visual-accent)" />
   </svg>
 );
 
@@ -82,25 +82,25 @@ const DashboardVisual = () => (
     preserveAspectRatio="xMidYMid meet"
   >
     {/* Dashboard background */}
-    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2"/>
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2" />
     {/* Header bar */}
-    <rect x="10" y="15" width="80" height="15" rx="5" fill="var(--visual-muted)"/>
+    <rect x="10" y="15" width="80" height="15" rx="5" fill="var(--visual-muted)" />
     {/* Sidebar */}
-    <rect x="10" y="30" width="20" height="55" rx="0" fill="var(--visual-muted)"/>
+    <rect x="10" y="30" width="20" height="55" rx="0" fill="var(--visual-muted)" />
     {/* Chart area */}
-    <rect x="35" y="35" width="50" height="25" rx="2" fill="var(--visual-border)" opacity="0.5"/>
+    <rect x="35" y="35" width="50" height="25" rx="2" fill="var(--visual-border)" opacity="0.5" />
     {/* Chart bars */}
-    <rect x="40" y="50" width="5" height="10" rx="1" fill="var(--visual-accent)"/>
-    <rect x="50" y="45" width="5" height="15" rx="1" fill="var(--visual-accent)"/>
-    <rect x="60" y="48" width="5" height="12" rx="1" fill="var(--visual-accent)"/>
-    <rect x="70" y="42" width="5" height="18" rx="1" fill="var(--visual-accent)"/>
+    <rect x="40" y="50" width="5" height="10" rx="1" fill="var(--visual-accent)" />
+    <rect x="50" y="45" width="5" height="15" rx="1" fill="var(--visual-accent)" />
+    <rect x="60" y="48" width="5" height="12" rx="1" fill="var(--visual-accent)" />
+    <rect x="70" y="42" width="5" height="18" rx="1" fill="var(--visual-accent)" />
     {/* Stats cards */}
-    <rect x="35" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5"/>
-    <rect x="63" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5"/>
+    <rect x="35" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5" />
+    <rect x="63" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5" />
     {/* Sidebar items */}
-    <rect x="15" y="38" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
-    <rect x="15" y="45" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
-    <rect x="15" y="52" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
+    <rect x="15" y="38" width="10" height="2.5" rx="1" fill="var(--visual-accent)" />
+    <rect x="15" y="45" width="10" height="2.5" rx="1" fill="var(--visual-accent)" />
+    <rect x="15" y="52" width="10" height="2.5" rx="1" fill="var(--visual-accent)" />
   </svg>
 );
 
@@ -165,18 +165,7 @@ const onboardingSteps = [
     ],
     multiSelect: true,
   },
-  {
-    id: 3,
-    question: "What's your company size?",
-    options: [
-      { id: "team-1", label: "Just me" },
-      { id: "team-2", label: "2-5 people" },
-      { id: "team-3", label: "6-20 people" },
-      { id: "team-4", label: "21-100 people" },
-      { id: "team-5", label: "100+ people" },
-    ],
-    multiSelect: false,
-  },
+
   {
     id: 4,
     question: "How will you use our platform?",
@@ -189,10 +178,28 @@ const onboardingSteps = [
   },
 ]
 
+// Mapping of goals to recommended channels
+const goalToChannels: Record<string, string[]> = {
+  "goal-1": ["channel-2", "channel-1", "channel-7"], // Customer engagement
+  "goal-2": ["channel-2", "channel-1", "channel-3", "channel-6"], // Marketing campaigns
+  "goal-3": ["channel-2", "channel-5", "channel-4"], // Support automation
+  "goal-4": ["channel-2", "channel-3"], // Lead generation
+  "goal-5": ["channel-3", "channel-1"], // Internal communications
+  "goal-6": ["channel-2", "channel-4", "channel-3"], // Sales automation
+  "goal-7": ["channel-3", "channel-7", "channel-1"], // Customer retention
+  "goal-8": [], // Analytics & reporting (all channels)
+  "goal-9": ["channel-2", "channel-1", "channel-3"], // Multi-channel messaging
+}
+
+// Helper to get channel details by ID
+const getChannelById = (channelId: string) => {
+  const channelsQuestion = onboardingSteps.find(s => s.id === 2);
+  return channelsQuestion?.options.find(o => o.id === channelId);
+}
+
 // Short wizard steps (only Company size and Persona)
 const shortWizardSteps = [
-  onboardingSteps[2], // Company size (step 3)
-  onboardingSteps[3], // Persona/Usage (step 4)
+  onboardingSteps[2], // Persona/Usage (step 4)
 ]
 
 export default function NewUserOnboardingPage() {
@@ -218,8 +225,9 @@ export default function NewUserOnboardingPage() {
   // If "Other": show all 4 questions (goals, channels, company size, usage)
   const getQuestionsToShow = () => {
     if (isOtherIndustry()) {
-      // Show all 4 questions for "Other"
-      return onboardingSteps
+      // Show all questions EXCEPT Channels (id: 2) for "Other"
+      // Also exclude company size (id: 3) which was already removed from source array
+      return onboardingSteps.filter(step => step.id !== 2)
     } else {
       // Show only last 2 questions for specific industry
       return shortWizardSteps
@@ -265,13 +273,13 @@ export default function NewUserOnboardingPage() {
   const handleOptionSelect = (optionId: string) => {
     const step = getCurrentQuestionStep()
     if (!step) return // Industry selection handled separately
-    
+
     if (step.multiSelect) {
       // For multi-select, toggle the option
       setSelectedOptions(prev => {
         const currentSelections = prev[step.id] || []
         const isSelected = currentSelections.includes(optionId)
-        
+
         if (isSelected) {
           return {
             ...prev,
@@ -306,7 +314,7 @@ export default function NewUserOnboardingPage() {
     if (!selectedTemplate) return false
     const step = getCurrentQuestionStep()
     if (!step) return false
-    
+
     // Check based on step type
     if (step.id === 1) {
       // Goals question
@@ -392,17 +400,17 @@ export default function NewUserOnboardingPage() {
                 setIsLoading(false)
                 return
               }
-              
+
               // Update onboarding status in database and context
               // markOnboardingComplete updates the database and onboarding context
               await markOnboardingComplete(onboardingDataToSave)
-              
+
               // Update auth context state (skip database update since it's already done)
               await updateOnboardingStatus(true, true)
-              
+
               // Small delay to ensure state updates propagate
               await new Promise(resolve => setTimeout(resolve, 100))
-              
+
               setIsLoading(false)
               // Redirect after completion - all users go to guide page
               navigate("/getting-started")
@@ -410,7 +418,7 @@ export default function NewUserOnboardingPage() {
               console.error("Error completing onboarding:", error)
               const errorMessage = error?.message || "An unknown error occurred"
               console.error("Full error details:", error)
-              
+
               // If error is about missing user ID, redirect to login
               if (errorMessage.includes("User ID not available") || errorMessage.includes("log in again")) {
                 toast.error("Session expired", {
@@ -471,7 +479,7 @@ export default function NewUserOnboardingPage() {
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <ThemeSwitcher />
       </div>
-      
+
       <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-16">
         {/* Wizard Card */}
         <Card ref={wizardCardRef} className="w-full max-w-xl bg-card rounded-lg overflow-hidden p-4">
@@ -495,11 +503,10 @@ export default function NewUserOnboardingPage() {
                       return (
                         <div
                           key={index}
-                          className={`h-1 flex-1 rounded-full ${
-                            questionIndex <= currentQuestionIndex
-                              ? "bg-primary"
-                              : "bg-muted"
-                          }`}
+                          className={`h-1 flex-1 rounded-full ${questionIndex <= currentQuestionIndex
+                            ? "bg-primary"
+                            : "bg-muted"
+                            }`}
                         />
                       )
                     })}
@@ -526,11 +533,11 @@ export default function NewUserOnboardingPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     Please select an industry or enter a custom industry name
                   </p>
-                  
+
                   <div className="mb-8 mt-4">
                     <OnboardingTemplateSelection
                       onTemplateSelect={handleTemplateSelect}
-                      onStartFromScratch={() => {}} // Not used in inline mode
+                      onStartFromScratch={() => { }} // Not used in inline mode
                       onCustomIndustry={handleCustomIndustry}
                       inlineMode={true}
                       selectedTemplate={selectedTemplate}
@@ -547,7 +554,7 @@ export default function NewUserOnboardingPage() {
                   {(() => {
                     const currentQuestion = getCurrentQuestionStep()
                     if (!currentQuestion) return null
-                    
+
                     return (
                       <motion.div
                         key={`step-${currentStep}`}
@@ -560,7 +567,7 @@ export default function NewUserOnboardingPage() {
                         <h3 className="text-md font-semibold mb-1">
                           {currentQuestion.question}
                         </h3>
-                        
+
                         {currentQuestion.multiSelect ? (
                           <p className="text-xs text-muted-foreground mb-3">
                             You can select multiple options
@@ -576,89 +583,87 @@ export default function NewUserOnboardingPage() {
                           // Visual options for usage question - with grayscale visuals above labels
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {currentQuestion.options.map(option => {
-                          const isSelected = isOptionSelected(option.id);
-                          const hasIconData = hasIcon(option);
-                          return (
-                            <div
-                              key={option.id}
-                              onClick={() => handleOptionSelect(option.id)}
-                              className={`relative flex flex-col rounded-lg border cursor-pointer transition-colors ${
-                                isSelected
-                                  ? "border-primary hover:bg-accent"
-                                  : "border-border hover:bg-accent"
-                              }`}
-                            >
-                              {/* Visual/Icon above - full width */}
-                              {hasIconData && (
-                                <div className="w-full flex items-center justify-center rounded-t-lg overflow-hidden">
-                                  {renderIcon(option, "large")}
+                              const isSelected = isOptionSelected(option.id);
+                              const hasIconData = hasIcon(option);
+                              return (
+                                <div
+                                  key={option.id}
+                                  onClick={() => handleOptionSelect(option.id)}
+                                  className={`relative flex flex-col rounded-lg border cursor-pointer transition-colors ${isSelected
+                                    ? "border-primary hover:bg-accent"
+                                    : "border-border hover:bg-accent"
+                                    }`}
+                                >
+                                  {/* Visual/Icon above - full width */}
+                                  {hasIconData && (
+                                    <div className="w-full flex items-center justify-center rounded-t-lg overflow-hidden">
+                                      {renderIcon(option, "large")}
+                                    </div>
+                                  )}
+                                  {/* Checkbox and Label */}
+                                  <div className="flex flex-col items-center space-y-2 w-full p-4">
+                                    <div className="flex items-center space-x-2 w-full justify-center">
+                                      <Checkbox
+                                        checked={isSelected}
+                                        className="pointer-events-none"
+                                      />
+                                      <Label className="text-sm font-normal cursor-pointer text-center">
+                                        {option.label}
+                                      </Label>
+                                    </div>
+                                    {isOptionCommonForIndustry(option.id) && getIndustryName() && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        Matches {getIndustryName()}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                              {/* Checkbox and Label */}
-                              <div className="flex flex-col items-center space-y-2 w-full p-4">
-                                <div className="flex items-center space-x-2 w-full justify-center">
-                                  <Checkbox 
-                                    checked={isSelected}
-                                    className="pointer-events-none"
-                                  />
-                                  <Label className="text-sm font-normal cursor-pointer text-center">
-                                    {option.label}
-                                  </Label>
-                                </div>
-                                {isOptionCommonForIndustry(option.id) && getIndustryName() && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Matches {getIndustryName()}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                              );
+                            })}
                           </div>
                         ) : (
                           // Standard options for other questions
                           <div className="mt-8">
                             {currentQuestion.options.map(option => {
-                          const isSelected = isOptionSelected(option.id);
-                          return (
-                          <div
-                            key={option.id}
-                            onClick={() => handleOptionSelect(option.id)}
-                            className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 transition-colors hover:bg-accent`}
-                          >
-                              {currentQuestion.multiSelect ? (
-                                <Checkbox 
-                                  checked={isOptionSelected(option.id)}
-                                  className="pointer-events-none"
-                                />
-                              ) : (
-                              <div 
-                                className={`h-4 w-4 rounded-full border-1 shrink-0 flex items-center justify-center ${
-                                  isOptionSelected(option.id) 
-                                    ? "border-primary bg-primary" 
-                                    : "border-muted-foreground/50"
-                                }`}
-                              >
-                                {isOptionSelected(option.id) && (
-                                  <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
-                                )}
-                              </div>
-                            )}
-                            {hasIcon(option) && (
-                              <div className="flex-shrink-0">
-                                {renderIcon(option)}
-                              </div>
-                            )}
-                            <Label className="text-sm font-normal cursor-pointer flex-1">
-                              {option.label}
-                            </Label>
-                            {isOptionCommonForIndustry(option.id) && getIndustryName() && (
-                              <Badge variant="secondary" className="text-xs shrink-0">
-                                Matches {getIndustryName()}
-                              </Badge>
-                            )}
-                          </div>
-                          );
+                              const isSelected = isOptionSelected(option.id);
+                              return (
+                                <div
+                                  key={option.id}
+                                  onClick={() => handleOptionSelect(option.id)}
+                                  className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 transition-colors hover:bg-accent`}
+                                >
+                                  {currentQuestion.multiSelect ? (
+                                    <Checkbox
+                                      checked={isOptionSelected(option.id)}
+                                      className="pointer-events-none"
+                                    />
+                                  ) : (
+                                    <div
+                                      className={`h-4 w-4 rounded-full border-1 shrink-0 flex items-center justify-center ${isOptionSelected(option.id)
+                                        ? "border-primary bg-primary"
+                                        : "border-muted-foreground/50"
+                                        }`}
+                                    >
+                                      {isOptionSelected(option.id) && (
+                                        <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {hasIcon(option) && (
+                                    <div className="flex-shrink-0">
+                                      {renderIcon(option)}
+                                    </div>
+                                  )}
+                                  <Label className="text-sm font-normal cursor-pointer flex-1">
+                                    {option.label}
+                                  </Label>
+                                  {isOptionCommonForIndustry(option.id) && getIndustryName() && (
+                                    <Badge variant="secondary" className="text-xs shrink-0">
+                                      Matches {getIndustryName()}
+                                    </Badge>
+                                  )}
+                                </div>
+                              );
                             })}
                           </div>
                         )}
@@ -666,6 +671,60 @@ export default function NewUserOnboardingPage() {
                     )
                   })()}
                 </>
+              )}
+
+              {isOtherIndustry() && currentStep === 1 && selectedOptions[1]?.length > 0 && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                  animate={{ height: "auto", opacity: 1, marginTop: 24 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="overflow-hidden bg-muted/30 rounded-lg border border-border"
+                >
+                  <div className="p-4">
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary" />
+                        Recommended channels
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You have access to all channels, but these are commonly used for your selected goals.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        // Calculate recommended channels based on selected goals
+                        const selectedGoals = selectedOptions[1] || [];
+                        const uniqueChannelIds = new Set<string>();
+
+                        selectedGoals.forEach(goalId => {
+                          const channels = goalToChannels[goalId] || [];
+                          channels.forEach(cid => uniqueChannelIds.add(cid));
+                        });
+
+                        const recommendedChannels = Array.from(uniqueChannelIds)
+                          .map(cid => getChannelById(cid))
+                          .filter(Boolean); // Filter out undefined
+
+                        if (recommendedChannels.length === 0) {
+                          return <p className="text-xs text-muted-foreground italic">Select goals to see recommendations</p>
+                        }
+
+                        return recommendedChannels.map(channel => (
+                          <div key={channel!.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-background border border-border rounded-md shadow-sm">
+                            {hasIcon(channel!) && (
+                              <div className="flex-shrink-0">
+                                {renderIcon(channel!, "small")}
+                              </div>
+                            )}
+                            <span className="text-xs font-medium">{channel!.label}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </motion.div>
               )}
 
               {/* Navigation buttons */}
@@ -722,7 +781,7 @@ export default function NewUserOnboardingPage() {
               </p>
             </motion.div>
           )}
-      </Card>
+        </Card>
       </div>
     </div>
   )

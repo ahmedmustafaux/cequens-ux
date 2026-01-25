@@ -7,15 +7,15 @@ import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-rea
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Field, 
-  FieldLabel, 
-  FieldContent 
+import {
+  Field,
+  FieldLabel,
+  FieldContent
 } from "@/components/ui/field"
-import { 
-  InputGroup, 
-  InputGroupInput, 
-  InputGroupAddon 
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon
 } from "@/components/ui/input-group"
 import {
   Popover,
@@ -27,33 +27,33 @@ import { cn } from "@/lib/utils"
 
 // Channel icon mapping
 const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
-  "channel-1": { 
-    icon: <ChatText weight="fill" className="w-3.5 h-3.5 text-primary" />, 
-    label: "SMS" 
+  "channel-1": {
+    icon: <ChatText weight="fill" className="w-3.5 h-3.5 text-primary" />,
+    label: "SMS"
   },
-  "channel-2": { 
-    icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-3.5 h-3.5" />, 
-    label: "WhatsApp" 
+  "channel-2": {
+    icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-3.5 h-3.5" />,
+    label: "WhatsApp"
   },
-  "channel-3": { 
-    icon: <EnvelopeSimple weight="fill" className="w-3.5 h-3.5 text-primary" />, 
-    label: "Email" 
+  "channel-3": {
+    icon: <EnvelopeSimple weight="fill" className="w-3.5 h-3.5 text-primary" />,
+    label: "Email"
   },
-  "channel-4": { 
-    icon: <PhoneIcon weight="fill" className="w-3.5 h-3.5 text-primary" />, 
-    label: "Voice" 
+  "channel-4": {
+    icon: <PhoneIcon weight="fill" className="w-3.5 h-3.5 text-primary" />,
+    label: "Voice"
   },
-  "channel-5": { 
-    icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />, 
-    label: "Messenger" 
+  "channel-5": {
+    icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />,
+    label: "Messenger"
   },
-  "channel-6": { 
-    icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-3.5 h-3.5" />, 
-    label: "Instagram" 
+  "channel-6": {
+    icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-3.5 h-3.5" />,
+    label: "Instagram"
   },
-  "channel-7": { 
-    icon: <Bell weight="fill" className="w-3.5 h-3.5 text-primary" />, 
-    label: "Push Notifications" 
+  "channel-7": {
+    icon: <Bell weight="fill" className="w-3.5 h-3.5 text-primary" />,
+    label: "Push Notifications"
   },
 }
 
@@ -389,8 +389,8 @@ interface OnboardingTemplateSelectionProps {
   wizardCardRef?: React.RefObject<HTMLElement | HTMLDivElement | null>;
 }
 
-export function OnboardingTemplateSelection({ 
-  onTemplateSelect, 
+export function OnboardingTemplateSelection({
+  onTemplateSelect,
   onStartFromScratch,
   onCustomIndustry,
   inlineMode = false,
@@ -401,7 +401,6 @@ export function OnboardingTemplateSelection({
 }: OnboardingTemplateSelectionProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [internalSelectedTemplate, setInternalSelectedTemplate] = useState<IndustryTemplate | null>(null)
-  const [showOtherInput, setShowOtherInput] = useState(false)
   const [internalCustomIndustryName, setInternalCustomIndustryName] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -441,14 +440,14 @@ export function OnboardingTemplateSelection({
       const updatePosition = () => {
         const viewportWidth = window.innerWidth
         const isMobile = viewportWidth < 1024 // lg breakpoint
-        
+
         if (isMobile && inlineMode) {
           // Mobile + inline mode: Position below the wizard card (using fixed positioning for portal)
           if (wizardCardRef?.current && overviewCardRef.current) {
             const cardRect = wizardCardRef.current.getBoundingClientRect()
             const gap = 16 // gap-4 = 16px
             const padding = 16 // Match card padding
-            
+
             overviewCardRef.current.style.position = 'fixed'
             overviewCardRef.current.style.left = `${Math.max(padding, cardRect.left)}px`
             overviewCardRef.current.style.top = `${cardRect.bottom + gap}px`
@@ -467,7 +466,7 @@ export function OnboardingTemplateSelection({
           // Desktop/LG: Fixed positioning
           // Try to get wizard card ref first (inline mode), then select button, then Card container
           let referenceElement: HTMLElement | null = null
-          
+
           if (inlineMode) {
             referenceElement = wizardCardRef?.current || selectButtonRef.current
           } else {
@@ -475,18 +474,18 @@ export function OnboardingTemplateSelection({
             const cardContainer = overviewCardRef.current?.closest('.min-h-screen')?.querySelector('[class*="max-w-xl"]') as HTMLElement
             referenceElement = cardContainer || selectButtonRef.current
           }
-          
+
           if (referenceElement && overviewCardRef.current) {
             const referenceRect = referenceElement.getBoundingClientRect()
             const gap = 16 // gap-4 = 16px
             const cardWidth = 360
             const padding = 16
-            
+
             overviewCardRef.current.style.position = 'fixed'
             const leftPosition = referenceRect.right + gap
             const maxLeft = viewportWidth - cardWidth - padding
             const finalLeft = Math.min(leftPosition, maxLeft)
-            
+
             overviewCardRef.current.style.left = `${finalLeft}px`
             overviewCardRef.current.style.top = `${referenceRect.top}px`
             overviewCardRef.current.style.right = 'auto'
@@ -511,7 +510,6 @@ export function OnboardingTemplateSelection({
     } else {
       setInternalSelectedTemplate(template)
     }
-    setShowOtherInput(false)
     if (!inlineMode) {
       setInternalCustomIndustryName("")
     }
@@ -519,22 +517,16 @@ export function OnboardingTemplateSelection({
   }
 
   const handleOtherSelect = () => {
-    setShowOtherInput(true)
-    if (inlineMode && onClear) {
-      onClear()
+    if (inlineMode && onCustomIndustry) {
+      onCustomIndustry("Other")
     } else {
+      setInternalCustomIndustryName("Other")
       setInternalSelectedTemplate(null)
     }
     setIsOpen(false)
   }
 
-  const handleCustomIndustryChange = (value: string) => {
-    if (inlineMode && onCustomIndustry) {
-      onCustomIndustry(value)
-    } else {
-      setInternalCustomIndustryName(value)
-    }
-  }
+
 
   const handleClearSelection = () => {
     if (inlineMode && onClear) {
@@ -542,7 +534,6 @@ export function OnboardingTemplateSelection({
     } else {
       setInternalSelectedTemplate(null)
     }
-    setShowOtherInput(false)
     if (!inlineMode) {
       setInternalCustomIndustryName("")
     }
@@ -581,7 +572,7 @@ export function OnboardingTemplateSelection({
                         <span>{selectedTemplate.icon}</span>
                         <span>{selectedTemplate.name}</span>
                       </>
-                    ) : showOtherInput ? (
+                    ) : customIndustryName === "Other" ? (
                       <span>Other</span>
                     ) : (
                       <span className="text-muted-foreground">Select an industry...</span>
@@ -641,7 +632,7 @@ export function OnboardingTemplateSelection({
                       onClick={handleOtherSelect}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors border-t border-border",
-                        showOtherInput && "bg-accent"
+                        !selectedTemplate && customIndustryName === "Other" && "bg-accent"
                       )}
                     >
                       <div className="w-5 h-5 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -650,10 +641,10 @@ export function OnboardingTemplateSelection({
                       <div className="flex-1">
                         <div className="font-medium text-sm">Other</div>
                         <div className="text-xs text-muted-foreground">
-                          Your industry not listed? Type it here
+                          Your industry not listed? Select this option
                         </div>
                       </div>
-                      {showOtherInput && (
+                      {!selectedTemplate && customIndustryName === "Other" && (
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </div>
@@ -665,30 +656,14 @@ export function OnboardingTemplateSelection({
         </Field>
       </div>
 
-      {/* Custom Industry Input */}
-      {showOtherInput && (
-        <div className="mt-3 space-y-2">
-          <InputGroup>
-            <InputGroupInput
-              type="text"
-              placeholder="e.g., Real Estate, Manufacturing, Consulting..."
-              value={customIndustryName || ""}
-              onChange={(e) => handleCustomIndustryChange(e.target.value)}
-              className="w-full"
-              autoFocus
-            />
-          </InputGroup>
-        </div>
-      )}
-
       {/* Continue Button - Only show in full page mode */}
-      {!inlineMode && (selectedTemplate || (showOtherInput && customIndustryName?.trim())) && (
+      {!inlineMode && (selectedTemplate || (customIndustryName?.trim())) && (
         <div className="flex justify-end pt-2">
           <Button
             onClick={() => {
               if (selectedTemplate) {
                 onTemplateSelect(selectedTemplate)
-              } else if (showOtherInput && customIndustryName?.trim() && onCustomIndustry) {
+              } else if (customIndustryName?.trim() && onCustomIndustry) {
                 onCustomIndustry(customIndustryName.trim())
               } else {
                 onStartFromScratch()
@@ -709,7 +684,7 @@ export function OnboardingTemplateSelection({
     if (!selectedTemplate) return null
 
     const popoverContent = (
-      <div 
+      <div
         ref={overviewCardRef}
         className={cn(
           "z-50 flex flex-col gap-4",
@@ -861,8 +836,8 @@ export function OnboardingTemplateSelection({
           exit={{ opacity: 0, x: -10 }}
           transition={smoothTransition}
         >
-          <Alert 
-            variant={inlineMode ? "default" : "default"} 
+          <Alert
+            variant={inlineMode ? "default" : "default"}
             className={cn(
               "text-sm"
             )}
