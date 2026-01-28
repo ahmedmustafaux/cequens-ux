@@ -229,15 +229,12 @@ export default function NewUserOnboardingPage() {
   // Get the questions to show based on industry selection
   // If specific industry: show only last 2 questions (company size, usage)
   // If "Other": show all 4 questions (goals, channels, company size, usage)
+  // Get the questions to show
+  // Enforced flow: Industry -> Goal -> Usage (3 steps total)
+  // We exclude Channels (id: 2) for everyone to keep it to 3 main questions
   const getQuestionsToShow = () => {
-    if (isOtherIndustry()) {
-      // Show all questions EXCEPT Channels (id: 2) for "Other"
-      // Also exclude company size (id: 3) which was already removed from source array
-      return onboardingSteps.filter(step => step.id !== 2)
-    } else {
-      // Show only last 2 questions for specific industry
-      return shortWizardSteps
-    }
+    // Return Goal (index 0) and Usage (index 2)
+    return [onboardingSteps[0], onboardingSteps[2]]
   }
 
   // Calculate total steps: 1 (industry) + questions to show
@@ -501,30 +498,25 @@ export default function NewUserOnboardingPage() {
               transition={smoothTransition}
               className="space-y-4"
             >
-              {/* Progress indicator - Only show after industry selection (step 0) */}
-              {currentStep > 0 && (
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex-1 flex space-x-1">
-                    {Array.from({ length: questionsToShow.length }).map((_, index) => {
-                      // Map question index to current step (currentStep - 1 because step 0 is industry)
-                      const questionIndex = index
-                      const currentQuestionIndex = currentStep - 1
-                      return (
-                        <div
-                          key={index}
-                          className={`h-1 flex-1 rounded-full ${questionIndex <= currentQuestionIndex
-                            ? "bg-primary"
-                            : "bg-muted"
-                            }`}
-                        />
-                      )
-                    })}
-                  </div>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {currentStep}/{questionsToShow.length}
-                  </span>
+              {/* Progress indicator - Show on all steps */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex-1 flex space-x-1">
+                  {Array.from({ length: totalSteps }).map((_, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className={`h-1 flex-1 rounded-full ${index <= currentStep
+                          ? "bg-primary"
+                          : "bg-muted"
+                          }`}
+                      />
+                    )
+                  })}
                 </div>
-              )}
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {currentStep + 1}/{totalSteps}
+                </span>
+              </div>
 
               {/* Industry Selection Step (Step 0) */}
               {currentStep === 0 ? (
