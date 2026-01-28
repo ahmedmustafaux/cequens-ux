@@ -674,7 +674,7 @@ export default function NewUserOnboardingPage() {
                 </>
               )}
 
-              {isOtherIndustry() && currentStep === 1 && selectedOptions[1]?.length > 0 && (
+              {currentStep === 1 && selectedOptions[1]?.length > 0 && (
                 <motion.div
                   initial={{ height: 0, opacity: 0, marginTop: 0 }}
                   animate={{ height: "auto", opacity: 1, marginTop: 24 }}
