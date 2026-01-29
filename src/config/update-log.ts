@@ -1,7 +1,8 @@
-export const UPDATE_MESSAGE = `🚀 Updates:
-• Added a global update banner to track session changes.
-• Refined UI: Floating glassmorphism pill at the bottom.
-• Added persistent read-status badge for new updates.`;
+export const UPDATE_MESSAGE = `🚀 Daily Update (Jan 29):
+• UI Refinement: Signup page logos are now larger; section renamed to "OUR PARTNERS".
+• Fixes: Replaced 'saal.webp' with correct PNG format.
+• New Feature: Added Global Update Banner (Floating UI at bottom) to track these changes.`;
+
 
 
 
