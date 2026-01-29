@@ -1,3 +1,5 @@
-export const UPDATE_MESSAGE = "🎨 Update: The banner is now gray, closable, and resets on page reload.";
+export const UPDATE_MESSAGE = "💎 Update: The updates indicator is now a floating pill at the top of the screen. Unobtrusive yet accessible!";
+
+
 
 
