@@ -3,6 +3,7 @@ import { AuthProvider } from '@/hooks/use-auth'
 import { OnboardingProvider } from '@/contexts/onboarding-context'
 import { Toaster } from '@/components/ui/sonner'
 import { ProtectedRoute, PublicRoute } from '@/components/ProtectedRoute'
+import { UpdateBanner } from '@/components/UpdateBanner'
 // appConfig removed as it's not used in Vite version
 
 // Layout components
@@ -71,504 +72,505 @@ import ProfilePage from '@/pages/ProfilePage'
 function App() {
   return (
     <AuthProvider>
+      <UpdateBanner />
       <OnboardingProvider>
         <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={
-          <PublicRoute>
-            <LoginLayout>
-              <LoginPage />
-            </LoginLayout>
-          </PublicRoute>
-        } />
-        <Route path="/signup" element={
-          <PublicRoute>
-            <LoginLayout>
-              <SignupPage />
-            </LoginLayout>
-          </PublicRoute>
-        } />
-        <Route path="/email-confirmation" element={
-          <PublicRoute>
-            <LoginLayout>
-              <EmailConfirmationPage />
-            </LoginLayout>
-          </PublicRoute>
-        } />
-        <Route path="/phone-verification" element={
-          <PublicRoute>
-            <LoginLayout>
-              <PhoneVerificationPage />
-            </LoginLayout>
-          </PublicRoute>
-        } />
-        
-        {/* New User Onboarding */}
-        <Route path="/onboarding" element={
-          <ProtectedRoute>
-            <NewUserOnboardingPage />
-          </ProtectedRoute>
-        } />
-        
-        {/* Protected routes */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DashboardPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/analytics" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <AnalyticsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns/create" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsCreatePage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns/settings" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsSettingsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns/templates" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsTemplatesPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns/ai-bots" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsAiBotsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/campaigns/automation" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <CampaignsAutomationPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/segments" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactsSegmentsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/tags" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactsTagsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/:id/edit" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactsEditPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/:id" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactDetailPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/messages" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <MessagesPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/inbox" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <InboxPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/inbox/requests" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <InboxRequestsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/inbox/settings" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <InboxSettingsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/automation" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <AutomationPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/automation/journey" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <AutomationJourneyPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/automation/templates" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <AutomationTemplatesPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/automation/bots" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <AutomationBotsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/sms" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsSmsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/whatsapp" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsWhatsAppPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/messenger" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsMessengerPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/instagram" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsInstagramPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/apple" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsApplePage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/email" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsEmailPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/call" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsCallPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/push" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsPushPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/channels/rcs" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ChannelsRcsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/notifications" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <NotificationsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        {/* Developer APIs Routes */}
-        <Route path="/developer-apis" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/listing" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisListingPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/docs" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisDocsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/sms" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisSmsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/voice" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisVoicePage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/whatsapp" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisWhatsappPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/push" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisPushPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/otp" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisOtpPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/developer-apis/bots" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <DeveloperApisBotsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Settings Routes */}
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/profile" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsProfilePage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/organization" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsOrganizationPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/contacts-export" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsContactsExportPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/plugins" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsPluginsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/preferences" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsPreferencesPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/support" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <SettingsSupportPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Billing & Profile Routes */}
-        <Route path="/billing" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <BillingPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ProfilePage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Redirect unmatched routes to login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Public routes */}
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginLayout>
+                <LoginPage />
+              </LoginLayout>
+            </PublicRoute>
+          } />
+          <Route path="/signup" element={
+            <PublicRoute>
+              <LoginLayout>
+                <SignupPage />
+              </LoginLayout>
+            </PublicRoute>
+          } />
+          <Route path="/email-confirmation" element={
+            <PublicRoute>
+              <LoginLayout>
+                <EmailConfirmationPage />
+              </LoginLayout>
+            </PublicRoute>
+          } />
+          <Route path="/phone-verification" element={
+            <PublicRoute>
+              <LoginLayout>
+                <PhoneVerificationPage />
+              </LoginLayout>
+            </PublicRoute>
+          } />
+
+          {/* New User Onboarding */}
+          <Route path="/onboarding" element={
+            <ProtectedRoute>
+              <NewUserOnboardingPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Protected routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DashboardPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns/create" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsCreatePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns/settings" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsSettingsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns/templates" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsTemplatesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns/ai-bots" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsAiBotsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns/automation" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignsAutomationPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/segments" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactsSegmentsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/tags" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactsTagsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/:id/edit" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactsEditPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/:id" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactDetailPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/messages" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <MessagesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/inbox" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <InboxPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/inbox/requests" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <InboxRequestsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/inbox/settings" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <InboxSettingsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation/journey" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationJourneyPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation/templates" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationTemplatesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation/bots" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationBotsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/sms" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsSmsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/whatsapp" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsWhatsAppPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/messenger" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsMessengerPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/instagram" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsInstagramPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/apple" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsApplePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/email" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsEmailPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/call" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsCallPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/push" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsPushPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/channels/rcs" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ChannelsRcsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <NotificationsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          {/* Developer APIs Routes */}
+          <Route path="/developer-apis" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/listing" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisListingPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/docs" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisDocsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/sms" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisSmsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/voice" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisVoicePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/whatsapp" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisWhatsappPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/push" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisPushPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/otp" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisOtpPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/bots" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisBotsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Settings Routes */}
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/profile" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsProfilePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/organization" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsOrganizationPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/contacts-export" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsContactsExportPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/plugins" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsPluginsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/preferences" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsPreferencesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/support" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsSupportPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Billing & Profile Routes */}
+          <Route path="/billing" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <BillingPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ProfilePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Redirect unmatched routes to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         <Toaster />
       </OnboardingProvider>
