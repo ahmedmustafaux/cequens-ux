@@ -30,7 +30,7 @@ export function UpdateBanner() {
     if (!UPDATE_MESSAGE) return null;
 
     return (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100]">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100]">
             <Popover open={isOpen} onOpenChange={handleOpenChange}>
                 <PopoverTrigger asChild>
                     <button className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm rounded-full px-4 py-1.5 flex items-center space-x-2 text-sm font-medium text-gray-700 hover:bg-white hover:text-gray-900 transition-all focus:outline-none ring-offset-2 focus:ring-2 ring-gray-200">
@@ -46,10 +46,10 @@ export function UpdateBanner() {
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4" align="center" sideOffset={8}>
+                <PopoverContent className="w-80 p-4" align="center" side="top" sideOffset={8}>
                     <div className="flex items-start space-x-3">
                         <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-gray-700 leading-relaxed">
+                        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                             {UPDATE_MESSAGE}
                         </div>
                     </div>
