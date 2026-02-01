@@ -8,6 +8,16 @@ export interface UpdateLog {
 
 export const UPDATE_LOGS: UpdateLog[] = [
     {
+        id: 'update-feb-01-nav-sidebar',
+        date: 'Feb 01',
+        title: 'Sidebar & Navigation Enhancements',
+        content: `• Feature: Added external link support with "ArrowUpRight" icons in main navigation.
+• Component: Introduced status badges for navigation items and sub-items.
+• Sidebar: Integrated "ChannelPrompter" for proactive user engagement.
+• UX: Refined sidebar animations and chevron interaction logic.`,
+        type: 'feature'
+    },
+    {
         id: 'update-feb-01-final',
         date: 'Feb 01',
         title: 'Refined Dev Updates Drawer',
