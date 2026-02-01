@@ -8,6 +8,16 @@ export interface UpdateLog {
 
 export const UPDATE_LOGS: UpdateLog[] = [
     {
+        id: 'update-feb-01-campaign-targeting',
+        date: 'Feb 01',
+        title: 'Rich Campaign Targeting & Shopify',
+        content: `• Feature: Redesigned Campaign Targeting step with 2-column Master-Detail UI.
+• Integration: Added native Shopify trigger support with abandoned cart & order events.
+• UX: Enhanced trigger selection with intelligent inputs (e.g. Min Order Amount).
+• Refactor: Moved trigger selection from dialog to main wizard flow.`,
+        type: 'feature'
+    },
+    {
         id: 'update-feb-01-nav-sidebar',
         date: 'Feb 01',
         title: 'Sidebar & Navigation Enhancements',
