@@ -83,7 +83,6 @@ const data = {
       title: "AI & Bots",
       url: "/automation/bots",
       icon: Bot,
-      badge: "New",
       items: [
         {
           title: "My AI Agents",

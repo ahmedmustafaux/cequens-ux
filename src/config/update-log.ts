@@ -10,9 +10,9 @@ export const UPDATE_LOGS: UpdateLog[] = [
     {
         id: 'update-feb-01-campaign-targeting',
         date: 'Feb 01',
-        title: 'Rich Campaign Targeting & Shopify',
+        title: 'Rich Campaign Targeting',
         content: `• Feature: Redesigned Campaign Targeting step with 2-column Master-Detail UI.
-• Integration: Added native Shopify trigger support with abandoned cart & order events.
+• Integration: Added native triggers support with abandoned cart & order events.
 • UX: Enhanced trigger selection with intelligent inputs (e.g. Min Order Amount).
 • Refactor: Moved trigger selection from dialog to main wizard flow.`,
         type: 'feature'

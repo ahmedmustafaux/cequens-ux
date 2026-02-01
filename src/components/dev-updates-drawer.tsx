@@ -89,7 +89,7 @@ export function DevUpdatesDrawer() {
                     </SheetHeader>
                 </div>
 
-                <div className="flex-1 p-4 space-y-4">
+                <div className="flex-1 p-4 space-y-4 overflow-y-auto">
                     {UPDATE_LOGS.map((log) => {
                         const isRead = readIds.includes(log.id);
                         return (
