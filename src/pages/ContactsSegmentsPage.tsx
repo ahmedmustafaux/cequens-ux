@@ -70,7 +70,7 @@ const convertSegmentFilterToMock = (filter: SegmentFilter): MockSegmentFilter =>
   } else {
     value = filter.value as MockSegmentFilter["value"]
   }
-  
+
   return {
     field: filter.field as MockSegmentFilter["field"],
     operator: filter.operator as MockSegmentFilter["operator"],
@@ -92,7 +92,7 @@ const convertSegmentFilterFromMock = (filter: MockSegmentFilter): SegmentFilter 
   } else {
     value = filter.value as SegmentFilter["value"]
   }
-  
+
   return {
     field: filter.field,
     operator: filter.operator,
@@ -318,7 +318,7 @@ const formatFilterBadge = (filter: SegmentFilter): { label: string; value: strin
   // Format value based on field type
   let valueLabel = ""
   const needsValue = !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(filter.operator)
-  
+
   if (!needsValue) {
     valueLabel = ""
   } else if (fieldInfo?.field.valueType === 'date') {
@@ -329,7 +329,7 @@ const formatFilterBadge = (filter: SegmentFilter): { label: string; value: strin
         valueLabel = `${numValue} seconds ago` // Default to seconds, could be enhanced
       }
     } else if (filter.operator === 'isBetweenTime') {
-      const values = Array.isArray(filter.value) && filter.value.length === 2 
+      const values = Array.isArray(filter.value) && filter.value.length === 2
         ? filter.value.filter((v): v is number => typeof v === 'number')
         : [0, 0]
       if (values[0] > 0 || values[1] > 0) {
@@ -478,7 +478,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
     header: "Channels",
     cell: ({ row }) => {
       const channel = row.getValue("channel") as string | null;
-      
+
       // If channel is null or empty, show badge
       if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
         return (
@@ -487,7 +487,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
           </Badge>
         );
       }
-      
+
       const getChannelIconPath = (channel: string) => {
         switch (channel.toLowerCase()) {
           case "whatsapp":
@@ -546,10 +546,10 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
       const contact = row.original as AppContact;
       const updatedAt = contact.updatedAt;
       const lastInteractionTime = contact.lastInteractionTime;
-      
+
       // Use lastInteractionTime if available, otherwise use updatedAt
       const displayDate = lastInteractionTime || updatedAt;
-      
+
       if (!displayDate) {
         return (
           <div className="text-sm text-muted-foreground">
@@ -557,12 +557,12 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
           </div>
         );
       }
-      
+
       // Format date as relative time (e.g., "2 hours ago", "3 days ago")
       const formatRelativeTime = (date: Date): string => {
         const now = new Date();
         const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-        
+
         if (diffInSeconds < 60) {
           return 'Just now';
         } else if (diffInSeconds < 3600) {
@@ -583,7 +583,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
           });
         }
       };
-      
+
       return (
         <div className="text-sm text-muted-foreground">
           {formatRelativeTime(displayDate)}
@@ -624,7 +624,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
 
 function ContactsSegmentsPageContent() {
   const navigate = useNavigate()
-  
+
   // Database hooks
   const { data: segments = [], isLoading: segmentsLoading, refetch: refetchSegments } = useSegments()
   const { data: contacts = [], isLoading: contactsLoading } = useContacts()
@@ -632,7 +632,7 @@ function ContactsSegmentsPageContent() {
   const updateSegmentMutation = useUpdateSegment()
   const deleteSegmentMutation = useDeleteSegment()
   const updateSegmentContactsMutation = useUpdateSegmentContacts()
-  
+
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [editingSegment, setEditingSegment] = React.useState<MockSegment | null>(null)
@@ -713,7 +713,7 @@ function ContactsSegmentsPageContent() {
 
   const handleDeleteSegment = React.useCallback(async () => {
     if (!segmentToDelete) return
-    
+
     try {
       await deleteSegmentMutation.mutateAsync(segmentToDelete.id)
       await refetchSegments()
@@ -739,18 +739,18 @@ function ContactsSegmentsPageContent() {
 
   const handleRemoveFromSegment = React.useCallback(async () => {
     if (!selectedSegmentId) return
-    
+
     const selectedContactIds = Object.keys(rowSelection)
     if (selectedContactIds.length === 0) return
-    
+
     const selectedSegment = segments.find(s => s.id === selectedSegmentId)
     if (!selectedSegment) return
-    
+
     // Remove selected contacts from the segment's contact_ids
     const updatedContactIds = (selectedSegment.contact_ids || []).filter(
       (id) => !selectedContactIds.includes(id)
     )
-    
+
     try {
       await updateSegmentMutation.mutateAsync({
         id: selectedSegmentId,
@@ -772,7 +772,7 @@ function ContactsSegmentsPageContent() {
   const handleSendCampaign = React.useCallback(() => {
     const selectedContactIds = Object.keys(rowSelection)
     if (selectedContactIds.length === 0) return
-    
+
     // Navigate to create campaign page with selected contacts
     // In a real app, you might pass the contact IDs as query params or state
     navigate("/campaigns/create", {
@@ -807,12 +807,12 @@ function ContactsSegmentsPageContent() {
 
   const handleRemoveFilter = React.useCallback((filterIndex: number) => {
     if (!selectedSegment) return
-    
+
     const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
     const updatedFilters = currentFilters.filter((_, i) => i !== filterIndex)
-    
+
     setPendingFilters(updatedFilters)
-    
+
     // Set original filters if not set yet
     if (originalFilters === null) {
       setOriginalFilters([...selectedSegment.filters])
@@ -839,8 +839,8 @@ function ContactsSegmentsPageContent() {
             rcs: "RCS",
             push: "Push Notifications",
           }
-          return { 
-            value: channel, 
+          return {
+            value: channel,
             label: channelLabels[channel] || channel.charAt(0).toUpperCase() + channel.slice(1),
             icon: channel // Pass channel ID for icon rendering
           }
@@ -866,8 +866,8 @@ function ContactsSegmentsPageContent() {
             rcs: "RCS",
             push: "Push Notifications",
           }
-          return { 
-            value: channel, 
+          return {
+            value: channel,
             label: channelLabels[channel] || channel.charAt(0).toUpperCase() + channel.slice(1),
             icon: channel
           }
@@ -894,16 +894,16 @@ function ContactsSegmentsPageContent() {
 
   const handleFieldSelected = React.useCallback((field: string, event?: React.MouseEvent<HTMLElement>) => {
     if (!selectedSegment) return
-    
+
     try {
       const fieldInfo = getFieldInfo(field)
       if (!fieldInfo) return
 
       const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
-      
+
       // Get default operator from field definition
       const defaultOperator = fieldInfo.field.operators[0] || "equals"
-      
+
       // Get default value based on valueType
       let defaultValue: SegmentFilter["value"]
       if (fieldInfo.field.valueType === 'date') {
@@ -917,28 +917,28 @@ function ContactsSegmentsPageContent() {
       } else {
         defaultValue = ""
       }
-      
+
       const filterToAdd: SegmentFilter = {
         field,
         operator: defaultOperator,
         value: defaultValue,
       }
-      
+
       const updatedFilters = [...currentFilters, filterToAdd]
-      
+
       // Set original filters if not set yet
       if (originalFilters === null) {
         setOriginalFilters([...selectedSegment.filters])
       }
-      
+
       // Update pending filters
       setPendingFilters(updatedFilters)
-      
+
       // Store the clicked element for positioning
       if (event?.currentTarget) {
         setSelectedFieldElement(event.currentTarget)
       }
-      
+
       // Keep the popover open and show value selection for the selected field
       setSelectedFieldForValueSelection(field)
       setSelectedCategory(null)
@@ -950,10 +950,10 @@ function ContactsSegmentsPageContent() {
 
   const handleFilterValueChange = React.useCallback((filterIndex: number, newValues: string | string[] | number | number[] | Date | { from: Date; to: Date }) => {
     if (!selectedSegment) return
-    
+
     const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
     const updatedFilters = [...currentFilters]
-    
+
     // Convert Date values to strings for database type
     let convertedValue: SegmentFilter["value"]
     if (newValues instanceof Date) {
@@ -968,19 +968,19 @@ function ContactsSegmentsPageContent() {
     } else {
       convertedValue = newValues as SegmentFilter["value"]
     }
-    
+
     updatedFilters[filterIndex] = {
       ...updatedFilters[filterIndex],
       value: convertedValue,
     }
-    
+
     setPendingFilters(updatedFilters)
-    
+
     // Set original filters if not set yet
     if (originalFilters === null) {
       setOriginalFilters([...selectedSegment.filters])
     }
-    
+
     // If this is a new filter being created, close the "Add Filter" popover after value is selected
     if (selectedFieldForValueSelection && filterIndex === updatedFilters.length - 1) {
       setSelectedFieldForValueSelection(null)
@@ -992,14 +992,14 @@ function ContactsSegmentsPageContent() {
 
   const handleFilterOperatorChange = React.useCallback((filterIndex: number, operator: SegmentFilter["operator"]) => {
     if (!selectedSegment) return
-    
+
     const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
     const updatedFilters = [...currentFilters]
     const currentFilter = updatedFilters[filterIndex]
-    
+
     // Get field info to determine default value type
     const fieldInfo = getFieldInfo(currentFilter.field)
-    
+
     // Reset value based on field type and operator
     let resetValue: SegmentFilter["value"]
     if (fieldInfo?.field.valueType === 'date') {
@@ -1013,15 +1013,15 @@ function ContactsSegmentsPageContent() {
     } else {
       resetValue = ""
     }
-    
+
     updatedFilters[filterIndex] = {
       ...updatedFilters[filterIndex],
       operator,
       value: resetValue,
     }
-    
+
     setPendingFilters(updatedFilters)
-    
+
     // Set original filters if not set yet
     if (originalFilters === null) {
       setOriginalFilters([...selectedSegment.filters])
@@ -1057,7 +1057,7 @@ function ContactsSegmentsPageContent() {
       if (operator === 'isGreaterThanTime' || operator === 'isLessThanTime') {
         const currentValue = typeof filter.value === 'number' ? filter.value : 0
         const currentTimeUnit = timeUnits[String(filterIndex)] || 'seconds'
-        
+
         return (
           <div className="p-3 space-y-2">
             <div>
@@ -1103,13 +1103,13 @@ function ContactsSegmentsPageContent() {
           </div>
         )
       }
-      
+
       if (operator === 'isBetweenTime') {
-        const values = Array.isArray(filter.value) && filter.value.length === 2 
+        const values = Array.isArray(filter.value) && filter.value.length === 2
           ? filter.value.filter((v): v is number => typeof v === 'number')
           : [0, 0]
         const currentTimeUnit = timeUnits[String(filterIndex)] || 'seconds'
-        
+
         return (
           <div className="p-3 space-y-2">
             <div>
@@ -1163,15 +1163,15 @@ function ContactsSegmentsPageContent() {
           </div>
         )
       }
-      
+
       // Timestamp operators (isTimestampAfter, isTimestampBefore, isTimestampBetween) use calendar picker
       const getDateRange = (): DateRange | undefined => {
         if (typeof filter.value === 'object' && filter.value && 'from' in filter.value) {
           const dateValue = filter.value as { from: string; to: string }
           // Convert string dates to Date objects for Calendar component
-          return { 
-            from: new Date(dateValue.from), 
-            to: new Date(dateValue.to) 
+          return {
+            from: new Date(dateValue.from),
+            to: new Date(dateValue.to)
           }
         }
         return undefined
@@ -1241,9 +1241,9 @@ function ContactsSegmentsPageContent() {
     // Number fields - use number input
     if (fieldDef.valueType === 'number') {
       const currentValue = typeof filter.value === 'number' ? filter.value : (Array.isArray(filter.value) && typeof filter.value[0] === 'number' ? filter.value[0] : '')
-      
+
       if (operator === 'between') {
-        const values = Array.isArray(filter.value) && filter.value.length === 2 
+        const values = Array.isArray(filter.value) && filter.value.length === 2
           ? filter.value.filter((v): v is number => typeof v === 'number')
           : [0, 0]
         return (
@@ -1277,7 +1277,7 @@ function ContactsSegmentsPageContent() {
           </div>
         )
       }
-      
+
       return (
         <div className="p-3">
           <Input
@@ -1305,17 +1305,17 @@ function ContactsSegmentsPageContent() {
       if (!options || options.length === 0) {
         return <div className="px-2 py-2 text-sm text-muted-foreground text-center">No options available</div>
       }
-      
-      const displayValues: string[] = Array.isArray(filter.value) 
+
+      const displayValues: string[] = Array.isArray(filter.value)
         ? filter.value.filter((v): v is string => typeof v === 'string')
         : typeof filter.value === 'string' ? [filter.value] : []
-      
+
       const filteredOptions = valueSearchQuery
-        ? options.filter(option => 
-            option.label.toLowerCase().includes(valueSearchQuery.toLowerCase())
-          )
+        ? options.filter(option =>
+          option.label.toLowerCase().includes(valueSearchQuery.toLowerCase())
+        )
         : options
-      
+
       return (
         <div className="flex flex-col h-full min-h-0">
           <div className="flex-shrink-0 p-2 border-b">
@@ -1326,7 +1326,7 @@ function ContactsSegmentsPageContent() {
               autoFocus={false}
             />
           </div>
-          
+
           {filteredOptions.length > 0 ? (
             <div className="overflow-y-auto flex-1 min-h-0 p-1" style={{ maxHeight: '400px' }}>
               {filteredOptions.map((option) => {
@@ -1385,7 +1385,7 @@ function ContactsSegmentsPageContent() {
 
   const handleSaveFilters = React.useCallback(async () => {
     if (!selectedSegment || pendingFilters === null) return
-    
+
     try {
       // Convert database filters to mock filters for the dialog
       const mockFilters = pendingFilters.map(convertSegmentFilterToMock)
@@ -1394,11 +1394,11 @@ function ContactsSegmentsPageContent() {
         description: selectedSegment.description || undefined,
         filters: mockFilters,
       })
-      
+
       // Update segment contacts after filters are saved
       await updateSegmentContactsMutation.mutateAsync(selectedSegment.id)
       await refetchSegments()
-      
+
       setPendingFilters(null)
       setOriginalFilters(null)
     } catch (error) {
@@ -1408,7 +1408,7 @@ function ContactsSegmentsPageContent() {
 
   const handleDiscardFilters = React.useCallback(() => {
     if (!selectedSegment || originalFilters === null) return
-    
+
     setPendingFilters(null)
     setOriginalFilters(null)
   }, [selectedSegment, originalFilters])
@@ -1416,10 +1416,10 @@ function ContactsSegmentsPageContent() {
   // Check if filters have been modified
   const hasFilterChanges = React.useMemo(() => {
     if (!selectedSegment || pendingFilters === null || originalFilters === null) return false
-    
+
     // Compare filters arrays
     if (pendingFilters.length !== originalFilters.length) return true
-    
+
     return JSON.stringify(pendingFilters) !== JSON.stringify(originalFilters)
   }, [selectedSegment, pendingFilters, originalFilters])
 
@@ -1521,7 +1521,7 @@ function ContactsSegmentsPageContent() {
               renderSelectedView: (view, onClick) => {
                 const segment = segments.find(s => s.id === view.value)
                 if (!segment) return null
-                
+
                 return (
                   <DropdownMenu open={isSegmentMenuOpen} onOpenChange={setIsSegmentMenuOpen}>
                     <DropdownMenuTrigger asChild>
@@ -1621,9 +1621,9 @@ function ContactsSegmentsPageContent() {
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                       </DataTableHead>
                     )
                   })
@@ -1693,8 +1693,8 @@ function ContactsSegmentsPageContent() {
       />
 
       {/* Delete Segment Dialog */}
-      <Dialog 
-        open={showDeleteDialog} 
+      <Dialog
+        open={showDeleteDialog}
         onOpenChange={(open) => {
           setShowDeleteDialog(open)
           if (!open) {
@@ -1704,17 +1704,17 @@ function ContactsSegmentsPageContent() {
         }}
       >
         <DialogContent className="sm:max-w-lg p-0 gap-0">
-          <DialogHeader className="p-4">
+          <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive" />
               Delete Segment
             </DialogTitle>
             <DialogDescription className="mt-2">
-              Are you sure you want to delete this segment? 
+              Are you sure you want to delete this segment?
               This action cannot be undone and will permanently remove the segment and all its associated data.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="p-4 space-y-4">
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
               <div className="flex items-start gap-3">
@@ -1722,19 +1722,19 @@ function ContactsSegmentsPageContent() {
                 <div className="space-y-1 flex-1">
                   <p className="text-sm text-destructive font-semibold">Warning</p>
                   <p className="text-sm text-destructive/90 leading-relaxed">
-                    Deleting this segment will permanently remove it and cannot be undone. 
+                    Deleting this segment will permanently remove it and cannot be undone.
                     All contacts associated with this segment will remain, but the segment itself will be deleted.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             {segmentToDelete && (
               <div className="text-sm text-muted-foreground">
                 <span className="font-medium">Segment:</span> {segmentToDelete.name}
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="deleteConfirm" className="text-sm font-medium">
                 Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">delete</code> to confirm:
@@ -1749,7 +1749,7 @@ function ContactsSegmentsPageContent() {
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-4 border-t gap-3">
+          <DialogFooter className="gap-3">
             <Button
               variant="outline"
               onClick={() => {

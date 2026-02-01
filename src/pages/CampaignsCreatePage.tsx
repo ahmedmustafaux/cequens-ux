@@ -3,10 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { PageWrapper } from "@/components/page-wrapper"
 import { Button } from "@/components/ui/button"
-import { 
-  Field, 
-  FieldLabel, 
-  FieldContent, 
+import {
+  Field,
+  FieldLabel,
+  FieldContent,
   FieldDescription,
   FieldError
 } from "@/components/ui/field"
@@ -28,6 +28,7 @@ import { useContacts } from "@/hooks/use-contacts"
 import { useAuth } from "@/hooks/use-auth"
 import { getUserConnectedChannels } from "@/lib/supabase/users"
 import { loadWhatsAppConfig } from "@/lib/channel-utils"
+import { cn } from "@/lib/utils"
 import type { Campaign } from "@/lib/supabase/types"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -35,22 +36,21 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { IPhoneMockup } from "react-device-mockup"
 import { mockWhatsAppTemplates, type WhatsAppTemplate, type WhatsAppTemplateVariable, type WhatsAppTemplateCategory } from "@/data/mock-data"
-import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter } from "lucide-react"
+import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter, ShoppingCart, User, Zap, Gift, AlertTriangle, CreditCard, Activity } from "lucide-react"
 
 interface CampaignFormData {
   name: string
   type: "Email" | "SMS" | "Whatsapp" | ""
+  campaignType: "broadcast" | "condition"
   status: "Draft" | "Active" | "Completed"
   senderId: string
   selectedSegmentId: string
@@ -63,6 +63,10 @@ interface CampaignFormData {
   scheduledTime: string
   selectedTemplateId: string
   templateVariables: Record<string, string>
+  // Condition specific
+  triggerCategory: string
+  trigger: string
+  triggerConfig: Record<string, any>
 }
 
 export default function CampaignsCreatePage() {
@@ -72,7 +76,7 @@ export default function CampaignsCreatePage() {
   const createCampaignMutation = useCreateCampaign()
   const { data: segments = [], isLoading: segmentsLoading } = useSegments()
   const { data: allContacts = [] } = useContacts(undefined, true) // Get all contacts for "All contacts" option
-  
+
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>({})
@@ -85,14 +89,110 @@ export default function CampaignsCreatePage() {
   const [templateSearchQuery, setTemplateSearchQuery] = React.useState("")
   const [selectedTemplateCategory, setSelectedTemplateCategory] = React.useState<WhatsAppTemplateCategory | "ALL">("ALL")
   const [hoveredTemplateId, setHoveredTemplateId] = React.useState<string | null>(null)
-  
+
+  interface TriggerInput {
+    name: string
+    label: string
+    type: "text" | "number" | "select"
+    placeholder?: string
+    required?: boolean
+    options?: { label: string; value: string }[]
+  }
+
+  interface Trigger {
+    value: string
+    label: string
+    description: string
+    inputs?: TriggerInput[]
+  }
+
+  interface TriggerCategory {
+    id: string
+    label: string
+    description?: string
+    icon?: React.ReactNode
+    triggers: Trigger[]
+  }
+
+  // Trigger Data Structure
+  const triggerCategories = React.useMemo<TriggerCategory[]>(() => [
+    {
+      id: "shopify",
+      label: "Shopify",
+      description: "Triggers from your connected Shopify store",
+      icon: <img src="/assets/shopify.png" alt="Shopify" className="h-5 w-5 object-contain" />,
+      triggers: [
+        { value: "abandoned_cart", label: "Abandoned Cart", description: "Customer adds items but doesn't checkout after 1 hour" },
+        { value: "order_placed", label: "Order Placed", description: "New order is successfully created" },
+        { value: "order_fulfilled", label: "Order Fulfilled", description: "Order status changes to fulfilled/shipped" },
+        { value: "payment_failed", label: "Payment Failed", description: "Customer transaction is declined" },
+        {
+          value: "high_value_order",
+          label: "High Value Order",
+          description: "Order value exceeds configured threshold",
+          inputs: [
+            { name: "minAmount", label: "Minimum Order Amount", type: "number", placeholder: "e.g., 500", required: true }
+          ]
+        }
+      ]
+    },
+    {
+      id: "crm",
+      label: "CRM & User Lifecycle",
+      description: "Events related to user account and journey",
+      icon: <User className="h-5 w-5" />,
+      triggers: [
+        { value: "signup", label: "User Signs Up", description: "New user account created" },
+        { value: "profile_updated", label: "Profile Updated", description: "User updates their personal information" },
+        { value: "churn_risk", label: "Churn Risk Detected", description: "AI prediction indicates high risk of user leaving" },
+        { value: "subscription_renewed", label: "Subscription Renewed", description: "Recurring subscription payment successful" }
+      ]
+    },
+    {
+      id: "support",
+      label: "Support & Ticketing",
+      description: "Customer service interactions and updates",
+      icon: <MessageSquareIcon className="h-5 w-5" />,
+      triggers: [
+        { value: "ticket_created", label: "Ticket Created", description: "New support ticket opened by customer" },
+        { value: "ticket_resolved", label: "Ticket Resolved", description: "Support ticket marked as resolved" },
+        { value: "csat_feedback", label: "CSAT Feedback Request", description: "Trigger after ticket closure to gather feedback" }
+      ]
+    },
+    {
+      id: "custom",
+      label: "Custom Events",
+      description: "Define your own business specific events",
+      icon: <Zap className="h-5 w-5" />,
+      triggers: [
+        {
+          value: "custom_event",
+          label: "Custom API Event",
+          description: "Trigger via REST API webhook",
+          inputs: [
+            { name: "eventName", label: "Event Name", type: "text", placeholder: "e.g., user.login", required: true }
+          ]
+        },
+        {
+          value: "webhook_received",
+          label: "Webhook Received",
+          description: "Generic webhook payload received",
+          inputs: [
+            { name: "webhookName", label: "Webhook Source/Name", type: "text", placeholder: "e.g., payment_gateway", required: true }
+          ]
+        }
+      ]
+    }
+  ], [])
+
+
   const steps = [
     { id: 0, label: "Details", description: "Campaign information" },
-    { id: 1, label: "Recipients", description: "Select audience" },
+    { id: 1, label: (location.state as any)?.type === "Condition-based" ? "Targeting" : "Recipients", description: (location.state as any)?.type === "Condition-based" ? "Choose trigger" : "Select audience" },
     { id: 2, label: "Content", description: "Message content" },
     { id: 3, label: "Schedule", description: "Send timing" }
   ]
-  
+
   usePageTitle("Create Campaign")
 
   // Handle page refresh/close
@@ -158,7 +258,8 @@ export default function CampaignsCreatePage() {
 
   // Initialize form data
   const [formData, setFormData] = React.useState<CampaignFormData>({
-    name: "",
+    name: (location.state as any)?.name || "",
+    campaignType: (location.state as any)?.type === "Condition-based" ? "condition" : "broadcast",
     type: "",
     status: "Draft",
     senderId: "",
@@ -171,7 +272,10 @@ export default function CampaignsCreatePage() {
     scheduledDate: defaultDate,
     scheduledTime: defaultTime,
     selectedTemplateId: "",
-    templateVariables: {}
+    templateVariables: {},
+    triggerCategory: "",
+    trigger: "",
+    triggerConfig: {}
   })
 
   // Get selected segment to calculate recipients
@@ -294,21 +398,21 @@ export default function CampaignsCreatePage() {
       case "verified":
         // Meta blue verification checkmark badge
         return (
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 100 100" 
-            fill="none" 
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 100 100"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="flex-shrink-0"
           >
             <g clipPath={`url(#clip0_meta_${senderId || 'default'})`}>
-              <path fillRule="evenodd" clipRule="evenodd" d="M93.9979 49.9999L99.4459 39.9939C100.604 37.8669 99.8909 35.2049 97.8239 33.9419L88.1029 28.0009L87.8189 16.6119C87.7579 14.1899 85.8099 12.2419 83.3879 12.1809L71.9989 11.8969L66.0579 2.17593C64.7949 0.10893 62.1329 -0.60407 60.0059 0.55393L49.9999 6.00193L39.9939 0.55393C37.8669 -0.60407 35.2049 0.10893 33.9419 2.17593L28.0009 11.8969L16.6119 12.1809C14.1899 12.2419 12.2419 14.1899 12.1819 16.6119L11.8969 28.0009L2.17593 33.9419C0.10893 35.2049 -0.60407 37.8669 0.55393 39.9939L6.00193 49.9999L0.55393 60.0059C-0.60407 62.1329 0.10893 64.7949 2.17593 66.0579L11.8969 71.9989L12.1809 83.3879C12.2419 85.8089 14.1899 87.7579 16.6119 87.8179L28.0009 88.1029L33.9419 97.8239C35.2049 99.8909 37.8669 100.604 39.9939 99.4459L49.9999 93.9979L60.0059 99.4459C62.1329 100.604 64.7949 99.8909 66.0579 97.8239L71.9989 88.1029L83.3879 87.8179C85.8099 87.7579 87.7579 85.8089 87.8189 83.3879L88.1029 71.9989L97.8239 66.0579C99.8909 64.7949 100.604 62.1329 99.4459 60.0059L93.9979 49.9999ZM71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="#3897F0"/>
-              <path fillRule="evenodd" clipRule="evenodd" d="M71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="white"/>
+              <path fillRule="evenodd" clipRule="evenodd" d="M93.9979 49.9999L99.4459 39.9939C100.604 37.8669 99.8909 35.2049 97.8239 33.9419L88.1029 28.0009L87.8189 16.6119C87.7579 14.1899 85.8099 12.2419 83.3879 12.1809L71.9989 11.8969L66.0579 2.17593C64.7949 0.10893 62.1329 -0.60407 60.0059 0.55393L49.9999 6.00193L39.9939 0.55393C37.8669 -0.60407 35.2049 0.10893 33.9419 2.17593L28.0009 11.8969L16.6119 12.1809C14.1899 12.2419 12.2419 14.1899 12.1819 16.6119L11.8969 28.0009L2.17593 33.9419C0.10893 35.2049 -0.60407 37.8669 0.55393 39.9939L6.00193 49.9999L0.55393 60.0059C-0.60407 62.1329 0.10893 64.7949 2.17593 66.0579L11.8969 71.9989L12.1809 83.3879C12.2419 85.8089 14.1899 87.7579 16.6119 87.8179L28.0009 88.1029L33.9419 97.8239C35.2049 99.8909 37.8669 100.604 39.9939 99.4459L49.9999 93.9979L60.0059 99.4459C62.1329 100.604 64.7949 99.8909 66.0579 97.8239L71.9989 88.1029L83.3879 87.8179C85.8099 87.7579 87.7579 85.8089 87.8189 83.3879L88.1029 71.9989L97.8239 66.0579C99.8909 64.7949 100.604 62.1329 99.4459 60.0059L93.9979 49.9999ZM71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="#3897F0" />
+              <path fillRule="evenodd" clipRule="evenodd" d="M71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="white" />
             </g>
             <defs>
               <clipPath id={`clip0_meta_${senderId || 'default'}`}>
-                <rect width="100" height="100" fill="white"/>
+                <rect width="100" height="100" fill="white" />
               </clipPath>
             </defs>
           </svg>
@@ -344,9 +448,9 @@ export default function CampaignsCreatePage() {
     const contactCount = segment.contact_ids?.length || 0
 
     return (
-      <SelectItem 
-        key={segment.id} 
-        value={segment.id} 
+      <SelectItem
+        key={segment.id}
+        value={segment.id}
         className="pr-2 pl-2 [&>span:first-child]:hidden"
       >
         <div className="flex items-center gap-2 w-full">
@@ -519,22 +623,32 @@ export default function CampaignsCreatePage() {
         errors.senderId = "Sender ID is required"
       }
     } else if (step === 1) {
-      // Validate Recipients step
-      if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
-        errors.selectedSegmentId = "Selected segment has no contacts"
-      }
-      if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
-        errors.selectedSegmentId = "No contacts available"
-      }
-      if (!formData.selectedSegmentId) {
-        errors.selectedSegmentId = "Please select an audience"
+      // Validate Recipients/Targeting step
+      if (formData.campaignType === "condition") {
+        if (!formData.triggerCategory) {
+          errors.triggerCategory = "Trigger source is required"
+        }
+        if (formData.triggerCategory && !formData.trigger) {
+          errors.trigger = "Trigger event is required"
+        }
+      } else {
+        // Broadcast validation
+        if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
+          errors.selectedSegmentId = "Selected segment has no contacts"
+        }
+        if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+          errors.selectedSegmentId = "No contacts available"
+        }
+        if (!formData.selectedSegmentId) {
+          errors.selectedSegmentId = "Please select an audience"
+        }
       }
     } else if (step === 2) {
       // Validate Content step
       if (formData.type === "Email" && !formData.subject.trim()) {
         errors.subject = "Subject line is required for email campaigns"
       }
-      
+
       // WhatsApp template validation
       if (formData.type === "Whatsapp") {
         if (!formData.selectedTemplateId) {
@@ -627,7 +741,7 @@ export default function CampaignsCreatePage() {
     }
 
     try {
-      const scheduledDateTime = formData.scheduleType === "scheduled" 
+      const scheduledDateTime = formData.scheduleType === "scheduled"
         ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString()
         : null
 
@@ -636,8 +750,8 @@ export default function CampaignsCreatePage() {
         type: formData.type as "Email" | "SMS" | "Whatsapp",
         status: formData.scheduleType === "now" ? "Active" : "Draft",
         recipients: formData.recipients,
-        sent_date: formData.scheduleType === "now" 
-          ? new Date().toISOString() 
+        sent_date: formData.scheduleType === "now"
+          ? new Date().toISOString()
           : scheduledDateTime,
         open_rate: 0,
         click_rate: 0,
@@ -646,8 +760,8 @@ export default function CampaignsCreatePage() {
       await createCampaignMutation.mutateAsync(campaignData)
       setIsDirty(false) // Reset dirty state after successful save
       toast.success(
-        formData.scheduleType === "scheduled" 
-          ? "Campaign scheduled successfully!" 
+        formData.scheduleType === "scheduled"
+          ? "Campaign scheduled successfully!"
           : "Campaign created successfully!"
       )
       navigate("/campaigns")
@@ -697,6 +811,23 @@ export default function CampaignsCreatePage() {
       return hasName && hasType && hasSenderId
     } else if (currentStep === 1) {
       // Validate Recipients step
+      if (formData.campaignType === "condition") {
+        if (!formData.triggerCategory) return false
+        if (!formData.trigger) return false
+
+        // Validate trigger config if enabled
+        const category = triggerCategories.find(c => c.id === formData.triggerCategory)
+        const trigger = category?.triggers.find(t => t.value === formData.trigger)
+
+        if (trigger?.inputs) {
+          for (const input of trigger.inputs) {
+            if (input.required && !formData.triggerConfig[input.name]) {
+              return false
+            }
+          }
+        }
+        return true
+      }
       if (!formData.selectedSegmentId) return false
       if (formData.selectedSegmentId === "all-contacts") {
         return allContacts.length > 0
@@ -706,20 +837,20 @@ export default function CampaignsCreatePage() {
     } else if (currentStep === 2) {
       // Validate Content step
       const hasSubject = formData.type !== "Email" || formData.subject.trim() !== ""
-      
+
       // WhatsApp template validation
       if (formData.type === "Whatsapp") {
         if (!formData.selectedTemplateId) return false
         if (selectedTemplate && templateVariables.length > 0) {
           // Check if all required variables are filled
-          const allRequiredFilled = templateVariables.every(variable => 
+          const allRequiredFilled = templateVariables.every(variable =>
             !variable.required || formData.templateVariables[variable.name]?.trim()
           )
           return allRequiredFilled
         }
         return true
       }
-      
+
       // Message validation for non-WhatsApp
       const hasMessage = formData.message.trim() !== "" && !isOverLimit
       return hasSubject && hasMessage
@@ -737,11 +868,11 @@ export default function CampaignsCreatePage() {
   // Generate message from template
   const generateMessageFromTemplate = React.useCallback((template: WhatsAppTemplate | null, variables: Record<string, string>): string => {
     if (!template) return ""
-    
+
     let message = ""
     const bodyComponent = template.components.find(c => c.type === "BODY")
     const footerComponent = template.components.find(c => c.type === "FOOTER")
-    
+
     if (bodyComponent?.text) {
       message = bodyComponent.text
       // Replace variables {{1}}, {{2}}, etc. with actual values
@@ -750,33 +881,33 @@ export default function CampaignsCreatePage() {
         message = message.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
       })
     }
-    
+
     if (footerComponent?.text) {
       message += `\n\n${footerComponent.text}`
     }
-    
+
     return message
   }, [])
 
   // Filter templates based on search and category
   const filteredTemplates = React.useMemo(() => {
     let filtered = mockWhatsAppTemplates.filter(t => t.status === "APPROVED")
-    
+
     // Filter by category
     if (selectedTemplateCategory !== "ALL") {
       filtered = filtered.filter(t => t.category === selectedTemplateCategory)
     }
-    
+
     // Filter by search query
     if (templateSearchQuery.trim()) {
       const query = templateSearchQuery.toLowerCase()
-      filtered = filtered.filter(t => 
+      filtered = filtered.filter(t =>
         t.name.toLowerCase().includes(query) ||
         t.description?.toLowerCase().includes(query) ||
         t.components.some(c => c.text?.toLowerCase().includes(query))
       )
     }
-    
+
     return filtered
   }, [selectedTemplateCategory, templateSearchQuery])
 
@@ -795,7 +926,7 @@ export default function CampaignsCreatePage() {
   const getHoverPreview = React.useCallback((template: WhatsAppTemplate): string => {
     const bodyComponent = template.components.find(c => c.type === "BODY")
     if (!bodyComponent?.text) return ""
-    
+
     let preview = bodyComponent.text
     // Replace variables with example values or placeholders
     if (bodyComponent.variables) {
@@ -806,12 +937,12 @@ export default function CampaignsCreatePage() {
         )
       })
     }
-    
+
     const footerComponent = template.components.find(c => c.type === "FOOTER")
     if (footerComponent?.text) {
       preview += `\n\n${footerComponent.text}`
     }
-    
+
     return preview
   }, [])
 
@@ -836,15 +967,15 @@ export default function CampaignsCreatePage() {
 
   const canSave = React.useMemo(() => {
     const hasBasicFields = formData.name.trim() !== "" && formData.type !== "" && formData.senderId.trim() !== ""
-    
+
     if (formData.type === "Whatsapp") {
       const hasTemplate = formData.selectedTemplateId !== ""
-      const allRequiredVarsFilled = templateVariables.every(v => 
+      const allRequiredVarsFilled = templateVariables.every(v =>
         !v.required || formData.templateVariables[v.name]?.trim()
       )
       return hasBasicFields && hasTemplate && allRequiredVarsFilled && !createCampaignMutation.isPending
     }
-    
+
     return hasBasicFields && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
   }, [formData, templateVariables, isOverLimit, createCampaignMutation.isPending])
 
@@ -921,7 +1052,7 @@ export default function CampaignsCreatePage() {
             </div>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             className="w-full"
             variants={pageVariants}
             initial="initial"
@@ -936,7 +1067,7 @@ export default function CampaignsCreatePage() {
                   {/* Steps container */}
                   <div className="relative flex items-start gap-12">
                     {/* Progress line background - from center of first to center of last circle */}
-                    <div 
+                    <div
                       className="absolute top-4 h-0.5 border-b border-muted-foreground/15"
                       style={{
                         left: '1rem', // Half of w-8 (2rem)
@@ -944,35 +1075,34 @@ export default function CampaignsCreatePage() {
                         width: 'calc(80% - 1rem)'
                       }}
                     />
-                    
+
                     {/* Progress fill - calculated based on fixed step width (from start of step to start of next step) */}
-                    <div 
+                    <div
                       className="absolute top-4 h-0.5 bg-primary transition-all duration-300 ease-out"
                       style={{
                         left: '1rem',
                         // Fixed step segment width = step width + gap = (100% + 3rem) / steps.length
                         // Progress = currentStep segments from center of first circle to center of current circle
-                        width: currentStep > 0 
+                        width: currentStep > 0
                           ? `calc(((100% + 3rem) / ${steps.length}) * ${currentStep})`
                           : '0'
                       }}
                     />
-                    
+
                     {/* Steps */}
                     {steps.map((step, index) => {
                       const isActive = currentStep === step.id
                       const isCompleted = currentStep > step.id
-                      
+
                       return (
                         <div key={step.id} className="flex flex-col items-start flex-1 relative z-10">
                           <div className="flex flex-col items-start gap-2 w-full">
                             {/* Step circle */}
                             <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors flex-shrink-0 bg-background ${
-                                isActive || isCompleted
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : "border-muted-foreground/30 text-muted-foreground"
-                              }`}
+                              className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors flex-shrink-0 bg-background ${isActive || isCompleted
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-muted-foreground/30 text-muted-foreground"
+                                }`}
                             >
                               {isCompleted ? (
                                 <Check className="h-4 w-4" />
@@ -983,11 +1113,10 @@ export default function CampaignsCreatePage() {
                             {/* Step labels */}
                             <div className="flex flex-col items-start min-w-0 mt-1">
                               <span
-                                className={`text-sm font-medium text-left ${
-                                  isActive || isCompleted
-                                    ? "text-foreground"
-                                    : "text-muted-foreground"
-                                }`}
+                                className={`text-sm font-medium text-left ${isActive || isCompleted
+                                  ? "text-foreground"
+                                  : "text-muted-foreground"
+                                  }`}
                               >
                                 {step.label}
                               </span>
@@ -1012,33 +1141,44 @@ export default function CampaignsCreatePage() {
                         <CardDescription>Enter the basic information for your campaign</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <Field>
-                          <FieldLabel>Campaign Name *</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="name"
-                              value={formData.name}
-                              onChange={(e) => handleInputChange("name", e.target.value)}
-                              placeholder="e.g., Winter Sale 2026"
-                              className={formErrors.name ? "border-destructive" : ""}
-                            />
-                          </FieldContent>
-                          {formErrors.name && <FieldError>{formErrors.name}</FieldError>}
-                        </Field>
+                        <div className="grid grid-cols-2 gap-6 py-2">
+                          <div className="space-y-1.5">
+                            <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Campaign Name</Label>
+                            <div className="font-medium text-base">
+                              {formData.name || "Untitled Campaign"}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Campaign Goal</Label>
+                            <div className="flex items-center gap-2">
+                              {formData.campaignType === "broadcast" ? (
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="default">Broadcast</Badge>
+                                  <span className="text-sm text-muted-foreground">Standard campaign</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary">Condition-based</Badge>
+                                  <span className="text-sm text-muted-foreground">Automated triggers</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
 
                         <Field>
-                          <FieldLabel>Campaign Type *</FieldLabel>
+                          <FieldLabel>Channel *</FieldLabel>
                           <FieldContent>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               {connectedChannels.includes("whatsapp") ? (
                                 <Card
-                                  className={`cursor-pointer shadow-none ${
-                                    formData.type === "Whatsapp" 
-                                      ? "border-primary border-2" 
-                                      : formErrors.type 
-                                        ? "border-destructive border-2" 
-                                        : ""
-                                  }`}
+                                  className={`cursor-pointer shadow-none ${formData.type === "Whatsapp"
+                                    ? "border-primary border-2"
+                                    : formErrors.type
+                                      ? "border-destructive border-2"
+                                      : ""
+                                    }`}
                                   onClick={() => {
                                     handleInputChange("type", "Whatsapp")
                                     // Reset message and sender ID when type changes
@@ -1049,10 +1189,10 @@ export default function CampaignsCreatePage() {
                                   }}
                                 >
                                   <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                    <img 
-                                      src="/icons/WhatsApp.svg" 
-                                      alt="WhatsApp" 
-                                      className="h-6 w-6" 
+                                    <img
+                                      src="/icons/WhatsApp.svg"
+                                      alt="WhatsApp"
+                                      className="h-6 w-6"
                                     />
                                     <div className="flex flex-col items-left gap-1">
                                       <span className="text-sm font-semibold text-foreground">
@@ -1071,10 +1211,10 @@ export default function CampaignsCreatePage() {
                                       <div>
                                         <Card className="shadow-none cursor-not-allowed opacity-50">
                                           <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                            <img 
-                                              src="/icons/WhatsApp.svg" 
-                                              alt="WhatsApp" 
-                                              className="h-6 w-6" 
+                                            <img
+                                              src="/icons/WhatsApp.svg"
+                                              alt="WhatsApp"
+                                              className="h-6 w-6"
                                             />
                                             <div className="flex flex-col items-left gap-1">
                                               <div className="flex items-center gap-2">
@@ -1112,16 +1252,15 @@ export default function CampaignsCreatePage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
-                              
+
                               {connectedChannels.includes("sms") ? (
                                 <Card
-                                  className={`cursor-pointer shadow-none ${
-                                    formData.type === "SMS" 
-                                      ? "border-primary border-2" 
-                                      : formErrors.type 
-                                        ? "border-destructive border-2" 
-                                        : ""
-                                  }`}
+                                  className={`cursor-pointer shadow-none ${formData.type === "SMS"
+                                    ? "border-primary border-2"
+                                    : formErrors.type
+                                      ? "border-destructive border-2"
+                                      : ""
+                                    }`}
                                   onClick={() => {
                                     handleInputChange("type", "SMS")
                                     // Reset message and sender ID when type changes
@@ -1132,9 +1271,9 @@ export default function CampaignsCreatePage() {
                                   }}
                                 >
                                   <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                    <ChatText 
-                                      className="h-6 w-6 text-primary" 
-                                      weight="fill" 
+                                    <ChatText
+                                      className="h-6 w-6 text-primary"
+                                      weight="fill"
                                     />
                                     <div className="flex flex-col items-left gap-1">
                                       <span className="text-sm font-semibold text-foreground">
@@ -1153,9 +1292,9 @@ export default function CampaignsCreatePage() {
                                       <div>
                                         <Card className="shadow-none cursor-not-allowed opacity-50">
                                           <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                            <ChatText 
-                                              className="h-6 w-6 text-primary opacity-50" 
-                                              weight="fill" 
+                                            <ChatText
+                                              className="h-6 w-6 text-primary opacity-50"
+                                              weight="fill"
                                             />
                                             <div className="flex flex-col items-left gap-1">
                                               <div className="flex items-center gap-2">
@@ -1193,16 +1332,15 @@ export default function CampaignsCreatePage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
-                              
+
                               {connectedChannels.includes("email") ? (
                                 <Card
-                                  className={`cursor-pointer shadow-none ${
-                                    formData.type === "Email" 
-                                      ? "border-primary border-2" 
-                                      : formErrors.type 
-                                        ? "border-destructive border-2" 
-                                        : ""
-                                  }`}
+                                  className={`cursor-pointer shadow-none ${formData.type === "Email"
+                                    ? "border-primary border-2"
+                                    : formErrors.type
+                                      ? "border-destructive border-2"
+                                      : ""
+                                    }`}
                                   onClick={() => {
                                     handleInputChange("type", "Email")
                                     // Reset message and sender ID when type changes
@@ -1213,9 +1351,9 @@ export default function CampaignsCreatePage() {
                                   }}
                                 >
                                   <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                    <EnvelopeSimple 
-                                      className="h-6 w-6 text-blue-600 dark:text-blue-400" 
-                                      weight="fill" 
+                                    <EnvelopeSimple
+                                      className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                                      weight="fill"
                                     />
                                     <div className="flex flex-col items-left gap-1">
                                       <span className="text-sm font-semibold text-foreground">
@@ -1234,9 +1372,9 @@ export default function CampaignsCreatePage() {
                                       <div>
                                         <Card className="shadow-none cursor-not-allowed opacity-50">
                                           <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                            <EnvelopeSimple 
-                                              className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50" 
-                                              weight="fill" 
+                                            <EnvelopeSimple
+                                              className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50"
+                                              weight="fill"
                                             />
                                             <div className="flex flex-col items-left gap-1">
                                               <div className="flex items-center gap-2">
@@ -1333,8 +1471,8 @@ export default function CampaignsCreatePage() {
                             {formData.type && availableSenderIds.length > 0
                               ? "Select the sender identifier that recipients will see"
                               : formData.type
-                              ? "Configure sender IDs in your channel settings"
-                              : "Select a campaign type to choose a sender ID"}
+                                ? "Configure sender IDs in your channel settings"
+                                : "Select a campaign type to choose a sender ID"}
                           </FieldDescription>
                         </Field>
                       </CardContent>
@@ -1348,8 +1486,8 @@ export default function CampaignsCreatePage() {
                           >
                             <span className="hidden sm:inline">Discard</span>
                           </Button>
-                          <Button 
-                            onClick={handleNext} 
+                          <Button
+                            onClick={handleNext}
                             disabled={!isCurrentStepValid || isInitialLoading}
                             className="flex-shrink-0"
                           >
@@ -1365,68 +1503,200 @@ export default function CampaignsCreatePage() {
                   {currentStep === 1 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
-                        <CardTitle>Select Recipients</CardTitle>
-                        <CardDescription>Choose the audience for your campaign</CardDescription>
+                        <CardTitle>{formData.campaignType === "condition" ? "Campaign Trigger" : "Select Recipients"}</CardTitle>
+                        <CardDescription>
+                          {formData.campaignType === "condition"
+                            ? "Select the event that will trigger this campaign"
+                            : "Choose the audience for your campaign"}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <Field>
-                          <FieldLabel>Select Audience *</FieldLabel>
-                          <FieldContent>
-                            <Select
-                              value={formData.selectedSegmentId}
-                              onValueChange={(value) => handleInputChange("selectedSegmentId", value)}
-                              disabled={segmentsLoading}
-                            >
-                              <SelectTrigger className={formErrors.selectedSegmentId ? "border-destructive" : ""}>
-                                <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"}>
-                                  {renderSelectedSegmentValue()}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {/* All Contacts Option */}
-                                <SelectItem value="all-contacts" className="pr-2 pl-2 [&>span:first-child]:hidden">
-                                  <div className="flex items-center gap-2 w-full">
-                                    <div className="w-[120px] truncate">All Contacts</div>
-                                    <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-                                      <Badge variant="secondary">
-                                        {allContacts.length} contacts
-                                      </Badge>
-                                      <SelectPrimitive.ItemIndicator>
-                                        <Check className="h-4 w-4" />
-                                      </SelectPrimitive.ItemIndicator>
+                        {formData.campaignType === "condition" ? (
+                          <div className="grid grid-cols-2 gap-4 h-[450px]">
+                            {/* Left Column: Categories */}
+                            <div className="border rounded-md flex flex-col overflow-hidden bg-muted/10">
+                              <div className="p-3 border-b bg-muted/20 font-medium text-sm text-muted-foreground uppercase tracking-wider">
+                                Trigger Source
+                              </div>
+                              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                {triggerCategories.map(cat => (
+                                  <button
+                                    key={cat.id}
+                                    onClick={() => setFormData(prev => ({ ...prev, triggerCategory: cat.id, trigger: "" }))}
+                                    className={cn(
+                                      "w-full flex items-start gap-3 p-3 rounded-md text-left transition-all border",
+                                      formData.triggerCategory === cat.id
+                                        ? "bg-primary/5 border-primary/50"
+                                        : "border-transparent hover:bg-primary/5 hover:border-primary/20"
+                                    )}
+                                  >
+                                    <div className={cn(
+                                      "p-2 rounded-md shrink-0 transition-colors",
+                                      formData.triggerCategory === cat.id
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                    )}>
+                                      {cat.icon}
                                     </div>
-                                  </div>
-                                </SelectItem>
+                                    <div>
+                                      <div className="font-medium text-sm">{cat.label}</div>
+                                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cat.description}</div>
+                                    </div>
+                                    {formData.triggerCategory === cat.id && (
+                                      <ChevronRight className="w-4 h-4 ml-auto text-primary mt-1" />
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
 
-                                {/* Segments List */}
-                                {segmentsLoading ? (
-                                  <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                                    Loading segments...
-                                  </div>
-                                ) : segments.length === 0 ? (
-                                  <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                                    No segments available. <br />
-                                    <Button 
-                                      variant="link" 
-                                      className="mt-2 h-auto p-0"
-                                      onClick={() => navigate("/contacts/segments")}
-                                    >
-                                      Create a segment first
-                                    </Button>
+                            {/* Right Column: Events */}
+                            <div className="border rounded-md flex flex-col overflow-hidden bg-background">
+                              <div className="p-3 border-b bg-muted/20 font-medium text-sm text-muted-foreground uppercase tracking-wider">
+                                Trigger Event
+                              </div>
+                              <div className="flex-1 overflow-y-auto p-2">
+                                {!formData.triggerCategory ? (
+                                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
+                                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                                      <Search className="w-6 h-6 opacity-50" />
+                                    </div>
+                                    <p className="text-sm">Select a trigger source from the left to view available events.</p>
                                   </div>
                                 ) : (
-                                  segments.map(renderSegmentItem)
+                                  <div className="space-y-1">
+                                    {(triggerCategories.find(c => c.id === formData.triggerCategory)?.triggers || []).map(t => (
+                                      <button
+                                        key={t.value}
+                                        onClick={() => setFormData(prev => ({ ...prev, trigger: t.value, triggerConfig: {} }))}
+                                        className={cn(
+                                          "w-full flex flex-col gap-3 p-3 rounded-md text-left transition-all border",
+                                          formData.trigger === t.value
+                                            ? "bg-primary/5 border-primary/50"
+                                            : "border-transparent hover:bg-primary/5 hover:border-primary/20"
+                                        )}
+                                      >
+                                        <div className="w-full flex items-center gap-3">
+                                          <div className="flex-1">
+                                            <div className="font-medium text-sm flex items-center gap-2">
+                                              {t.label}
+                                              {formData.trigger === t.value && (
+                                                <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                                              )}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">{t.description}</div>
+                                          </div>
+                                        </div>
+
+                                        {/* Trigger Inputs */}
+                                        {formData.trigger === t.value && t.inputs && (
+                                          <div className="w-full pt-2 border-t border-primary/10 space-y-3 animate-in fade-in slide-in-from-top-1 cursor-default" onClick={e => e.stopPropagation()}>
+                                            {t.inputs.map(input => (
+                                              <div key={input.name} className="space-y-1.5">
+                                                <Label htmlFor={input.name} className="text-xs font-medium text-muted-foreground">
+                                                  {input.label} {input.required && <span className="text-destructive">*</span>}
+                                                </Label>
+                                                {input.type === "select" ? (
+                                                  <Select
+                                                    value={formData.triggerConfig[input.name] || ""}
+                                                    onValueChange={(val) => setFormData(prev => ({
+                                                      ...prev,
+                                                      triggerConfig: { ...prev.triggerConfig, [input.name]: val }
+                                                    }))}
+                                                  >
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                      <SelectValue placeholder={input.placeholder || "Select..."} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                      {input.options?.map(opt => (
+                                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                      ))}
+                                                    </SelectContent>
+                                                  </Select>
+                                                ) : (
+                                                  <Input
+                                                    id={input.name}
+                                                    type={input.type}
+                                                    placeholder={input.placeholder}
+                                                    value={formData.triggerConfig[input.name] || ""}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                      ...prev,
+                                                      triggerConfig: { ...prev.triggerConfig, [input.name]: e.target.value }
+                                                    }))}
+                                                    className="h-8 text-xs bg-background"
+                                                  />
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
                                 )}
-                              </SelectContent>
-                            </Select>
-                          </FieldContent>
-                          {formErrors.selectedSegmentId && (
-                            <FieldError>{formErrors.selectedSegmentId}</FieldError>
-                          )}
-                          <FieldDescription>
-                            {renderRecipientsDescription()}
-                          </FieldDescription>
-                        </Field>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Field>
+                            <FieldLabel>Select Audience *</FieldLabel>
+                            <FieldContent>
+                              <Select
+                                value={formData.selectedSegmentId}
+                                onValueChange={(value) => handleInputChange("selectedSegmentId", value)}
+                                disabled={segmentsLoading}
+                              >
+                                <SelectTrigger className={formErrors.selectedSegmentId ? "border-destructive" : ""}>
+                                  <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"}>
+                                    {renderSelectedSegmentValue()}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* All Contacts Option */}
+                                  <SelectItem value="all-contacts" className="pr-2 pl-2 [&>span:first-child]:hidden">
+                                    <div className="flex items-center gap-2 w-full">
+                                      <div className="w-[120px] truncate">All Contacts</div>
+                                      <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+                                        <Badge variant="secondary">
+                                          {allContacts.length} contacts
+                                        </Badge>
+                                        <SelectPrimitive.ItemIndicator>
+                                          <Check className="h-4 w-4" />
+                                        </SelectPrimitive.ItemIndicator>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+
+                                  {/* Segments List */}
+                                  {segmentsLoading ? (
+                                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                                      Loading segments...
+                                    </div>
+                                  ) : segments.length === 0 ? (
+                                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                                      No segments available. <br />
+                                      <Button
+                                        variant="link"
+                                        className="mt-2 h-auto p-0"
+                                        onClick={() => navigate("/contacts/segments")}
+                                      >
+                                        Create a segment first
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    segments.map(renderSegmentItem)
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </FieldContent>
+                            {formErrors.selectedSegmentId && (
+                              <FieldError>{formErrors.selectedSegmentId}</FieldError>
+                            )}
+                            <FieldDescription>
+                              {renderRecipientsDescription()}
+                            </FieldDescription>
+                          </Field>
+                        )}
                       </CardContent>
                       {/* Footer */}
                       <div className="border-t pt-4 px-4 sm:px-4">
@@ -1439,8 +1709,8 @@ export default function CampaignsCreatePage() {
                             <ChevronLeft className="h-4 w-4 mr-2" />
                             <span className="hidden sm:inline">Back</span>
                           </Button>
-                          <Button 
-                            onClick={handleNext} 
+                          <Button
+                            onClick={handleNext}
                             disabled={!isCurrentStepValid || isInitialLoading}
                             className="flex-shrink-0"
                           >
@@ -1458,7 +1728,7 @@ export default function CampaignsCreatePage() {
                       <CardHeader>
                         <CardTitle>Message Content</CardTitle>
                         <CardDescription>
-                          {formData.type === "Whatsapp" 
+                          {formData.type === "Whatsapp"
                             ? "Choose a template from your library"
                             : "Write your campaign message"}
                         </CardDescription>
@@ -1487,124 +1757,102 @@ export default function CampaignsCreatePage() {
                         {/* WhatsApp Template Selection */}
                         {formData.type === "Whatsapp" && (
                           <div className="space-y-4">
-                          <Field>
-                            <FieldLabel>Select Template *</FieldLabel>
-                            <FieldContent>
-                              <Select
-                                value={formData.selectedTemplateId}
-                                onValueChange={(value) => {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    selectedTemplateId: value,
-                                    templateVariables: {}
-                                  }))
-                                  setIsDirty(true)
-                                }}
-                              >
-                                <SelectTrigger className={formErrors.selectedTemplateId ? "border-destructive" : ""}>
-                                  <SelectValue placeholder="Select a template">
-                                    {selectedTemplate ? (
-                                      <div className="flex items-center gap-2">
-                                        <span>{selectedTemplate.name}</span>
-                                        <Badge className={getCategoryBadgeColor(selectedTemplate.category)}>
-                                          {selectedTemplate.category}
-                                        </Badge>
-                                      </div>
-                                    ) : (
-                                      "Select a template"
-                                    )}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent className="max-h-[500px] min-w-[500px] w-[max(500px,var(--radix-select-trigger-width))]">
-                                  {/* Search Input inside dropdown */}
-                                  <div className="p-2 border-b sticky top-0 bg-background z-10">
-                                    <div className="relative">
-                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                      <Input
-                                        placeholder="Search templates..."
-                                        value={templateSearchQuery}
-                                        onChange={(e) => {
-                                          e.stopPropagation()
-                                          setTemplateSearchQuery(e.target.value)
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        className="pl-9 pr-8 h-9"
-                                      />
-                                      {templateSearchQuery && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                                          onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            setTemplateSearchQuery("")
-                                          }}
-                                        >
-                                          <XIcon className="h-3 w-3" />
-                                        </Button>
+                            <Field>
+                              <FieldLabel>Select Template *</FieldLabel>
+                              <FieldContent>
+                                <Select
+                                  value={formData.selectedTemplateId}
+                                  onValueChange={(value) => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      selectedTemplateId: value,
+                                      templateVariables: {}
+                                    }))
+                                    setIsDirty(true)
+                                  }}
+                                >
+                                  <SelectTrigger className={formErrors.selectedTemplateId ? "border-destructive" : ""}>
+                                    <SelectValue placeholder="Select a template">
+                                      {selectedTemplate ? (
+                                        <div className="flex items-center gap-2">
+                                          <span>{selectedTemplate.name}</span>
+                                          <Badge className={getCategoryBadgeColor(selectedTemplate.category)}>
+                                            {selectedTemplate.category}
+                                          </Badge>
+                                        </div>
+                                      ) : (
+                                        "Select a template"
                                       )}
-                                    </div>
-                                  </div>
-
-                                  {/* Category Filter inside dropdown */}
-                                  <div className="p-2 border-b bg-muted/30">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                      <span className="text-xs font-medium text-muted-foreground mr-1">Category:</span>
-                                      {(["ALL", "MARKETING", "UTILITY", "AUTHENTICATION"] as const).map((category) => (
-                                        <Button
-                                          key={category}
-                                          variant={selectedTemplateCategory === category ? "default" : "outline"}
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.preventDefault()
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-[500px] min-w-[500px] w-[max(500px,var(--radix-select-trigger-width))]">
+                                    {/* Search Input inside dropdown */}
+                                    <div className="p-2 border-b sticky top-0 bg-background z-10">
+                                      <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                          placeholder="Search templates..."
+                                          value={templateSearchQuery}
+                                          onChange={(e) => {
                                             e.stopPropagation()
-                                            setSelectedTemplateCategory(category)
+                                            setTemplateSearchQuery(e.target.value)
                                           }}
-                                          className="flex items-center gap-1.5 h-7 text-xs px-2"
-                                        >
-                                       
-                                          {category === "ALL" ? "All" : category}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* Show active filters info */}
-                                  {(templateSearchQuery || selectedTemplateCategory !== "ALL") && filteredTemplates.length > 0 && (
-                                    <div className="px-3 py-2 border-b bg-muted/20">
-                                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                        <span>
-                                          {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} found
-                                        </span>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 px-2 text-xs"
-                                          onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            setTemplateSearchQuery("")
-                                            setSelectedTemplateCategory("ALL")
-                                          }}
-                                        >
-                                          Clear
-                                        </Button>
+                                          onClick={(e) => e.stopPropagation()}
+                                          onKeyDown={(e) => e.stopPropagation()}
+                                          className="pl-9 pr-8 h-9"
+                                        />
+                                        {templateSearchQuery && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                                            onClick={(e) => {
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              setTemplateSearchQuery("")
+                                            }}
+                                          >
+                                            <XIcon className="h-3 w-3" />
+                                          </Button>
+                                        )}
                                       </div>
                                     </div>
-                                  )}
-                                  {/* Template List */}
-                                  <div className="max-h-[300px] overflow-y-auto">
-                                    {filteredTemplates.length === 0 ? (
-                                      <div className="px-3 py-6 text-center text-sm text-muted-foreground space-y-2">
-                                        <p>No templates found.</p>
-                                        {(templateSearchQuery || selectedTemplateCategory !== "ALL") && (
+
+                                    {/* Category Filter inside dropdown */}
+                                    <div className="p-2 border-b bg-muted/30">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                        <span className="text-xs font-medium text-muted-foreground mr-1">Category:</span>
+                                        {(["ALL", "MARKETING", "UTILITY", "AUTHENTICATION"] as const).map((category) => (
                                           <Button
-                                            variant="link"
+                                            key={category}
+                                            variant={selectedTemplateCategory === category ? "default" : "outline"}
                                             size="sm"
-                                            className="h-auto p-0 text-xs"
+                                            onClick={(e) => {
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              setSelectedTemplateCategory(category)
+                                            }}
+                                            className="flex items-center gap-1.5 h-7 text-xs px-2"
+                                          >
+
+                                            {category === "ALL" ? "All" : category}
+                                          </Button>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* Show active filters info */}
+                                    {(templateSearchQuery || selectedTemplateCategory !== "ALL") && filteredTemplates.length > 0 && (
+                                      <div className="px-3 py-2 border-b bg-muted/20">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                          <span>
+                                            {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} found
+                                          </span>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 px-2 text-xs"
                                             onClick={(e) => {
                                               e.preventDefault()
                                               e.stopPropagation()
@@ -1612,109 +1860,131 @@ export default function CampaignsCreatePage() {
                                               setSelectedTemplateCategory("ALL")
                                             }}
                                           >
-                                            Clear filters
+                                            Clear
                                           </Button>
-                                        )}
+                                        </div>
                                       </div>
-                                    ) : (
-                                      filteredTemplates.map((template) => {
-                                        const headerComponent = template.components.find(c => c.type === "HEADER")
-                                        const bodyComponent = template.components.find(c => c.type === "BODY")
-                                        const hasButtons = template.components.some(c => c.type === "BUTTONS")
-                                        const hoverPreview = getHoverPreview(template)
-                                        
-                                        return (
-                                          <TooltipProvider key={template.id}>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <div>
-                                                  <SelectItem 
-                                                    value={template.id}
-                                                    onMouseEnter={() => setHoveredTemplateId(template.id)}
-                                                    onMouseLeave={() => setHoveredTemplateId(null)}
-                                                    className="cursor-pointer"
-                                                  >
-                                                    <div className="flex-1 items-center justify-between w-full">
-                                                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                        <div className="flex-1 min-w-0">
-                                                          <div className="flex items-center gap-2 mb-1">
-                                                            <span className=" font-medium text-sm truncate">{template.name}</span>
-                                                            <Badge className={getCategoryBadgeColor(template.category)}>
-                                                              {template.category}
-                                                            </Badge>
+                                    )}
+                                    {/* Template List */}
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                      {filteredTemplates.length === 0 ? (
+                                        <div className="px-3 py-6 text-center text-sm text-muted-foreground space-y-2">
+                                          <p>No templates found.</p>
+                                          {(templateSearchQuery || selectedTemplateCategory !== "ALL") && (
+                                            <Button
+                                              variant="link"
+                                              size="sm"
+                                              className="h-auto p-0 text-xs"
+                                              onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                setTemplateSearchQuery("")
+                                                setSelectedTemplateCategory("ALL")
+                                              }}
+                                            >
+                                              Clear filters
+                                            </Button>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        filteredTemplates.map((template) => {
+                                          const headerComponent = template.components.find(c => c.type === "HEADER")
+                                          const bodyComponent = template.components.find(c => c.type === "BODY")
+                                          const hasButtons = template.components.some(c => c.type === "BUTTONS")
+                                          const hoverPreview = getHoverPreview(template)
+
+                                          return (
+                                            <TooltipProvider key={template.id}>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <div>
+                                                    <SelectItem
+                                                      value={template.id}
+                                                      onMouseEnter={() => setHoveredTemplateId(template.id)}
+                                                      onMouseLeave={() => setHoveredTemplateId(null)}
+                                                      className="cursor-pointer"
+                                                    >
+                                                      <div className="flex-1 items-center justify-between w-full">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                          <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                              <span className=" font-medium text-sm truncate">{template.name}</span>
+                                                              <Badge className={getCategoryBadgeColor(template.category)}>
+                                                                {template.category}
+                                                              </Badge>
+                                                            </div>
+                                                            {template.description && (
+                                                              <p className="text-xs text-muted-foreground truncate">
+                                                                {template.description}
+                                                              </p>
+                                                            )}
                                                           </div>
-                                                          {template.description && (
-                                                            <p className="text-xs text-muted-foreground truncate">
-                                                              {template.description}
-                                                            </p>
-                                                          )}
                                                         </div>
                                                       </div>
-                                                    </div>
-                                                  </SelectItem>
-                                                </div>
-                                              </TooltipTrigger>
-                                              <TooltipContent 
-                                                side="right" 
-                                                className="max-w-sm p-4"
-                                                onMouseEnter={() => setHoveredTemplateId(template.id)}
-                                                onMouseLeave={() => setHoveredTemplateId(null)}
-                                              >
-                                                <div className="space-y-2">
-                                                  <div className="flex items-center gap-2 mb-2">
-                                                    <span className="font-semibold text-sm">{template.name}</span>
-                                                    <Badge className={getCategoryBadgeColor(template.category)}>
-                                                      {template.category}
-                                                    </Badge>
+                                                    </SelectItem>
                                                   </div>
-                                                  {template.description && (
-                                                    <p className="text-xs text-muted-foreground mb-2">
-                                                      {template.description}
-                                                    </p>
-                                                  )}
-                                                  {headerComponent && (
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                                                      {getComponentIcon(headerComponent.format)}
-                                                      <span className="capitalize">
-                                                        {headerComponent.format || "Header"} Media
-                                                      </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                  side="right"
+                                                  className="max-w-sm p-4"
+                                                  onMouseEnter={() => setHoveredTemplateId(template.id)}
+                                                  onMouseLeave={() => setHoveredTemplateId(null)}
+                                                >
+                                                  <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <span className="font-semibold text-sm">{template.name}</span>
+                                                      <Badge className={getCategoryBadgeColor(template.category)}>
+                                                        {template.category}
+                                                      </Badge>
                                                     </div>
-                                                  )}
-                                                  {hoverPreview && (
-                                                    <div className="mt-2 pt-2 border-t">
-                                                      <p className="text-xs font-medium mb-1">Preview:</p>
-                                                      <p className="text-xs whitespace-pre-wrap text-muted-foreground line-clamp-6">
-                                                        {hoverPreview}
+                                                    {template.description && (
+                                                      <p className="text-xs text-muted-foreground mb-2">
+                                                        {template.description}
                                                       </p>
-                                                    </div>
-                                                  )}
-                                                  {hasButtons && (
-                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-                                                      <Link2 className="h-3 w-3" />
-                                                      <span>Interactive buttons</span>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        )
-                                      })
-                                    )}
-                                  </div>
-                                </SelectContent>
-                              </Select>
-                            </FieldContent>
-                            {formErrors.selectedTemplateId && (
-                              <FieldError>{formErrors.selectedTemplateId}</FieldError>
-                            )}
-                            <FieldDescription>
-                              Click to open template library. Search and filter templates inside the dropdown. Hover over templates to preview.
-                            </FieldDescription>
-                          </Field>
+                                                    )}
+                                                    {headerComponent && (
+                                                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                                        {getComponentIcon(headerComponent.format)}
+                                                        <span className="capitalize">
+                                                          {headerComponent.format || "Header"} Media
+                                                        </span>
+                                                      </div>
+                                                    )}
+                                                    {hoverPreview && (
+                                                      <div className="mt-2 pt-2 border-t">
+                                                        <p className="text-xs font-medium mb-1">Preview:</p>
+                                                        <p className="text-xs whitespace-pre-wrap text-muted-foreground line-clamp-6">
+                                                          {hoverPreview}
+                                                        </p>
+                                                      </div>
+                                                    )}
+                                                    {hasButtons && (
+                                                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                                                        <Link2 className="h-3 w-3" />
+                                                        <span>Interactive buttons</span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+                                          )
+                                        })
+                                      )}
+                                    </div>
+                                  </SelectContent>
+                                </Select>
+                              </FieldContent>
+                              {formErrors.selectedTemplateId && (
+                                <FieldError>{formErrors.selectedTemplateId}</FieldError>
+                              )}
+                              <FieldDescription>
+                                Click to open template library. Search and filter templates inside the dropdown. Hover over templates to preview.
+                              </FieldDescription>
+                            </Field>
 
-                          {/* Template Variables Input */}
-                          {selectedTemplate && templateVariables.length > 0 && (
+                            {/* Template Variables Input */}
+                            {selectedTemplate && templateVariables.length > 0 && (
                               <>
                                 <Separator />
                                 <div className="space-y-3">
@@ -1775,11 +2045,11 @@ export default function CampaignsCreatePage() {
                                 value={formData.message}
                                 onChange={(e) => handleInputChange("message", e.target.value)}
                                 placeholder={
-                                  formData.type === "Email" 
+                                  formData.type === "Email"
                                     ? "Write your email message here..."
                                     : formData.type === "SMS"
-                                    ? "Write your SMS message here (160 characters recommended)..."
-                                    : "Write your message here..."
+                                      ? "Write your SMS message here (160 characters recommended)..."
+                                      : "Write your message here..."
                                 }
                                 className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
                                 maxLength={characterLimit + 100}
@@ -1835,8 +2105,8 @@ export default function CampaignsCreatePage() {
                             <ChevronLeft className="h-4 w-4 mr-2" />
                             <span className="hidden sm:inline">Back</span>
                           </Button>
-                          <Button 
-                            onClick={handleNext} 
+                          <Button
+                            onClick={handleNext}
                             disabled={!isCurrentStepValid || isInitialLoading}
                             className="flex-shrink-0"
                           >
@@ -1954,10 +2224,10 @@ export default function CampaignsCreatePage() {
                           >
                             <Save className="h-4 w-4 mr-2" />
                             <span className="hidden sm:inline">
-                              {createCampaignMutation.isPending 
-                                ? "Creating..." 
-                                : formData.scheduleType === "scheduled" 
-                                  ? "Schedule Campaign" 
+                              {createCampaignMutation.isPending
+                                ? "Creating..."
+                                : formData.scheduleType === "scheduled"
+                                  ? "Schedule Campaign"
                                   : "Send Now"}
                             </span>
                             <span className="sm:hidden">
@@ -1972,31 +2242,27 @@ export default function CampaignsCreatePage() {
               </div>
 
               {/* Discard Alert Dialog */}
-              <AlertDialog open={showDiscardDialog} onOpenChange={(open) => {
-                if (!open) {
-                  handleDiscardCancel()
-                }
-              }}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Discard Campaign?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to discard this campaign? All unsaved changes will be lost.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={handleDiscardCancel}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
+              <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Discard changes?</DialogTitle>
+                  </DialogHeader>
+                  <div className="p-4">
+                    <DialogDescription>
+                      You have unsaved changes. Are you sure you want to leave this page?
+                    </DialogDescription>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={handleDiscardCancel}>Cancel</Button>
+                    <Button
                       onClick={handleDiscard}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      variant="destructive"
                     >
                       Discard
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               {/* Sidebar */}
               <div className="grid grid-cols-1 gap-4 items-start">
@@ -2051,192 +2317,191 @@ export default function CampaignsCreatePage() {
                     <CardContent className="px-4 overflow-hidden" style={{ height: '580px' }}>
                       {/* Mobile Device Mockup - Show only 60% (cropped at bottom) */}
                       <div className="relative flex justify-center items-end overflow-hidden w-full h-full">
-                        <div className="relative w-full h-full flex justify-center items-start" style={{ 
-                        
+                        <div className="relative w-full h-full flex justify-center items-start" style={{
+
                         }}>
                           <div className="w-full h-full flex justify-center items-start">
-                            <IPhoneMockup 
+                            <IPhoneMockup
                               screenWidth={320}
                               screenType="notch"
                               frameColor="#1f2937"
                               hideStatusBar={true}
                             >
-                            <div className={`pt-6 w-full h-full relative ${
-                              formData.type === "Whatsapp" 
-                                ? "bg-[#efeae9] dark:bg-background" 
+                              <div className={`pt-6 w-full h-full relative ${formData.type === "Whatsapp"
+                                ? "bg-[#efeae9] dark:bg-background"
                                 : "bg-[#efeae9] dark:bg-background"
-                            }`}>
-                              {/* WhatsApp Background Pattern */}
-                              {formData.type === "Whatsapp" && (
-                                <div 
-                                  className="absolute inset-0 opacity-[0.12]"
-                                  style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='whatsapp-pattern' x='0' y='0' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='15' cy='15' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='45' cy='20' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='75' cy='25' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='25' cy='40' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='55' cy='45' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='85' cy='50' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='35' cy='65' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='65' cy='70' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='20' cy='85' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='50' cy='90' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='80' cy='95' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23whatsapp-pattern)'/%3E%3C/svg%3E")`,
-                                    backgroundSize: '100px 100px',
-                                    backgroundRepeat: 'repeat',
-                                  }}
-                                />
-                              )}
-                              <div className="relative z-10 flex flex-col h-full px-4 pt-3 pb-4">
-                                {/* Sender Info (for WhatsApp) - Show name from Sender ID */}
+                                }`}>
+                                {/* WhatsApp Background Pattern */}
                                 {formData.type === "Whatsapp" && (
-                                  <div className="mb-3 pb-3 border-b border-gray-300/50">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm">
-                                        <span className="text-white text-sm font-semibold">
-                                          {selectedSender?.label ? selectedSender.label.charAt(0).toUpperCase() : "C"}
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center gap-1.5">
-                                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            {selectedSender?.label || formData.senderId || "Contact"}
-                                          </p>
-                                          {selectedSender?.status === "verified" && getVerificationIcon(selectedSender.status, selectedSender.id)}
+                                  <div
+                                    className="absolute inset-0 opacity-[0.12]"
+                                    style={{
+                                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='whatsapp-pattern' x='0' y='0' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='15' cy='15' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='45' cy='20' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='75' cy='25' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='25' cy='40' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='55' cy='45' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='85' cy='50' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='35' cy='65' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='65' cy='70' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='20' cy='85' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='50' cy='90' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='80' cy='95' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23whatsapp-pattern)'/%3E%3C/svg%3E")`,
+                                      backgroundSize: '100px 100px',
+                                      backgroundRepeat: 'repeat',
+                                    }}
+                                  />
+                                )}
+                                <div className="relative z-10 flex flex-col h-full px-4 pt-3 pb-4">
+                                  {/* Sender Info (for WhatsApp) - Show name from Sender ID */}
+                                  {formData.type === "Whatsapp" && (
+                                    <div className="mb-3 pb-3 border-b border-gray-300/50">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm">
+                                          <span className="text-white text-sm font-semibold">
+                                            {selectedSender?.label ? selectedSender.label.charAt(0).toUpperCase() : "C"}
+                                          </span>
                                         </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">online</p>
+                                        <div>
+                                          <div className="flex items-center gap-1.5">
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                              {selectedSender?.label || formData.senderId || "Contact"}
+                                            </p>
+                                            {selectedSender?.status === "verified" && getVerificationIcon(selectedSender.status, selectedSender.id)}
+                                          </div>
+                                          <p className="text-xs text-gray-600 dark:text-gray-400">online</p>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
 
-                                {/* Template Message Content */}
-                                <div className="mt-0 flex flex-col">
-                                  <div className="flex justify-end">
-                                    <div className="relative max-w-[85%] flex flex-col items-end">
-                                      {/* Header Media (Image/Video/Document) */}
-                                      {formData.type === "Whatsapp" && selectedTemplate && (() => {
-                                        const headerComponent = selectedTemplate.components.find(c => c.type === "HEADER")
-                                        if (!headerComponent || !headerComponent.format) return null
-                                        
-                                        const mediaUrl = headerComponent.example?.header_handle?.[0]
-                                        const isValidUrl = mediaUrl && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) && mediaUrl !== "image_url_here"
-                                        const placeholderUrl = "https://images.unsplash.com/photo-1557683316-973673baf926?w=320&h=200&fit=crop"
-                                        
-                                        return (
-                                          <div className="w-full mb-0 rounded-t-lg overflow-hidden">
-                                            {headerComponent.format === "IMAGE" && (
-                                              <div className="w-full bg-gray-200 relative" style={{ minHeight: '150px', maxHeight: '200px' }}>
-                                                {isValidUrl ? (
-                                                  <img 
-                                                    src={mediaUrl} 
-                                                    alt="Template header" 
-                                                    className="w-full h-full object-cover"
-                                                    style={{ minHeight: '150px', maxHeight: '200px' }}
-                                                    onError={(e) => {
-                                                      const target = e.target as HTMLImageElement
-                                                      target.src = placeholderUrl
-                                                    }}
-                                                  />
-                                                ) : (
-                                                  <img 
-                                                    src={placeholderUrl} 
-                                                    alt="Template header placeholder" 
-                                                    className="w-full h-full object-cover"
-                                                    style={{ minHeight: '150px', maxHeight: '200px' }}
-                                                  />
-                                                )}
-                                              </div>
-                                            )}
-                                            {headerComponent.format === "VIDEO" && (
-                                              <div className="relative w-full bg-gray-200 aspect-video flex items-center justify-center max-h-[200px]">
-                                                <Video className="w-12 h-12 text-gray-400" />
-                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                                                    <svg className="w-5 h-5 text-gray-700 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                                      <path d="M8 5v14l11-7z"/>
-                                                    </svg>
+                                  {/* Template Message Content */}
+                                  <div className="mt-0 flex flex-col">
+                                    <div className="flex justify-end">
+                                      <div className="relative max-w-[85%] flex flex-col items-end">
+                                        {/* Header Media (Image/Video/Document) */}
+                                        {formData.type === "Whatsapp" && selectedTemplate && (() => {
+                                          const headerComponent = selectedTemplate.components.find(c => c.type === "HEADER")
+                                          if (!headerComponent || !headerComponent.format) return null
+
+                                          const mediaUrl = headerComponent.example?.header_handle?.[0]
+                                          const isValidUrl = mediaUrl && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) && mediaUrl !== "image_url_here"
+                                          const placeholderUrl = "https://images.unsplash.com/photo-1557683316-973673baf926?w=320&h=200&fit=crop"
+
+                                          return (
+                                            <div className="w-full mb-0 rounded-t-lg overflow-hidden">
+                                              {headerComponent.format === "IMAGE" && (
+                                                <div className="w-full bg-gray-200 relative" style={{ minHeight: '150px', maxHeight: '200px' }}>
+                                                  {isValidUrl ? (
+                                                    <img
+                                                      src={mediaUrl}
+                                                      alt="Template header"
+                                                      className="w-full h-full object-cover"
+                                                      style={{ minHeight: '150px', maxHeight: '200px' }}
+                                                      onError={(e) => {
+                                                        const target = e.target as HTMLImageElement
+                                                        target.src = placeholderUrl
+                                                      }}
+                                                    />
+                                                  ) : (
+                                                    <img
+                                                      src={placeholderUrl}
+                                                      alt="Template header placeholder"
+                                                      className="w-full h-full object-cover"
+                                                      style={{ minHeight: '150px', maxHeight: '200px' }}
+                                                    />
+                                                  )}
+                                                </div>
+                                              )}
+                                              {headerComponent.format === "VIDEO" && (
+                                                <div className="relative w-full bg-gray-200 aspect-video flex items-center justify-center max-h-[200px]">
+                                                  <Video className="w-12 h-12 text-gray-400" />
+                                                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                    <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                                                      <svg className="w-5 h-5 text-gray-700 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M8 5v14l11-7z" />
+                                                      </svg>
+                                                    </div>
                                                   </div>
                                                 </div>
-                                              </div>
-                                            )}
-                                            {headerComponent.format === "DOCUMENT" && (
-                                              <div className="w-full bg-gray-100 p-4 flex items-center gap-3 border border-gray-200">
-                                                <File className="w-8 h-8 text-gray-500 flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                  <p className="text-sm font-medium text-gray-900 truncate">Document.pdf</p>
-                                                  <p className="text-xs text-gray-500">Document attachment</p>
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
-                                        )
-                                      })()}
-
-                                      {/* WhatsApp message bubble with tail */}
-                                      {formData.type === "Whatsapp" ? (
-                                        <>
-                                          <div className={`bg-[#dcf8c6] rounded-lg px-3 py-2 shadow-sm ${selectedTemplate?.components.find(c => c.type === "HEADER" && c.format) ? 'rounded-t-none' : ''}`}>
-                                            <p className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">
-                                              {previewMessage || "Your message will appear here..."}
-                                            </p>
-                                          </div>
-                                          {/* Tail */}
-                                          <svg 
-                                            className="flex-shrink-0 -ml-1 mb-0.5" 
-                                            width="8" 
-                                            height="12" 
-                                            viewBox="0 0 8 13"
-                                          >
-                                            <path 
-                                              d="M5.188 1H0v11.193l6.467-11.188C5.243.874 5.163.965 5.188 1z" 
-                                              fill="#dcf8c6"
-                                            />
-                                          </svg>
-                                        </>
-                                      ) : (
-                                        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm">
-                                          <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100 leading-relaxed">
-                                            {previewMessage || "Your message will appear here..."}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Template Buttons */}
-                                  {formData.type === "Whatsapp" && selectedTemplate && (() => {
-                                    const buttonsComponent = selectedTemplate.components.find(c => c.type === "BUTTONS")
-                                    if (!buttonsComponent || !buttonsComponent.buttons || buttonsComponent.buttons.length === 0) return null
-                                    
-                                    return (
-                                      <div className="flex justify-end">
-                                        <div className="flex flex-col gap-1 max-w-[85%] w-full">
-                                          {buttonsComponent.buttons.map((button, index) => (
-                                            <div key={index} className="w-full">
-                                              {button.type === "QUICK_REPLY" && (
-                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
-                                                  <p className="text-sm font-medium text-gray-900 text-center">{button.text}</p>
-                                                </div>
                                               )}
-                                              {button.type === "URL" && (
-                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
-                                                  <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
-                                                </div>
-                                              )}
-                                              {button.type === "PHONE_NUMBER" && (
-                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
-                                                  <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
+                                              {headerComponent.format === "DOCUMENT" && (
+                                                <div className="w-full bg-gray-100 p-4 flex items-center gap-3 border border-gray-200">
+                                                  <File className="w-8 h-8 text-gray-500 flex-shrink-0" />
+                                                  <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">Document.pdf</p>
+                                                    <p className="text-xs text-gray-500">Document attachment</p>
+                                                  </div>
                                                 </div>
                                               )}
                                             </div>
-                                          ))}
-                                        </div>
+                                          )
+                                        })()}
+
+                                        {/* WhatsApp message bubble with tail */}
+                                        {formData.type === "Whatsapp" ? (
+                                          <>
+                                            <div className={`bg-[#dcf8c6] rounded-lg px-3 py-2 shadow-sm ${selectedTemplate?.components.find(c => c.type === "HEADER" && c.format) ? 'rounded-t-none' : ''}`}>
+                                              <p className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">
+                                                {previewMessage || "Your message will appear here..."}
+                                              </p>
+                                            </div>
+                                            {/* Tail */}
+                                            <svg
+                                              className="flex-shrink-0 -ml-1 mb-0.5"
+                                              width="8"
+                                              height="12"
+                                              viewBox="0 0 8 13"
+                                            >
+                                              <path
+                                                d="M5.188 1H0v11.193l6.467-11.188C5.243.874 5.163.965 5.188 1z"
+                                                fill="#dcf8c6"
+                                              />
+                                            </svg>
+                                          </>
+                                        ) : (
+                                          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm">
+                                            <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100 leading-relaxed">
+                                              {previewMessage || "Your message will appear here..."}
+                                            </p>
+                                          </div>
+                                        )}
                                       </div>
-                                    )
-                                  })()}
-                                  
-                                  {formData.type === "Whatsapp" && (
-                                    <div className="flex items-center justify-end gap-1 mt-0.5 pr-1">
-                                      <span className="text-[10px] text-gray-600">9:41</span>
-                                      <svg className="w-3.5 h-3.5 text-gray-600" viewBox="0 0 16 15" fill="none">
-                                        <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.063-.51zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z" fill="currentColor"/>
-                                      </svg>
                                     </div>
-                                  )}
+
+                                    {/* Template Buttons */}
+                                    {formData.type === "Whatsapp" && selectedTemplate && (() => {
+                                      const buttonsComponent = selectedTemplate.components.find(c => c.type === "BUTTONS")
+                                      if (!buttonsComponent || !buttonsComponent.buttons || buttonsComponent.buttons.length === 0) return null
+
+                                      return (
+                                        <div className="flex justify-end">
+                                          <div className="flex flex-col gap-1 max-w-[85%] w-full">
+                                            {buttonsComponent.buttons.map((button, index) => (
+                                              <div key={index} className="w-full">
+                                                {button.type === "QUICK_REPLY" && (
+                                                  <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                    <p className="text-sm font-medium text-gray-900 text-center">{button.text}</p>
+                                                  </div>
+                                                )}
+                                                {button.type === "URL" && (
+                                                  <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                    <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
+                                                  </div>
+                                                )}
+                                                {button.type === "PHONE_NUMBER" && (
+                                                  <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                    <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )
+                                    })()}
+
+                                    {formData.type === "Whatsapp" && (
+                                      <div className="flex items-center justify-end gap-1 mt-0.5 pr-1">
+                                        <span className="text-[10px] text-gray-600">9:41</span>
+                                        <svg className="w-3.5 h-3.5 text-gray-600" viewBox="0 0 16 15" fill="none">
+                                          <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.063-.51zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z" fill="currentColor" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
                             </IPhoneMockup>
                           </div>
                         </div>

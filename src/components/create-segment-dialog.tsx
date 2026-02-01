@@ -118,7 +118,7 @@ const getAllConversationStatuses = (): string[] => {
 // Helper to flatten filter structure to SegmentFilter[] for saving
 const flattenFilters = (structure: FilterStructure[]): SegmentFilter[] => {
   const result: SegmentFilter[] = []
-  
+
   const processItem = (item: FilterStructure) => {
     if ('filter' in item) {
       // It's a FilterItemWithOperator
@@ -128,7 +128,7 @@ const flattenFilters = (structure: FilterStructure[]): SegmentFilter[] => {
       item.items.forEach(processItem)
     }
   }
-  
+
   structure.forEach(processItem)
   return result
 }
@@ -225,7 +225,7 @@ export function CreateSegmentDialog({
       // Directly select the field (there's only one field for 2-level categories)
       // We'll handle this in handleFieldSelected, so just set up the field selection
       const field = category.fields[0].value
-      
+
       // Find the field definition to get default operator
       let defaultOperator: SegmentFilter["operator"] = "equals"
       const fieldDef = category.fields.find(f => f.value === field)
@@ -238,14 +238,14 @@ export function CreateSegmentDialog({
         operator: defaultOperator,
         value: [],
       }
-      
+
       const newItem: FilterItemWithOperator = {
         id: generateId(),
         filter: filterToAdd,
         operator: filterStructure.length > 0 ? 'and' : undefined,
         groupId,
       }
-      
+
       if (groupId) {
         // Add to existing group
         setFilterStructure(prev => prev.map(item => {
@@ -262,7 +262,7 @@ export function CreateSegmentDialog({
         // Add as new filter
         setFilterStructure(prev => [...prev, newItem])
       }
-      
+
       setSelectedFieldForValueSelection(field)
       setSelectedCategory(null)
       setIsAddingFilter(false)
@@ -289,14 +289,14 @@ export function CreateSegmentDialog({
       operator: defaultOperator,
       value: [],
     }
-    
+
     const newItem: FilterItemWithOperator = {
       id: generateId(),
       filter: filterToAdd,
       operator: filterStructure.length > 0 ? 'and' : undefined,
       groupId,
     }
-    
+
     if (groupId) {
       // Add to existing group
       setFilterStructure(prev => prev.map(item => {
@@ -313,7 +313,7 @@ export function CreateSegmentDialog({
       // Add as new filter
       setFilterStructure(prev => [...prev, newItem])
     }
-    
+
     setSelectedFieldForValueSelection(field)
     setSelectedCategory(null)
     setIsAddingFilter(false)
@@ -355,16 +355,16 @@ export function CreateSegmentDialog({
       } else if ('groupOperator' in item) {
         return {
           ...item,
-          items: item.items.map(filterItem => 
+          items: item.items.map(filterItem =>
             filterItem.id === filterId
               ? {
-                  ...filterItem,
-                  filter: {
-                    field,
-                    operator: defaultOperator,
-                    value: [],
-                  },
-                }
+                ...filterItem,
+                filter: {
+                  field,
+                  operator: defaultOperator,
+                  value: [],
+                },
+              }
               : filterItem
           ),
         }
@@ -454,15 +454,15 @@ export function CreateSegmentDialog({
         // It's a group, update filter inside
         return {
           ...item,
-          items: item.items.map(filterItem => 
+          items: item.items.map(filterItem =>
             filterItem.id === filterId
               ? {
-                  ...filterItem,
-                  filter: {
-                    ...filterItem.filter,
-                    value: newValues,
-                  },
-                }
+                ...filterItem,
+                filter: {
+                  ...filterItem.filter,
+                  value: newValues,
+                },
+              }
               : filterItem
           ),
         }
@@ -491,7 +491,7 @@ export function CreateSegmentDialog({
           }
         })
         .filter((item): item is FilterStructure => item !== null)
-      
+
       // Update operators for remaining items
       return newStructure.map((item, index) => ({
         ...item,
@@ -638,7 +638,7 @@ export function CreateSegmentDialog({
       if (operator === 'isGreaterThanTime' || operator === 'isLessThanTime') {
         const currentValue = typeof filter.value === 'number' ? filter.value : 0
         const currentTimeUnit = timeUnits[filterId] || 'seconds'
-        
+
         return (
           <div className="p-3 space-y-2">
             <div>
@@ -684,13 +684,13 @@ export function CreateSegmentDialog({
           </div>
         )
       }
-      
+
       if (operator === 'isBetweenTime') {
-        const values = Array.isArray(filter.value) && filter.value.length === 2 
+        const values = Array.isArray(filter.value) && filter.value.length === 2
           ? filter.value.filter((v): v is number => typeof v === 'number')
           : [0, 0]
         const currentTimeUnit = timeUnits[filterId] || 'seconds'
-        
+
         return (
           <div className="p-3 space-y-2">
             <div>
@@ -744,7 +744,7 @@ export function CreateSegmentDialog({
           </div>
         )
       }
-      
+
       // Timestamp operators (isTimestampAfter, isTimestampBefore, isTimestampBetween) use calendar picker
       const getDateRange = (): DateRange | undefined => {
         if (typeof filter.value === 'object' && filter.value && 'from' in filter.value) {
@@ -818,9 +818,9 @@ export function CreateSegmentDialog({
     // Number fields - use number input
     if (fieldDef.valueType === 'number') {
       const currentValue = typeof filter.value === 'number' ? filter.value : (Array.isArray(filter.value) && typeof filter.value[0] === 'number' ? filter.value[0] : '')
-      
+
       if (operator === 'between') {
-        const values = Array.isArray(filter.value) && filter.value.length === 2 
+        const values = Array.isArray(filter.value) && filter.value.length === 2
           ? filter.value.filter((v): v is number => typeof v === 'number')
           : [0, 0]
         return (
@@ -854,7 +854,7 @@ export function CreateSegmentDialog({
           </div>
         )
       }
-      
+
       return (
         <div className="p-3">
           <Input
@@ -882,17 +882,17 @@ export function CreateSegmentDialog({
       if (!options || options.length === 0) {
         return <div className="px-2 py-2 text-sm text-muted-foreground text-center">No options available</div>
       }
-      
-      const displayValues: string[] = Array.isArray(filter.value) 
+
+      const displayValues: string[] = Array.isArray(filter.value)
         ? filter.value.filter((v): v is string => typeof v === 'string')
         : typeof filter.value === 'string' ? [filter.value] : []
-      
+
       const filteredOptions = valueSearchQuery
-        ? options.filter(option => 
-            option.label.toLowerCase().includes(valueSearchQuery.toLowerCase())
-          )
+        ? options.filter(option =>
+          option.label.toLowerCase().includes(valueSearchQuery.toLowerCase())
+        )
         : options
-      
+
       return (
         <div className="flex flex-col h-full" style={{ height: '400px', maxHeight: '400px' }}>
           <div className="flex-shrink-0 p-2 border-b">
@@ -903,14 +903,14 @@ export function CreateSegmentDialog({
               autoFocus={false}
             />
           </div>
-          
+
           {filteredOptions.length > 0 ? (
             <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
               {filteredOptions.map((option) => {
                 const isSelected = displayValues.includes(option.value)
                 return (
-                  <div 
-                    key={option.value} 
+                  <div
+                    key={option.value}
                     className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
                     onClick={() => {
                       const newValues = isSelected
@@ -1050,10 +1050,10 @@ export function CreateSegmentDialog({
         const fieldLabel = getFieldDisplayLabel(item.filter)
         const operatorLabel = OPERATOR_LABELS[item.filter.operator] || item.filter.operator
         const needsValue = !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(item.filter.operator)
-        
+
         let valueLabels = ""
         let valueItems: Array<{ value: string; label: string }> = []
-        
+
         if (needsValue) {
           if (fieldInfo?.field.valueType === 'date') {
             // Handle time-based operators (show number + time unit)
@@ -1068,7 +1068,7 @@ export function CreateSegmentDialog({
                 }]
               }
             } else if (item.filter.operator === 'isBetweenTime') {
-              const values = Array.isArray(item.filter.value) && item.filter.value.length === 2 
+              const values = Array.isArray(item.filter.value) && item.filter.value.length === 2
                 ? item.filter.value.filter((v): v is number => typeof v === 'number')
                 : [0, 0]
               const timeUnit = timeUnits[item.id] || 'seconds'
@@ -1122,7 +1122,7 @@ export function CreateSegmentDialog({
             }
           } else {
             // Handle array values (channels, tags, etc.)
-            const values = Array.isArray(item.filter.value) 
+            const values = Array.isArray(item.filter.value)
               ? item.filter.value.filter((v): v is string => typeof v === 'string')
               : typeof item.filter.value === 'string' ? [item.filter.value] : []
             const options = getFilterValueOptions(item.filter.field)
@@ -1133,7 +1133,7 @@ export function CreateSegmentDialog({
             }))
           }
         }
-        
+
         result.push({
           id: item.id,
           filter: item.filter,
@@ -1152,10 +1152,10 @@ export function CreateSegmentDialog({
           const fieldLabel = getFieldDisplayLabel(fi.filter)
           const operatorLabel = OPERATOR_LABELS[fi.filter.operator] || fi.filter.operator
           const needsValueItem = !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(fi.filter.operator)
-          
+
           let valueLabelsItem = ""
           let valueItemsItem: Array<{ value: string; label: string }> = []
-          
+
           if (needsValueItem) {
             if (fieldInfoItem?.field.valueType === 'date') {
               // Handle time-based operators
@@ -1167,7 +1167,7 @@ export function CreateSegmentDialog({
                   valueItemsItem = [{ value: String(numValue), label: valueLabelsItem }]
                 }
               } else if (fi.filter.operator === 'isBetweenTime') {
-                const values = Array.isArray(fi.filter.value) && fi.filter.value.length === 2 
+                const values = Array.isArray(fi.filter.value) && fi.filter.value.length === 2
                   ? fi.filter.value.filter((v): v is number => typeof v === 'number')
                   : [0, 0]
                 const timeUnit = timeUnits[fi.id] || 'seconds'
@@ -1200,7 +1200,7 @@ export function CreateSegmentDialog({
                 valueItemsItem = [{ value: String(numValue), label: valueLabelsItem }]
               }
             } else {
-              const values = Array.isArray(fi.filter.value) 
+              const values = Array.isArray(fi.filter.value)
                 ? fi.filter.value.filter((v): v is string => typeof v === 'string')
                 : typeof fi.filter.value === 'string' ? [fi.filter.value] : []
               const options = getFilterValueOptions(fi.filter.field)
@@ -1221,7 +1221,7 @@ export function CreateSegmentDialog({
             valueItems: valueItemsItem,
           }
         })
-        
+
         result.push({
           id: item.id,
           filter: item.items[0]?.filter || { field: 'countryISO', operator: 'in', value: [] },
@@ -1245,14 +1245,14 @@ export function CreateSegmentDialog({
     <>
       {/* Name Dialog - First Step */}
       <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
-        <DialogContent className="sm:max-w-md p-6">
+        <DialogContent className="sm:max-w-md gap-0">
           <DialogHeader>
             <DialogTitle>Create Segment</DialogTitle>
             <DialogDescription>
               Enter a name for your segment to get started.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="p-4">
             <Field>
               <FieldLabel>
                 Segment Name <span className="text-destructive">*</span>
@@ -1343,7 +1343,7 @@ export function CreateSegmentDialog({
                           </ToggleGroup>
                         </div>
                       )}
-                      
+
                       {badge.isGroup ? (
                         // Render group
                         <div className="border border-border rounded-lg p-3 space-y-2 bg-card/50">
@@ -1386,8 +1386,8 @@ export function CreateSegmentDialog({
                                 <div key={groupItem.id} className="space-y-2">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {/* Category/Field Selector */}
-                                    <Popover 
-                                      open={editingFilterId === groupItem.id && editingFilterPart === 'field'} 
+                                    <Popover
+                                      open={editingFilterId === groupItem.id && editingFilterPart === 'field'}
                                       onOpenChange={(open) => {
                                         if (open) {
                                           setEditingFilterId(groupItem.id)
@@ -1461,7 +1461,7 @@ export function CreateSegmentDialog({
                                               />
                                             </div>
                                             <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                              {FILTER_CATEGORIES.filter(category => 
+                                              {FILTER_CATEGORIES.filter(category =>
                                                 category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                               ).map((category) => (
                                                 <div
@@ -1493,8 +1493,8 @@ export function CreateSegmentDialog({
                                     </Popover>
 
                                     {/* Operator Selector */}
-                                    <Popover 
-                                      open={editingFilterId === groupItem.id && editingFilterPart === 'operator'} 
+                                    <Popover
+                                      open={editingFilterId === groupItem.id && editingFilterPart === 'operator'}
                                       onOpenChange={(open) => {
                                         if (open) {
                                           setEditingFilterId(groupItem.id)
@@ -1541,9 +1541,9 @@ export function CreateSegmentDialog({
                                     {(() => {
                                       const fieldInfo = getFieldInfo(filterItem.filter.field)
                                       const needsValue = fieldInfo && !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(filterItem.filter.operator)
-                                      
+
                                       if (!needsValue) return null
-                                      
+
                                       // For date/time fields, show clickable input field
                                       if (fieldInfo?.field.valueType === 'date') {
                                         const getDateDisplayValue = () => {
@@ -1554,16 +1554,16 @@ export function CreateSegmentDialog({
                                             if (numValue === 0) return "Enter value"
                                             return `${numValue} ${timeUnit} ago`
                                           }
-                                          
+
                                           if (filterItem.filter.operator === 'isBetweenTime') {
-                                            const values = Array.isArray(filterItem.filter.value) && filterItem.filter.value.length === 2 
+                                            const values = Array.isArray(filterItem.filter.value) && filterItem.filter.value.length === 2
                                               ? filterItem.filter.value.filter((v): v is number => typeof v === 'number')
                                               : [0, 0]
                                             const timeUnit = timeUnits[groupItem.id] || 'seconds'
                                             if (values[0] === 0 && values[1] === 0) return "Enter values"
                                             return `${values[0]} - ${values[1]} ${timeUnit} ago`
                                           }
-                                          
+
                                           // Timestamp operators show date
                                           if (typeof filterItem.filter.value === 'object' && filterItem.filter.value && 'from' in filterItem.filter.value) {
                                             const dateValue = filterItem.filter.value as { from: Date; to: Date }
@@ -1575,10 +1575,10 @@ export function CreateSegmentDialog({
                                           }
                                           return "Select date"
                                         }
-                                        
+
                                         return (
-                                          <Popover 
-                                            open={editingFilterId === groupItem.id && editingFilterPart === 'value'} 
+                                          <Popover
+                                            open={editingFilterId === groupItem.id && editingFilterPart === 'value'}
                                             onOpenChange={(open) => {
                                               if (open) {
                                                 setEditingFilterId(groupItem.id)
@@ -1602,7 +1602,7 @@ export function CreateSegmentDialog({
                                                 }}
                                               />
                                             </PopoverTrigger>
-                                            <PopoverContent 
+                                            <PopoverContent
                                               className="w-auto p-0 bg-card border border-border shadow-lg"
                                               align="start"
                                               onOpenAutoFocus={(e) => e.preventDefault()}
@@ -1614,11 +1614,11 @@ export function CreateSegmentDialog({
                                           </Popover>
                                         )
                                       }
-                                      
+
                                       // For other field types, show the (+) button
                                       return (
-                                        <Popover 
-                                          open={editingFilterId === groupItem.id && editingFilterPart === 'value'} 
+                                        <Popover
+                                          open={editingFilterId === groupItem.id && editingFilterPart === 'value'}
                                           onOpenChange={(open) => {
                                             if (open) {
                                               setEditingFilterId(groupItem.id)
@@ -1638,7 +1638,7 @@ export function CreateSegmentDialog({
                                               <Plus className="h-4 w-4" />
                                             </Button>
                                           </PopoverTrigger>
-                                          <PopoverContent 
+                                          <PopoverContent
                                             className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col"
                                             style={{ maxHeight: '400px' }}
                                             align="start"
@@ -1673,7 +1673,7 @@ export function CreateSegmentDialog({
                                     if (fieldInfo?.field.valueType === 'date') {
                                       return null
                                     }
-                                    
+
                                     return groupItem.valueItems && groupItem.valueItems.length > 0 ? (
                                       <div className="flex flex-wrap gap-2 mt-2">
                                         {groupItem.valueItems.map((valueItem) => (
@@ -1690,7 +1690,7 @@ export function CreateSegmentDialog({
                                               onClick={(e) => {
                                                 e.stopPropagation()
                                                 const fieldInfo = getFieldInfo(filterItem.filter.field)
-                                                
+
                                                 if (fieldInfo?.field.valueType === 'string') {
                                                   // For strings, clear the value
                                                   handleFilterValueChange(groupItem.id, '')
@@ -1699,7 +1699,7 @@ export function CreateSegmentDialog({
                                                   handleFilterValueChange(groupItem.id, 0)
                                                 } else {
                                                   // For arrays (channels, tags, etc.)
-                                                  const currentValues = Array.isArray(filterItem.filter.value) 
+                                                  const currentValues = Array.isArray(filterItem.filter.value)
                                                     ? filterItem.filter.value.filter((v): v is string => typeof v === 'string')
                                                     : typeof filterItem.filter.value === 'string' ? [filterItem.filter.value] : []
                                                   const newValues = currentValues.filter(v => v !== valueItem.value)
@@ -1717,8 +1717,8 @@ export function CreateSegmentDialog({
                                 </div>
                               )
                             })}
-                            <Popover 
-                              open={isAddingFilter && isAddingToGroup === badge.id} 
+                            <Popover
+                              open={isAddingFilter && isAddingToGroup === badge.id}
                               onOpenChange={(open) => {
                                 setIsAddingFilter(open)
                                 if (!open) {
@@ -1743,8 +1743,8 @@ export function CreateSegmentDialog({
                                   Add to group
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent 
-                                className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" 
+                              <PopoverContent
+                                className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col"
                                 style={{ maxHeight: '400px' }}
                                 align="start"
                               >
@@ -1789,7 +1789,7 @@ export function CreateSegmentDialog({
                                             </div>
                                           ))
                                       ) : (
-                                        FILTER_CATEGORIES.filter(category => 
+                                        FILTER_CATEGORIES.filter(category =>
                                           category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                         ).map((category) => (
                                           <div
@@ -1818,8 +1818,8 @@ export function CreateSegmentDialog({
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 flex-wrap">
                             {/* Category/Field Selector */}
-                            <Popover 
-                              open={editingFilterId === badge.id && editingFilterPart === 'field'} 
+                            <Popover
+                              open={editingFilterId === badge.id && editingFilterPart === 'field'}
                               onOpenChange={(open) => {
                                 if (open) {
                                   setEditingFilterId(badge.id)
@@ -1838,179 +1838,219 @@ export function CreateSegmentDialog({
                                   <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                                 </Button>
                               </PopoverTrigger>
-                            <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                              {selectedCategory ? (
-                                <div className="flex flex-col" style={{ maxHeight: '400px' }}>
-                                  <div className="p-2 border-b border-border flex-shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-full justify-start"
-                                      onClick={() => setSelectedCategory(null)}
-                                    >
-                                      ← Back
-                                    </Button>
+                              <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
+                                {selectedCategory ? (
+                                  <div className="flex flex-col" style={{ maxHeight: '400px' }}>
+                                    <div className="p-2 border-b border-border flex-shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-full justify-start"
+                                        onClick={() => setSelectedCategory(null)}
+                                      >
+                                        ← Back
+                                      </Button>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <FilterSearchInput
+                                        placeholder="Search fields..."
+                                        value={fieldSearchQuery}
+                                        onChange={setFieldSearchQuery}
+                                        autoFocus={false}
+                                      />
+                                    </div>
+                                    <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
+                                      {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                                        .filter(field => {
+                                          const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
+                                          return matchesSearch
+                                        })
+                                        .map((field) => (
+                                          <div
+                                            key={field.value}
+                                            className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
+                                            onClick={() => {
+                                              handleFilterFieldChange(badge.id, field.value)
+                                              setSelectedCategory(null)
+                                              setEditingFilterPart(null)
+                                            }}
+                                          >
+                                            <span className="text-sm leading-none cursor-pointer flex-1">
+                                              {field.label}
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
                                   </div>
-                                  <div className="flex-shrink-0">
-                                    <FilterSearchInput
-                                      placeholder="Search fields..."
-                                      value={fieldSearchQuery}
-                                      onChange={setFieldSearchQuery}
-                                      autoFocus={false}
-                                    />
-                                  </div>
-                                  <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                    {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
-                                      .filter(field => {
-                                        const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
-                                        return matchesSearch
-                                      })
-                                      .map((field) => (
+                                ) : (
+                                  <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                                    <div className="flex-shrink-0">
+                                      <FilterSearchInput
+                                        placeholder="Search categories..."
+                                        value={fieldSearchQuery}
+                                        onChange={setFieldSearchQuery}
+                                        autoFocus={false}
+                                      />
+                                    </div>
+                                    <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
+                                      {FILTER_CATEGORIES.filter(category =>
+                                        category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
+                                      ).map((category) => (
                                         <div
-                                          key={field.value}
+                                          key={category.id}
                                           className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
                                           onClick={() => {
-                                            handleFilterFieldChange(badge.id, field.value)
-                                            setSelectedCategory(null)
-                                            setEditingFilterPart(null)
+                                            // For 2-level categories, directly update filter; for 3-level, show fields
+                                            if (!category.hasThreeLevels && category.fields.length > 0) {
+                                              // Update existing filter with new field
+                                              const field = category.fields[0].value
+                                              handleFilterFieldChange(badge.id, field)
+                                              setEditingFilterPart(null)
+                                              setSelectedCategory(null)
+                                            } else {
+                                              setSelectedCategory(category.id)
+                                              setFieldSearchQuery("")
+                                            }
                                           }}
                                         >
                                           <span className="text-sm leading-none cursor-pointer flex-1">
-                                            {field.label}
+                                            {category.label}
                                           </span>
                                         </div>
                                       ))}
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
-                                  <div className="flex-shrink-0">
-                                    <FilterSearchInput
-                                      placeholder="Search categories..."
-                                      value={fieldSearchQuery}
-                                      onChange={setFieldSearchQuery}
-                                      autoFocus={false}
-                                    />
-                                  </div>
-                                  <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                    {FILTER_CATEGORIES.filter(category => 
-                                      category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
-                                    ).map((category) => (
+                                )}
+                              </PopoverContent>
+                            </Popover>
+
+                            {/* Operator Selector */}
+                            <Popover
+                              open={editingFilterId === badge.id && editingFilterPart === 'operator'}
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  setEditingFilterId(badge.id)
+                                  setEditingFilterPart('operator')
+                                } else {
+                                  setEditingFilterPart(null)
+                                }
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="h-8 px-3 text-sm font-normal border border-border bg-background hover:bg-accent"
+                                >
+                                  {badge.operatorLabel || "Select operator"}
+                                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
+                                <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
+                                  {(() => {
+                                    const fieldInfo = getFieldInfo(badge.filter.field)
+                                    const availableOperators = fieldInfo?.field.operators || []
+                                    return availableOperators.map((op) => (
                                       <div
-                                        key={category.id}
+                                        key={op}
                                         className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
                                         onClick={() => {
-                                          // For 2-level categories, directly update filter; for 3-level, show fields
-                                          if (!category.hasThreeLevels && category.fields.length > 0) {
-                                            // Update existing filter with new field
-                                            const field = category.fields[0].value
-                                            handleFilterFieldChange(badge.id, field)
-                                            setEditingFilterPart(null)
-                                            setSelectedCategory(null)
-                                          } else {
-                                            setSelectedCategory(category.id)
-                                            setFieldSearchQuery("")
-                                          }
+                                          handleFilterOperatorChange(badge.id, op)
+                                          setEditingFilterPart(null)
                                         }}
                                       >
                                         <span className="text-sm leading-none cursor-pointer flex-1">
-                                          {category.label}
+                                          {OPERATOR_LABELS[op]}
                                         </span>
                                       </div>
-                                    ))}
-                                  </div>
+                                    ))
+                                  })()}
                                 </div>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                              </PopoverContent>
+                            </Popover>
 
-                          {/* Operator Selector */}
-                          <Popover 
-                            open={editingFilterId === badge.id && editingFilterPart === 'operator'} 
-                            onOpenChange={(open) => {
-                              if (open) {
-                                setEditingFilterId(badge.id)
-                                setEditingFilterPart('operator')
-                              } else {
-                                setEditingFilterPart(null)
-                              }
-                            }}
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="h-8 px-3 text-sm font-normal border border-border bg-background hover:bg-accent"
-                              >
-                                {badge.operatorLabel || "Select operator"}
-                                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                              <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
-                                {(() => {
-                                  const fieldInfo = getFieldInfo(badge.filter.field)
-                                  const availableOperators = fieldInfo?.field.operators || []
-                                  return availableOperators.map((op) => (
-                                    <div
-                                      key={op}
-                                      className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
-                                      onClick={() => {
-                                        handleFilterOperatorChange(badge.id, op)
-                                        setEditingFilterPart(null)
-                                      }}
-                                    >
-                                      <span className="text-sm leading-none cursor-pointer flex-1">
-                                        {OPERATOR_LABELS[op]}
-                                      </span>
-                                    </div>
-                                  ))
-                                })()}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                            {/* Value Input - Show input field for date/time, button for others */}
+                            {(() => {
+                              const fieldInfo = getFieldInfo(badge.filter.field)
+                              const needsValue = fieldInfo && !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(badge.filter.operator)
 
-                          {/* Value Input - Show input field for date/time, button for others */}
-                          {(() => {
-                            const fieldInfo = getFieldInfo(badge.filter.field)
-                            const needsValue = fieldInfo && !['exists', 'doesNotExist', 'isEmpty', 'isNotEmpty'].includes(badge.filter.operator)
-                            
-                            if (!needsValue) return null
-                            
-                            // For date/time fields, show clickable input field
-                            if (fieldInfo?.field.valueType === 'date') {
-                              const getDateDisplayValue = () => {
-                                // Time-based operators show number + time unit
-                                if (badge.filter.operator === 'isGreaterThanTime' || badge.filter.operator === 'isLessThanTime') {
-                                  const numValue = typeof badge.filter.value === 'number' ? badge.filter.value : 0
-                                  const timeUnit = timeUnits[badge.id] || 'seconds'
-                                  if (numValue === 0) return "Enter value"
-                                  return `${numValue} ${timeUnit} ago`
-                                }
-                                
-                                if (badge.filter.operator === 'isBetweenTime') {
-                                  const values = Array.isArray(badge.filter.value) && badge.filter.value.length === 2 
-                                    ? badge.filter.value.filter((v): v is number => typeof v === 'number')
-                                    : [0, 0]
-                                  const timeUnit = timeUnits[badge.id] || 'seconds'
-                                  if (values[0] === 0 && values[1] === 0) return "Enter values"
-                                  return `${values[0]} - ${values[1]} ${timeUnit} ago`
-                                }
-                                
-                                // Timestamp operators show date
-                                if (typeof badge.filter.value === 'object' && badge.filter.value && 'from' in badge.filter.value) {
-                                  const dateValue = badge.filter.value as { from: Date; to: Date }
-                                  if (badge.filter.operator === 'isTimestampBetween') {
-                                    return `${format(dateValue.from, 'MMM dd, yyyy')} - ${format(dateValue.to, 'MMM dd, yyyy')}`
-                                  } else {
-                                    return format(dateValue.from, 'MMM dd, yyyy')
+                              if (!needsValue) return null
+
+                              // For date/time fields, show clickable input field
+                              if (fieldInfo?.field.valueType === 'date') {
+                                const getDateDisplayValue = () => {
+                                  // Time-based operators show number + time unit
+                                  if (badge.filter.operator === 'isGreaterThanTime' || badge.filter.operator === 'isLessThanTime') {
+                                    const numValue = typeof badge.filter.value === 'number' ? badge.filter.value : 0
+                                    const timeUnit = timeUnits[badge.id] || 'seconds'
+                                    if (numValue === 0) return "Enter value"
+                                    return `${numValue} ${timeUnit} ago`
                                   }
+
+                                  if (badge.filter.operator === 'isBetweenTime') {
+                                    const values = Array.isArray(badge.filter.value) && badge.filter.value.length === 2
+                                      ? badge.filter.value.filter((v): v is number => typeof v === 'number')
+                                      : [0, 0]
+                                    const timeUnit = timeUnits[badge.id] || 'seconds'
+                                    if (values[0] === 0 && values[1] === 0) return "Enter values"
+                                    return `${values[0]} - ${values[1]} ${timeUnit} ago`
+                                  }
+
+                                  // Timestamp operators show date
+                                  if (typeof badge.filter.value === 'object' && badge.filter.value && 'from' in badge.filter.value) {
+                                    const dateValue = badge.filter.value as { from: Date; to: Date }
+                                    if (badge.filter.operator === 'isTimestampBetween') {
+                                      return `${format(dateValue.from, 'MMM dd, yyyy')} - ${format(dateValue.to, 'MMM dd, yyyy')}`
+                                    } else {
+                                      return format(dateValue.from, 'MMM dd, yyyy')
+                                    }
+                                  }
+                                  return "Select date"
                                 }
-                                return "Select date"
+
+                                return (
+                                  <Popover
+                                    open={editingFilterId === badge.id && editingFilterPart === 'value'}
+                                    onOpenChange={(open) => {
+                                      if (open) {
+                                        setEditingFilterId(badge.id)
+                                        setEditingFilterPart('value')
+                                      } else {
+                                        setEditingFilterPart(null)
+                                        setValueSearchQuery("")
+                                      }
+                                    }}
+                                  >
+                                    <PopoverTrigger asChild>
+                                      <Input
+                                        type="text"
+                                        readOnly
+                                        placeholder="Select date"
+                                        value={getDateDisplayValue()}
+                                        className="h-8 w-auto min-w-[180px] cursor-pointer"
+                                        onClick={() => {
+                                          setEditingFilterId(badge.id)
+                                          setEditingFilterPart('value')
+                                        }}
+                                      />
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-auto p-0 bg-card border border-border shadow-lg"
+                                      align="start"
+                                      onOpenAutoFocus={(e) => e.preventDefault()}
+                                    >
+                                      <div className="flex flex-col flex-1 min-h-0">
+                                        {editingFilterId === badge.id && renderValueInput(badge.filter, badge.id)}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                )
                               }
-                              
+
+                              // For other field types, show the (+) button
                               return (
-                                <Popover 
-                                  open={editingFilterId === badge.id && editingFilterPart === 'value'} 
+                                <Popover
+                                  open={editingFilterId === badge.id && editingFilterPart === 'value'}
                                   onOpenChange={(open) => {
                                     if (open) {
                                       setEditingFilterId(badge.id)
@@ -2022,20 +2062,16 @@ export function CreateSegmentDialog({
                                   }}
                                 >
                                   <PopoverTrigger asChild>
-                                    <Input
-                                      type="text"
-                                      readOnly
-                                      placeholder="Select date"
-                                      value={getDateDisplayValue()}
-                                      className="h-8 w-auto min-w-[180px] cursor-pointer"
-                                      onClick={() => {
-                                        setEditingFilterId(badge.id)
-                                        setEditingFilterPart('value')
-                                      }}
-                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 border border-border bg-background hover:bg-accent"
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent 
-                                    className="w-auto p-0 bg-card border border-border shadow-lg"
+                                  <PopoverContent
+                                    className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col"
                                     align="start"
                                     onOpenAutoFocus={(e) => e.preventDefault()}
                                   >
@@ -2045,53 +2081,17 @@ export function CreateSegmentDialog({
                                   </PopoverContent>
                                 </Popover>
                               )
-                            }
-                            
-                            // For other field types, show the (+) button
-                            return (
-                              <Popover 
-                                open={editingFilterId === badge.id && editingFilterPart === 'value'} 
-                                onOpenChange={(open) => {
-                                  if (open) {
-                                    setEditingFilterId(badge.id)
-                                    setEditingFilterPart('value')
-                                  } else {
-                                    setEditingFilterPart(null)
-                                    setValueSearchQuery("")
-                                  }
-                                }}
-                              >
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 border border-border bg-background hover:bg-accent"
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent 
-                                  className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col"
-                                  align="start"
-                                  onOpenAutoFocus={(e) => e.preventDefault()}
-                                >
-                                  <div className="flex flex-col flex-1 min-h-0">
-                                    {editingFilterId === badge.id && renderValueInput(badge.filter, badge.id)}
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            )
-                          })()}
+                            })()}
 
-                          {/* Delete Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:text-destructive"
-                            onClick={() => handleRemoveFilter(badge.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                            {/* Delete Button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:text-destructive"
+                              onClick={() => handleRemoveFilter(badge.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
 
                           {/* Selected Value Badges - Hide for date/time fields (they use input field instead) */}
@@ -2101,7 +2101,7 @@ export function CreateSegmentDialog({
                             if (fieldInfo?.field.valueType === 'date') {
                               return null
                             }
-                            
+
                             return badge.valueItems && badge.valueItems.length > 0 ? (
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {badge.valueItems.map((valueItem) => (
@@ -2118,7 +2118,7 @@ export function CreateSegmentDialog({
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         const fieldInfo = getFieldInfo(badge.filter.field)
-                                        
+
                                         if (fieldInfo?.field.valueType === 'string') {
                                           // For strings, clear the value
                                           handleFilterValueChange(badge.id, '')
@@ -2127,7 +2127,7 @@ export function CreateSegmentDialog({
                                           handleFilterValueChange(badge.id, 0)
                                         } else {
                                           // For arrays (channels, tags, etc.)
-                                          const currentValues = Array.isArray(badge.filter.value) 
+                                          const currentValues = Array.isArray(badge.filter.value)
                                             ? badge.filter.value.filter((v): v is string => typeof v === 'string')
                                             : typeof badge.filter.value === 'string' ? [badge.filter.value] : []
                                           const newValues = currentValues.filter(v => v !== valueItem.value)
@@ -2151,8 +2151,8 @@ export function CreateSegmentDialog({
 
               {/* Filter Action Buttons - Show below filters when filters exist */}
               <ButtonGroup className="w-full">
-                <Popover 
-                  open={isAddingFilter && !isAddingToGroup} 
+                <Popover
+                  open={isAddingFilter && !isAddingToGroup}
                   onOpenChange={(open) => {
                     setIsAddingFilter(open)
                     if (open) {
@@ -2181,8 +2181,8 @@ export function CreateSegmentDialog({
                       Add filter
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent 
-                    className={selectedFieldForValueSelection ? "w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" : "w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col"} 
+                  <PopoverContent
+                    className={selectedFieldForValueSelection ? "w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" : "w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col"}
                     align="start"
                   >
                     {selectedFieldForValueSelection ? (
@@ -2191,19 +2191,19 @@ export function CreateSegmentDialog({
                         if (!lastItem || !('filter' in lastItem)) return null
                         return renderValueInput(lastItem.filter, lastItem.id)
                       })()
-                                ) : (
-                                  <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
-                                    <div className="flex-shrink-0">
-                                      <FilterSearchInput
-                                        placeholder="Search..."
-                                        value={fieldSearchQuery}
-                                        onChange={setFieldSearchQuery}
-                                        autoFocus={false}
-                                      />
-                                    </div>
-                                    <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                      {selectedCategory ? (
-                                        FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                    ) : (
+                      <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                        <div className="flex-shrink-0">
+                          <FilterSearchInput
+                            placeholder="Search..."
+                            value={fieldSearchQuery}
+                            onChange={setFieldSearchQuery}
+                            autoFocus={false}
+                          />
+                        </div>
+                        <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
+                          {selectedCategory ? (
+                            FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                               .filter(field => {
                                 const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                 const isAlreadyApplied = appliedFilterFields.has(field.value)
@@ -2224,7 +2224,7 @@ export function CreateSegmentDialog({
                                 </div>
                               ))
                           ) : (
-                            FILTER_CATEGORIES.filter(category => 
+                            FILTER_CATEGORIES.filter(category =>
                               category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                             ).map((category) => (
                               <div
@@ -2262,8 +2262,8 @@ export function CreateSegmentDialog({
           {/* Footer */}
           <SheetFooter className="sticky bottom-0 border-t bg-popover px-4 py-3 mt-auto z-10 shrink-0">
             <div className="flex gap-3 w-full justify-between">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleResetFilters}
                 disabled={filterStructure.length === 0}
               >
@@ -2271,13 +2271,13 @@ export function CreateSegmentDialog({
                 Reset Filter
               </Button>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handleDrawerClose(false)}
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSave}
                   disabled={filterStructure.length === 0}
                 >

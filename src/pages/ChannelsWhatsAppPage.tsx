@@ -18,15 +18,13 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   CheckCircle2,
   ExternalLink,
@@ -57,15 +55,15 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { CircleFlag } from "react-circle-flags"
-import { 
+import {
   addActiveChannel,
-  addActiveChannelWithSync, 
+  addActiveChannelWithSync,
   removeActiveChannel,
-  removeActiveChannelWithSync, 
-  saveWhatsAppConfig, 
-  loadWhatsAppConfig, 
+  removeActiveChannelWithSync,
+  saveWhatsAppConfig,
+  loadWhatsAppConfig,
   clearWhatsAppConfig,
-  type WhatsAppConfig 
+  type WhatsAppConfig
 } from "@/lib/channel-utils"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -105,10 +103,10 @@ export default function ChannelsWhatsAppPage() {
   const [showDisconnectDialog, setShowDisconnectDialog] = React.useState(false)
   const [disconnectConfirmation, setDisconnectConfirmation] = React.useState("")
   const [copiedButtonId, setCopiedButtonId] = React.useState<string | null>(null)
-  
+
   // Track if we're in initial load to prevent saving during restore
   const isInitialLoad = React.useRef(true)
-  
+
   // Form state
   const [formData, setFormData] = React.useState({
     businessAccountId: "",
@@ -208,7 +206,7 @@ export default function ChannelsWhatsAppPage() {
     if (isInitialLoad.current) {
       return
     }
-    
+
     // Only save if we have a businessAccountId (indicates successful integration)
     // This will persist the configuration for future sessions
     if (formData.businessAccountId) {
@@ -287,27 +285,27 @@ export default function ChannelsWhatsAppPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <svg 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 156 104" 
-                    fill="none" 
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 156 104"
+                    fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-5 h-5"
                   >
-                    <path d="M16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 C22.0084388,84.8742616 25.3353586,86.4027004 28.7270886,86.4027004 C33.1017722,86.4027004 37.1037975,85.3171308 44.8162025,74.6504641 C50.9947679,66.1009283 58.2751055,54.1002532 63.1736709,46.5768776 L71.4693671,33.8308861 C77.2320675,24.978903 83.9021097,15.1385654 91.5497046,8.46852321 C97.7930802,3.02447257 104.527932,0 111.305992,0 C122.68557,0 133.525063,6.59443038 141.820759,18.9623629 C150.899578,32.5076793 155.306667,49.5689451 155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 L128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 C140.508354,53.3711392 137.181435,37.535865 129.852489,26.221097 C124.651477,18.195443 117.911224,13.2914768 110.495865,13.2914768 C102.475612,13.2914768 96.0216034,19.3404219 88.76827,30.1259072 C84.9120675,35.8562025 80.9532489,42.8394937 76.5083544,50.7193249 L71.6151899,59.3876793 C61.785654,76.8162025 59.295865,80.7858228 54.381097,87.3370464 C45.7667511,98.8084388 38.4108017,103.156118 28.7270886,103.156118 C17.2394937,103.156118 9.97535865,98.1819409 5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 L16.7750211,68.0290295 Z" fill="#0081FB"/>
-                    <path d="M13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 C52.1181435,0 59.4470886,2.18194093 67.1000844,8.4307173 C75.4713924,15.2627848 84.3935865,26.5127426 95.5247257,45.0538397 L99.5159494,51.7076793 C109.151055,67.7589873 114.632911,76.0168776 117.841013,79.9108861 C121.967257,84.9120675 124.856709,86.4027004 128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 L155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 C121.697215,103.156118 115.572658,101.654684 108.8,95.2654852 C103.593586,90.361519 97.5068354,81.6499578 92.8243038,73.8187342 L78.8955274,50.5518987 C71.9068354,38.8752743 65.4960338,30.1691139 61.785654,26.2264979 C57.7944304,21.9868354 52.6636287,16.8668354 44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 L13.2266667,20.1451477 Z" fill="url(#meta-gradient-1)"/>
-                    <path d="M44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 C20.8526582,38.6808439 16.7750211,53.6519831 16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 L5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 C0,50.8219409 4.55831224,33.5122363 13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 L44.4759494,16.8668354 Z" fill="url(#meta-gradient-2)"/>
+                    <path d="M16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 C22.0084388,84.8742616 25.3353586,86.4027004 28.7270886,86.4027004 C33.1017722,86.4027004 37.1037975,85.3171308 44.8162025,74.6504641 C50.9947679,66.1009283 58.2751055,54.1002532 63.1736709,46.5768776 L71.4693671,33.8308861 C77.2320675,24.978903 83.9021097,15.1385654 91.5497046,8.46852321 C97.7930802,3.02447257 104.527932,0 111.305992,0 C122.68557,0 133.525063,6.59443038 141.820759,18.9623629 C150.899578,32.5076793 155.306667,49.5689451 155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 L128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 C140.508354,53.3711392 137.181435,37.535865 129.852489,26.221097 C124.651477,18.195443 117.911224,13.2914768 110.495865,13.2914768 C102.475612,13.2914768 96.0216034,19.3404219 88.76827,30.1259072 C84.9120675,35.8562025 80.9532489,42.8394937 76.5083544,50.7193249 L71.6151899,59.3876793 C61.785654,76.8162025 59.295865,80.7858228 54.381097,87.3370464 C45.7667511,98.8084388 38.4108017,103.156118 28.7270886,103.156118 C17.2394937,103.156118 9.97535865,98.1819409 5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 L16.7750211,68.0290295 Z" fill="#0081FB" />
+                    <path d="M13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 C52.1181435,0 59.4470886,2.18194093 67.1000844,8.4307173 C75.4713924,15.2627848 84.3935865,26.5127426 95.5247257,45.0538397 L99.5159494,51.7076793 C109.151055,67.7589873 114.632911,76.0168776 117.841013,79.9108861 C121.967257,84.9120675 124.856709,86.4027004 128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 L155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 C121.697215,103.156118 115.572658,101.654684 108.8,95.2654852 C103.593586,90.361519 97.5068354,81.6499578 92.8243038,73.8187342 L78.8955274,50.5518987 C71.9068354,38.8752743 65.4960338,30.1691139 61.785654,26.2264979 C57.7944304,21.9868354 52.6636287,16.8668354 44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 L13.2266667,20.1451477 Z" fill="url(#meta-gradient-1)" />
+                    <path d="M44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 C20.8526582,38.6808439 16.7750211,53.6519831 16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 L5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 C0,50.8219409 4.55831224,33.5122363 13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 L44.4759494,16.8668354 Z" fill="url(#meta-gradient-2)" />
                     <defs>
                       <linearGradient x1="13.8784354%" y1="55.9337491%" x2="89.143574%" y2="58.6936324%" id="meta-gradient-1">
-                        <stop stopColor="#0064E1" offset="0%"/>
-                        <stop stopColor="#0064E1" offset="40%"/>
-                        <stop stopColor="#0073EE" offset="83%"/>
-                        <stop stopColor="#0082FB" offset="100%"/>
+                        <stop stopColor="#0064E1" offset="0%" />
+                        <stop stopColor="#0064E1" offset="40%" />
+                        <stop stopColor="#0073EE" offset="83%" />
+                        <stop stopColor="#0082FB" offset="100%" />
                       </linearGradient>
                       <linearGradient x1="54.3150272%" y1="82.782443%" x2="54.3150272%" y2="39.3067715%" id="meta-gradient-2">
-                        <stop stopColor="#0082FB" offset="0%"/>
-                        <stop stopColor="#0064E0" offset="100%"/>
+                        <stop stopColor="#0082FB" offset="0%" />
+                        <stop stopColor="#0064E0" offset="100%" />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -334,30 +332,30 @@ export default function ChannelsWhatsAppPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-col items-center justify-center py-8 space-y-4">
                       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                        <svg 
-                          width="32" 
-                          height="32" 
-                          viewBox="0 0 156 104" 
-                          fill="none" 
+                        <svg
+                          width="32"
+                          height="32"
+                          viewBox="0 0 156 104"
+                          fill="none"
                           xmlns="http://www.w3.org/2000/svg"
-                    
+
                         >
-                          <path d="M16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 C22.0084388,84.8742616 25.3353586,86.4027004 28.7270886,86.4027004 C33.1017722,86.4027004 37.1037975,85.3171308 44.8162025,74.6504641 C50.9947679,66.1009283 58.2751055,54.1002532 63.1736709,46.5768776 L71.4693671,33.8308861 C77.2320675,24.978903 83.9021097,15.1385654 91.5497046,8.46852321 C97.7930802,3.02447257 104.527932,0 111.305992,0 C122.68557,0 133.525063,6.59443038 141.820759,18.9623629 C150.899578,32.5076793 155.306667,49.5689451 155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 L128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 C140.508354,53.3711392 137.181435,37.535865 129.852489,26.221097 C124.651477,18.195443 117.911224,13.2914768 110.495865,13.2914768 C102.475612,13.2914768 96.0216034,19.3404219 88.76827,30.1259072 C84.9120675,35.8562025 80.9532489,42.8394937 76.5083544,50.7193249 L71.6151899,59.3876793 C61.785654,76.8162025 59.295865,80.7858228 54.381097,87.3370464 C45.7667511,98.8084388 38.4108017,103.156118 28.7270886,103.156118 C17.2394937,103.156118 9.97535865,98.1819409 5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 L16.7750211,68.0290295 Z" fill="#0081FB"/>
-                          <path d="M13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 C52.1181435,0 59.4470886,2.18194093 67.1000844,8.4307173 C75.4713924,15.2627848 84.3935865,26.5127426 95.5247257,45.0538397 L99.5159494,51.7076793 C109.151055,67.7589873 114.632911,76.0168776 117.841013,79.9108861 C121.967257,84.9120675 124.856709,86.4027004 128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 L155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 C121.697215,103.156118 115.572658,101.654684 108.8,95.2654852 C103.593586,90.361519 97.5068354,81.6499578 92.8243038,73.8187342 L78.8955274,50.5518987 C71.9068354,38.8752743 65.4960338,30.1691139 61.785654,26.2264979 C57.7944304,21.9868354 52.6636287,16.8668354 44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 L13.2266667,20.1451477 Z" fill="url(#meta-gradient-3)"/>
-                          <path d="M44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 C20.8526582,38.6808439 16.7750211,53.6519831 16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 L5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 C0,50.8219409 4.55831224,33.5122363 13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 L44.4759494,16.8668354 Z" fill="url(#meta-gradient-4)"/>
+                          <path d="M16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 C22.0084388,84.8742616 25.3353586,86.4027004 28.7270886,86.4027004 C33.1017722,86.4027004 37.1037975,85.3171308 44.8162025,74.6504641 C50.9947679,66.1009283 58.2751055,54.1002532 63.1736709,46.5768776 L71.4693671,33.8308861 C77.2320675,24.978903 83.9021097,15.1385654 91.5497046,8.46852321 C97.7930802,3.02447257 104.527932,0 111.305992,0 C122.68557,0 133.525063,6.59443038 141.820759,18.9623629 C150.899578,32.5076793 155.306667,49.5689451 155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 L128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 C140.508354,53.3711392 137.181435,37.535865 129.852489,26.221097 C124.651477,18.195443 117.911224,13.2914768 110.495865,13.2914768 C102.475612,13.2914768 96.0216034,19.3404219 88.76827,30.1259072 C84.9120675,35.8562025 80.9532489,42.8394937 76.5083544,50.7193249 L71.6151899,59.3876793 C61.785654,76.8162025 59.295865,80.7858228 54.381097,87.3370464 C45.7667511,98.8084388 38.4108017,103.156118 28.7270886,103.156118 C17.2394937,103.156118 9.97535865,98.1819409 5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 L16.7750211,68.0290295 Z" fill="#0081FB" />
+                          <path d="M13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 C52.1181435,0 59.4470886,2.18194093 67.1000844,8.4307173 C75.4713924,15.2627848 84.3935865,26.5127426 95.5247257,45.0538397 L99.5159494,51.7076793 C109.151055,67.7589873 114.632911,76.0168776 117.841013,79.9108861 C121.967257,84.9120675 124.856709,86.4027004 128.610295,86.4027004 C138.131983,86.4027004 140.508354,77.6533333 140.508354,67.6401688 L155.306667,67.1756962 C155.306667,77.6425316 153.243544,85.3333333 149.732996,91.4092827 C146.341266,97.2854008 139.730633,103.156118 128.610295,103.156118 C121.697215,103.156118 115.572658,101.654684 108.8,95.2654852 C103.593586,90.361519 97.5068354,81.6499578 92.8243038,73.8187342 L78.8955274,50.5518987 C71.9068354,38.8752743 65.4960338,30.1691139 61.785654,26.2264979 C57.7944304,21.9868354 52.6636287,16.8668354 44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 L13.2266667,20.1451477 Z" fill="url(#meta-gradient-3)" />
+                          <path d="M44.4759494,16.8668354 C37.8491139,16.8668354 32.2214346,21.516962 27.5118987,28.6298734 C20.8526582,38.6808439 16.7750211,53.6519831 16.7750211,68.0290295 C16.7750211,73.9591561 18.0766245,78.5120675 19.7778903,81.2664979 L5.4764557,90.6855696 C1.80388186,84.5772152 0,76.5623629 0,67.4295359 C0,50.8219409 4.55831224,33.5122363 13.2266667,20.1451477 C20.9174684,8.29029536 32.0162025,0 44.7459916,0 L44.4759494,16.8668354 Z" fill="url(#meta-gradient-4)" />
                           <defs>
                             <linearGradient x1="13.8784354%" y1="55.9337491%" x2="89.143574%" y2="58.6936324%" id="meta-gradient-3">
-                              <stop stopColor="#0064E1" offset="0%"/>
-                              <stop stopColor="#0064E1" offset="40%"/>
-                              <stop stopColor="#0073EE" offset="83%"/>
-                              <stop stopColor="#0082FB" offset="100%"/>
+                              <stop stopColor="#0064E1" offset="0%" />
+                              <stop stopColor="#0064E1" offset="40%" />
+                              <stop stopColor="#0073EE" offset="83%" />
+                              <stop stopColor="#0082FB" offset="100%" />
                             </linearGradient>
                             <linearGradient x1="54.3150272%" y1="82.782443%" x2="54.3150272%" y2="39.3067715%" id="meta-gradient-4">
-                              <stop stopColor="#0082FB" offset="0%"/>
-                              <stop stopColor="#0064E0" offset="100%"/>
+                              <stop stopColor="#0082FB" offset="0%" />
+                              <stop stopColor="#0064E0" offset="100%" />
                             </linearGradient>
                           </defs>
                         </svg>
@@ -368,16 +366,16 @@ export default function ChannelsWhatsAppPage() {
                           Authorize Cequens to access your Meta Business Account and manage WhatsApp Business API
                         </p>
                       </div>
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         className="mt-4"
                         disabled={isAuthenticating}
                         onClick={() => {
                           setIsAuthenticating(true)
                           // Simulate OAuth flow - in real app this would redirect to Meta
                           setTimeout(() => {
-                            setFormData(prev => ({ 
-                              ...prev, 
+                            setFormData(prev => ({
+                              ...prev,
                               businessAccountId: "123456789012345",
                               apiToken: `ceq_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
                             }))
@@ -460,7 +458,7 @@ export default function ChannelsWhatsAppPage() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Authenticated state */}
                 {formData.businessAccountId && (
                   <div className="space-y-4">
@@ -498,15 +496,15 @@ export default function ChannelsWhatsAppPage() {
                       <Separator />
 
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => window.open('https://business.facebook.com', '_blank')}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Manage in Meta
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setShowDisconnectDialog(true)}
                         >
                           Disconnect
@@ -523,15 +521,15 @@ export default function ChannelsWhatsAppPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <img 
-                      src="/icons/WhatsApp.svg" 
-                      alt="WhatsApp" 
-                      className="w-5 h-5" 
+                    <img
+                      src="/icons/WhatsApp.svg"
+                      alt="WhatsApp"
+                      className="w-5 h-5"
                     />
                     <CardTitle>WhatsApp Channel Status</CardTitle>
                   </div>
                   {formData.businessAccountId && phoneNumbers.length > 0 && (
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => {
                         // Determine which number to add based on current count
@@ -547,7 +545,7 @@ export default function ChannelsWhatsAppPage() {
                         } else {
                           displayName = `Vodafone ${currentCount + 1}`
                         }
-                        
+
                         const phoneData = generatePhoneNumber("+20", "eg")
                         const newNumber: PhoneNumber = {
                           id: `phone-${Date.now()}`,
@@ -578,7 +576,7 @@ export default function ChannelsWhatsAppPage() {
                         toast.success("Phone number added successfully")
                       }}
                     >
-                      <Plus/>
+                      <Plus />
                       Add new number
                     </Button>
                   )}
@@ -596,7 +594,7 @@ export default function ChannelsWhatsAppPage() {
                       No Phone Numbers Configured
                     </p>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {!formData.businessAccountId 
+                      {!formData.businessAccountId
                         ? "Connect your Meta Business Account to add WhatsApp phone numbers"
                         : "Add a phone number from your Meta Business Account to get started"}
                     </p>
@@ -606,8 +604,8 @@ export default function ChannelsWhatsAppPage() {
                       </p>
                     )}
                     {formData.businessAccountId && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="mt-2"
                         onClick={() => {
                           const phoneData = generatePhoneNumber("+20", "eg")
@@ -646,7 +644,7 @@ export default function ChannelsWhatsAppPage() {
                     )}
                   </div>
                 )}
-                
+
                 {/* Phone numbers list */}
                 {phoneNumbers.length > 0 && (
                   <div className="space-y-3">
@@ -664,7 +662,7 @@ export default function ChannelsWhatsAppPage() {
                       }
 
                       return (
-                        <div 
+                        <div
                           key={phoneNumber.id}
                           className="rounded-lg border border-border overflow-hidden"
                         >
@@ -689,29 +687,29 @@ export default function ChannelsWhatsAppPage() {
                                     {phoneNumber.displayName}
                                   </p>
                                   {phoneNumber.status === "verified" && (
-                                    <svg 
-                                      width="16" 
-                                      height="16" 
-                                      viewBox="0 0 100 100" 
-                                      fill="none" 
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 100 100"
+                                      fill="none"
                                       xmlns="http://www.w3.org/2000/svg"
                                       className="flex-shrink-0"
                                     >
                                       <g clipPath={`url(#clip0_meta_${phoneNumber.id})`}>
-                                        <path fillRule="evenodd" clipRule="evenodd" d="M93.9979 49.9999L99.4459 39.9939C100.604 37.8669 99.8909 35.2049 97.8239 33.9419L88.1029 28.0009L87.8189 16.6119C87.7579 14.1899 85.8099 12.2419 83.3879 12.1809L71.9989 11.8969L66.0579 2.17593C64.7949 0.10893 62.1329 -0.60407 60.0059 0.55393L49.9999 6.00193L39.9939 0.55393C37.8669 -0.60407 35.2049 0.10893 33.9419 2.17593L28.0009 11.8969L16.6119 12.1809C14.1899 12.2419 12.2419 14.1899 12.1819 16.6119L11.8969 28.0009L2.17593 33.9419C0.10893 35.2049 -0.60407 37.8669 0.55393 39.9939L6.00193 49.9999L0.55393 60.0059C-0.60407 62.1329 0.10893 64.7949 2.17593 66.0579L11.8969 71.9989L12.1809 83.3879C12.2419 85.8089 14.1899 87.7579 16.6119 87.8179L28.0009 88.1029L33.9419 97.8239C35.2049 99.8909 37.8669 100.604 39.9939 99.4459L49.9999 93.9979L60.0059 99.4459C62.1329 100.604 64.7949 99.8909 66.0579 97.8239L71.9989 88.1029L83.3879 87.8179C85.8099 87.7579 87.7579 85.8089 87.8189 83.3879L88.1029 71.9989L97.8239 66.0579C99.8909 64.7949 100.604 62.1329 99.4459 60.0059L93.9979 49.9999ZM71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="#3897F0"/>
-                                        <path fillRule="evenodd" clipRule="evenodd" d="M71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="white"/>
+                                        <path fillRule="evenodd" clipRule="evenodd" d="M93.9979 49.9999L99.4459 39.9939C100.604 37.8669 99.8909 35.2049 97.8239 33.9419L88.1029 28.0009L87.8189 16.6119C87.7579 14.1899 85.8099 12.2419 83.3879 12.1809L71.9989 11.8969L66.0579 2.17593C64.7949 0.10893 62.1329 -0.60407 60.0059 0.55393L49.9999 6.00193L39.9939 0.55393C37.8669 -0.60407 35.2049 0.10893 33.9419 2.17593L28.0009 11.8969L16.6119 12.1809C14.1899 12.2419 12.2419 14.1899 12.1819 16.6119L11.8969 28.0009L2.17593 33.9419C0.10893 35.2049 -0.60407 37.8669 0.55393 39.9939L6.00193 49.9999L0.55393 60.0059C-0.60407 62.1329 0.10893 64.7949 2.17593 66.0579L11.8969 71.9989L12.1809 83.3879C12.2419 85.8089 14.1899 87.7579 16.6119 87.8179L28.0009 88.1029L33.9419 97.8239C35.2049 99.8909 37.8669 100.604 39.9939 99.4459L49.9999 93.9979L60.0059 99.4459C62.1329 100.604 64.7949 99.8909 66.0579 97.8239L71.9989 88.1029L83.3879 87.8179C85.8099 87.7579 87.7579 85.8089 87.8189 83.3879L88.1029 71.9989L97.8239 66.0579C99.8909 64.7949 100.604 62.1329 99.4459 60.0059L93.9979 49.9999ZM71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="#3897F0" />
+                                        <path fillRule="evenodd" clipRule="evenodd" d="M71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="white" />
                                       </g>
                                       <defs>
                                         <clipPath id={`clip0_meta_${phoneNumber.id}`}>
-                                          <rect width="100" height="100" fill="white"/>
+                                          <rect width="100" height="100" fill="white" />
                                         </clipPath>
                                       </defs>
                                     </svg>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <CircleFlag 
-                                    countryCode={phoneNumber.countryISO} 
+                                  <CircleFlag
+                                    countryCode={phoneNumber.countryISO}
                                     className="w-4 h-4 flex-shrink-0"
                                   />
                                   <p className="text-sm font-medium truncate">
@@ -720,7 +718,7 @@ export default function ChannelsWhatsAppPage() {
                                 </div>
                               </div>
                             </div>
-                            <ChevronDown 
+                            <ChevronDown
                               className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
                             />
                           </button>
@@ -743,22 +741,20 @@ export default function ChannelsWhatsAppPage() {
                                     <p className="text-xs text-muted-foreground mb-2">Quality Rating</p>
                                     <div className="flex items-center gap-2">
                                       <p className="text-base font-bold text-foreground">{phoneNumber.qualityRating}%</p>
-                                      <Badge 
+                                      <Badge
                                         variant="secondary"
-                                        className={`text-xs px-1.5 py-0 h-4 ${
-                                          phoneNumber.qualityRating >= 90 ? 'bg-success/10 text-success' :
+                                        className={`text-xs px-1.5 py-0 h-4 ${phoneNumber.qualityRating >= 90 ? 'bg-success/10 text-success' :
                                           phoneNumber.qualityRating >= 70 ? 'bg-warning/10 text-warning-foreground' : 'bg-destructive/10 text-destructive'
-                                        }`}
+                                          }`}
                                       >
                                         {phoneNumber.qualityRating >= 90 ? 'High' :
-                                         phoneNumber.qualityRating >= 70 ? 'Medium' : 'Low'}
+                                          phoneNumber.qualityRating >= 70 ? 'Medium' : 'Low'}
                                       </Badge>
                                       <div className="w-12 bg-muted rounded-full h-1">
-                                        <div 
-                                          className={`h-1 rounded-full ${
-                                            phoneNumber.qualityRating >= 90 ? 'bg-success' :
+                                        <div
+                                          className={`h-1 rounded-full ${phoneNumber.qualityRating >= 90 ? 'bg-success' :
                                             phoneNumber.qualityRating >= 70 ? 'bg-warning' : 'bg-destructive'
-                                          }`}
+                                            }`}
                                           style={{ width: `${phoneNumber.qualityRating}%` }}
                                         />
                                       </div>
@@ -770,7 +766,7 @@ export default function ChannelsWhatsAppPage() {
                                     <p className="text-xs text-muted-foreground mb-2">Message Limit</p>
                                     <div className="flex items-baseline gap-1.5">
                                       <p className="text-base font-bold text-foreground">
-                                        {phoneNumber.messageLimit >= 1000 
+                                        {phoneNumber.messageLimit >= 1000
                                           ? `${(phoneNumber.messageLimit / 1000).toFixed(1)}K`
                                           : phoneNumber.messageLimit}
                                       </p>
@@ -782,10 +778,9 @@ export default function ChannelsWhatsAppPage() {
                                   <div>
                                     <p className="text-xs text-muted-foreground mb-2">Status</p>
                                     <div className="flex items-center gap-1.5">
-                                      <CheckCircle2 className={`w-4 h-4 ${
-                                        phoneNumber.status === 'verified' ? 'text-success' :
+                                      <CheckCircle2 className={`w-4 h-4 ${phoneNumber.status === 'verified' ? 'text-success' :
                                         phoneNumber.status === 'pending' ? 'text-warning-foreground' : 'text-destructive'
-                                      }`} />
+                                        }`} />
                                       <span className="text-sm font-medium text-foreground">
                                         {statusLabels[phoneNumber.status]}
                                       </span>
@@ -808,10 +803,9 @@ export default function ChannelsWhatsAppPage() {
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Delivery Rate</span>
-                                    <span className={`font-semibold ${
-                                      phoneNumber.deliveryRate >= 95 ? 'text-success' :
+                                    <span className={`font-semibold ${phoneNumber.deliveryRate >= 95 ? 'text-success' :
                                       phoneNumber.deliveryRate >= 90 ? 'text-warning-foreground' : 'text-destructive'
-                                    }`}>
+                                      }`}>
                                       {phoneNumber.deliveryRate.toFixed(1)}%
                                     </span>
                                   </div>
@@ -938,18 +932,18 @@ export default function ChannelsWhatsAppPage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <Tabs defaultValue="curl">
                         <TabsList className="w-fit">
                           <TabsTrigger value="curl" className="flex-none">cURL</TabsTrigger>
                           <TabsTrigger value="javascript" className="flex-none">JavaScript</TabsTrigger>
                         </TabsList>
-                        
+
                         <TabsContent value="curl" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
                           <div className="relative rounded-lg border border-border bg-muted/50 overflow-hidden">
                             <div className="absolute top-2 right-2 z-10">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="h-7 bg-background/80 backdrop-blur-sm hover:bg-background border-border relative"
                                 onClick={() => {
@@ -990,12 +984,12 @@ export default function ChannelsWhatsAppPage() {
                             </pre>
                           </div>
                         </TabsContent>
-                        
+
                         <TabsContent value="javascript" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
                           <div className="relative rounded-lg border border-border bg-muted/50 overflow-hidden">
                             <div className="absolute top-2 right-2 z-10">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="h-7 bg-background/80 backdrop-blur-sm hover:bg-background border-border relative"
                                 onClick={() => {
@@ -1067,7 +1061,7 @@ export default function ChannelsWhatsAppPage() {
                           </div>
                         </TabsContent>
                       </Tabs>
-                      
+
                       <div className="space-y-2 text-xs text-muted-foreground pt-2 border-t border-border">
                         <p className="font-medium text-foreground">Required Fields:</p>
                         <ul className="space-y-1 ml-4 list-disc">
@@ -1138,32 +1132,32 @@ export default function ChannelsWhatsAppPage() {
       )}
 
       {/* Disconnect Alert Dialog */}
-      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
-        <AlertDialogContent className="sm:max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader>
+            <DialogTitle>
               Disconnect Meta Business Account
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to disconnect your Meta Business Account? 
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to disconnect your Meta Business Account?
               This will remove all WhatsApp channel configurations and you'll need to reconnect to use WhatsApp Business API again.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="space-y-4">
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 p-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
                   <p className="text-sm text-warning-foreground font-semibold">Warning</p>
                   <p className="text-sm text-warning-foreground leading-relaxed">
-                    Disconnecting will immediately stop all WhatsApp messaging capabilities. 
+                    Disconnecting will immediately stop all WhatsApp messaging capabilities.
                     All configured phone numbers and API tokens will be removed.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="disconnectConfirm" className="text-sm font-medium">
                 Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">disconnect</code> to confirm:
@@ -1178,15 +1172,18 @@ export default function ChannelsWhatsAppPage() {
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
+          <DialogFooter>
+            <Button
+              variant="outline"
               onClick={() => {
                 setDisconnectConfirmation("")
+                setShowDisconnectDialog(false)
               }}
             >
               Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
+            </Button>
+            <Button
+              variant="destructive"
               onClick={async () => {
                 if (disconnectConfirmation.toLowerCase() === "disconnect") {
                   setFormData(prev => ({ ...prev, businessAccountId: "", apiToken: "" }))
@@ -1207,41 +1204,40 @@ export default function ChannelsWhatsAppPage() {
                 }
               }}
               disabled={disconnectConfirmation.toLowerCase() !== "disconnect"}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Disconnect
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Revoke API Token Alert Dialog */}
-      <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="sm:max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader>
+            <DialogTitle>
               Revoke API Token
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will revoke your current API token and generate a new one. 
+            </DialogTitle>
+            <DialogDescription>
+              This action will revoke your current API token and generate a new one.
               Any applications using the current token will stop working until you update them with the new token.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="space-y-4">
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 p-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
                   <p className="text-sm text-warning-foreground font-semibold">Warning</p>
                   <p className="text-sm text-warning-foreground leading-relaxed">
-                    Revoking your API token will immediately invalidate the current token. 
+                    Revoking your API token will immediately invalidate the current token.
                     Make sure to update all integrations using this token before proceeding.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="revokeConfirm" className="text-sm font-medium">
                 Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">revoke</code> to confirm:
@@ -1256,15 +1252,18 @@ export default function ChannelsWhatsAppPage() {
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
+          <DialogFooter>
+            <Button
+              variant="outline"
               onClick={() => {
                 setRevokeConfirmation("")
+                setShowRevokeDialog(false)
               }}
             >
               Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
+            </Button>
+            <Button
+              variant="destructive"
               onClick={() => {
                 if (revokeConfirmation.toLowerCase() === "revoke") {
                   // Generate new token
@@ -1284,14 +1283,13 @@ export default function ChannelsWhatsAppPage() {
                 }
               }}
               disabled={revokeConfirmation.toLowerCase() !== "revoke"}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Revoke & Regenerate
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   )
 }

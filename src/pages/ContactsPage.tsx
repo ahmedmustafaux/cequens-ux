@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { CircleFlag } from "react-circle-flags"
-import { 
+import {
   ColumnDef,
   ColumnFiltersState,
   flexRender,
@@ -13,9 +13,9 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { 
-  Users, 
-  Edit, 
+import {
+  Users,
+  Edit,
   Archive,
   RotateCcw,
   Clock,
@@ -51,19 +51,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ContactsImportDialog } from "@/components/contacts-import-dialog"
-import { 
+import {
   DataTable,
   DataTableHeader,
   DataTableSelectionHeader,
@@ -99,7 +97,7 @@ const ContactsPageContent = (): React.JSX.Element => {
     pageIndex: 0,
     pageSize: 15,
   })
-  
+
   // Filter states
   const [selectedChannels, setSelectedChannels] = React.useState<string[]>([])
   const [selectedTags, setSelectedTags] = React.useState<string[]>([])
@@ -110,13 +108,13 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [showArchiveDialog, setShowArchiveDialog] = React.useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  
+
   // Dynamic page title
   usePageTitle("Audience")
-  
+
   // Debounced search query for database search (minimal debounce for real-time feel)
   const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState("")
-  
+
   // Minimal debounce (100ms) to avoid excessive queries while keeping real-time feel
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,11 +130,11 @@ const ContactsPageContent = (): React.JSX.Element => {
     debouncedSearchQuery || undefined,
     true // Always include archived for accurate counts
   )
-  
+
   // Archive and unarchive mutations
   const archiveContactsMutation = useArchiveContacts()
   const unarchiveContactsMutation = useUnarchiveContacts()
-  
+
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
     {
@@ -170,7 +168,7 @@ const ContactsPageContent = (): React.JSX.Element => {
         const firstName = contact.firstName || ''
         const lastName = contact.lastName || ''
         const hasName = firstName || lastName
-        
+
         return (
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="w-8 h-8 flex-shrink-0">
@@ -182,8 +180,8 @@ const ContactsPageContent = (): React.JSX.Element => {
             <div className="flex flex-col min-w-0">
               {hasName ? (
                 <div className="text-left group-hover:underline">
-                  <Highlight 
-                    text={`${firstName} ${lastName}`.trim()} 
+                  <Highlight
+                    text={`${firstName} ${lastName}`.trim()}
                     columnId="name"
                     className="font-medium text-sm whitespace-nowrap truncate"
                   />
@@ -211,8 +209,8 @@ const ContactsPageContent = (): React.JSX.Element => {
               <CircleFlag countryCode={contact.countryISO.toLowerCase()} className="w-full h-full" />
             </div>
             <div className="flex flex-col min-w-0">
-              <Highlight 
-                text={displayPhone} 
+              <Highlight
+                text={displayPhone}
                 columnId="phone"
                 className="font-normal text-sm text-muted-foreground whitespace-nowrap truncate"
               />
@@ -238,7 +236,7 @@ const ContactsPageContent = (): React.JSX.Element => {
       },
       cell: ({ row }) => {
         const channel = row.getValue("channel") as string | null;
-        
+
         // If channel is null or empty, show badge
         if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
           return (
@@ -247,7 +245,7 @@ const ContactsPageContent = (): React.JSX.Element => {
             </Badge>
           );
         }
-        
+
         const getChannelIconPath = (channel: string) => {
           switch (channel.toLowerCase()) {
             case 'whatsapp':
@@ -263,8 +261,8 @@ const ContactsPageContent = (): React.JSX.Element => {
 
         return (
           <div className="flex items-center justify-start whitespace-nowrap">
-            <img 
-              src={getChannelIconPath(channel)} 
+            <img
+              src={getChannelIconPath(channel)}
               alt={`${channel} icon`}
               className="w-4 h-4 flex-shrink-0"
               onError={(e) => {
@@ -284,10 +282,10 @@ const ContactsPageContent = (): React.JSX.Element => {
       cell: ({ row }) => {
         const updatedAt = row.original.updatedAt;
         const lastInteractionTime = row.original.lastInteractionTime;
-        
+
         // Use lastInteractionTime if available, otherwise use updatedAt
         const displayDate = lastInteractionTime || updatedAt;
-        
+
         if (!displayDate) {
           return (
             <div className="text-sm text-muted-foreground">
@@ -295,12 +293,12 @@ const ContactsPageContent = (): React.JSX.Element => {
             </div>
           );
         }
-        
+
         // Format date as relative time (e.g., "2 hours ago", "3 days ago")
         const formatRelativeTime = (date: Date): string => {
           const now = new Date();
           const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-          
+
           if (diffInSeconds < 60) {
             return 'Just now';
           } else if (diffInSeconds < 3600) {
@@ -321,7 +319,7 @@ const ContactsPageContent = (): React.JSX.Element => {
             });
           }
         };
-        
+
         return (
           <div className="text-sm text-muted-foreground">
             {formatRelativeTime(displayDate)}
@@ -373,15 +371,15 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Apply filters to table
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
-    
+
     if (selectedChannels.length > 0) {
       newFilters.push({ id: 'channel', value: selectedChannels })
     }
-    
+
     if (selectedTags.length > 0) {
       newFilters.push({ id: 'tags', value: selectedTags })
     }
-    
+
     setColumnFilters(newFilters)
   }, [selectedChannels, selectedTags])
 
@@ -468,8 +466,8 @@ const ContactsPageContent = (): React.JSX.Element => {
         className="hidden"
         onChange={handleFileChange}
       />
-      
-      <ContactsImportDialog 
+
+      <ContactsImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
       />
@@ -481,7 +479,7 @@ const ContactsPageContent = (): React.JSX.Element => {
           </p>
         </div>
       )}
-      
+
       <PageHeader
         title="Audience"
         description="Create and manage your audience."
@@ -512,8 +510,8 @@ const ContactsPageContent = (): React.JSX.Element => {
               <Download className="w-4 h-4" />
               Export
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="gap-2"
               onClick={handleCreateContact}
             >
@@ -625,7 +623,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                       onClick={async () => {
                         const selectedRows = table.getSelectedRowModel().rows
                         const selectedIds = selectedRows.map(row => row.original.id)
-                        
+
                         if (selectedIds.length === 0) {
                           toast.error("No contacts selected")
                           return
@@ -668,9 +666,9 @@ const ContactsPageContent = (): React.JSX.Element => {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </DataTableHead>
                   )
                 })
@@ -687,7 +685,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                   onClick={() => navigate(`/contacts/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <DataTableCell 
+                    <DataTableCell
                       key={cell.id}
                       columnId={cell.column.id}
                       clickable={cell.column.id === "select"}
@@ -716,8 +714,8 @@ const ContactsPageContent = (): React.JSX.Element => {
       </div>
 
       {/* Archive Alert Dialog */}
-      <AlertDialog 
-        open={showArchiveDialog} 
+      <Dialog
+        open={showArchiveDialog}
         onOpenChange={(open: boolean) => {
           setShowArchiveDialog(open)
           if (!open) {
@@ -725,31 +723,31 @@ const ContactsPageContent = (): React.JSX.Element => {
           }
         }}
       >
-        <AlertDialogContent className="sm:max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader>
+            <DialogTitle>
               Archive Contacts
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to archive the selected contacts? 
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to archive the selected contacts?
               Archived contacts will be moved to the archived view and can be restored later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="space-y-4">
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 p-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
                   <p className="text-sm text-amber-900 font-semibold">Warning</p>
                   <p className="text-sm text-amber-800 leading-relaxed">
-                    Archiving will move the selected contacts to the archived section. 
+                    Archiving will move the selected contacts to the archived section.
                     You can restore them later if needed.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="archiveConfirm" className="text-sm font-medium">
                 Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">archive</code> to confirm:
@@ -764,20 +762,23 @@ const ContactsPageContent = (): React.JSX.Element => {
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
+          <DialogFooter>
+            <Button
+              variant="outline"
               onClick={() => {
                 setArchiveConfirmation("")
+                setShowArchiveDialog(false)
               }}
             >
               Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
+            </Button>
+            <Button
+              variant="destructive"
               onClick={async () => {
                 if (archiveConfirmation.toLowerCase() === "archive") {
                   const selectedRows = table.getSelectedRowModel().rows
                   const selectedIds = selectedRows.map(row => row.original.id)
-                  
+
                   if (selectedIds.length === 0) {
                     toast.error("No contacts selected")
                     return
@@ -798,13 +799,12 @@ const ContactsPageContent = (): React.JSX.Element => {
                 }
               }}
               disabled={archiveConfirmation.toLowerCase() !== "archive" || archiveContactsMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {archiveContactsMutation.isPending ? "Archiving..." : "Archive Contacts"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {archiveContactsMutation.isPending ? "Archiving..." : "Archive"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

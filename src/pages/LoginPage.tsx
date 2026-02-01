@@ -993,15 +993,15 @@ export default function LoginPage() {
 
       {/* Verification Methods Dialog */}
       <Dialog open={showVerificationMethods} onOpenChange={setShowVerificationMethods}>
-        <DialogContent className="sm:max-w-sm p-4">
-          <DialogHeader className="pb-3">
+        <DialogContent className="sm:max-w-sm gap-0">
+          <DialogHeader className="px-4 py-4">
             <DialogTitle className="text-base">Choose verification method</DialogTitle>
             <DialogDescription className="text-xs">
               How would you like to receive your verification code?
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-2 p-4 pt-2">
             {/* Email */}
             <Button
               onClick={() => handleSendVerification('email')}

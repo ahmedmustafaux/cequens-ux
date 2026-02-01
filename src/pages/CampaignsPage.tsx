@@ -28,10 +28,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 import { SearchProvider } from "@/contexts/search-context"
 import { Highlight } from "@/components/ui/highlight"
 import { PageHeader } from "@/components/page-header"
@@ -78,7 +97,7 @@ const columns: ColumnDef<Campaign>[] = [
     header: "Campaign",
     cell: ({ row }) => (
       <div className="text-left group-hover:underline">
-        <Highlight 
+        <Highlight
           text={row.getValue("name") as string}
           columnId="name"
           className="font-medium text-sm whitespace-nowrap truncate"
@@ -204,6 +223,29 @@ function CampaignsPageContent() {
   const [typeSearchQuery, setTypeSearchQuery] = React.useState("")
   const [selectedView, setSelectedView] = React.useState<string>("all")
 
+  // Create Campaign Dialog State
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
+  const [newCampaignName, setNewCampaignName] = React.useState("")
+  const [newCampaignType, setNewCampaignType] = React.useState<"broadcast" | "condition">("broadcast")
+
+  const handleNewCampaign = () => {
+    setNewCampaignName("")
+    setNewCampaignType("broadcast")
+    setIsCreateDialogOpen(true)
+  }
+
+  const handleProceedToCreate = () => {
+    navigate("/campaigns/create", {
+      state: {
+        name: newCampaignName,
+        type: newCampaignType === "broadcast" ? "Broadcast" : "Condition-based"
+      }
+    })
+    setIsCreateDialogOpen(false)
+  }
+
+
+
   // Filter options
   const typeOptions = [
     { value: "Email", label: "Email" },
@@ -244,11 +286,11 @@ function CampaignsPageContent() {
   // Apply filters to table
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
-    
+
     if (typeFilter.length > 0) {
       newFilters.push({ id: 'type', value: typeFilter })
     }
-    
+
     setColumnFilters(newFilters)
   }, [typeFilter])
 
@@ -268,7 +310,7 @@ function CampaignsPageContent() {
     globalFilterFn: (row, columnId, value) => {
       const searchColumns = ['name'] // Only search in campaign name column
       const searchValue = value.toLowerCase()
-      
+
       // Check if any of the specified columns contain the search value
       return searchColumns.some(columnId => {
         const cellValue = row.getValue(columnId)
@@ -284,9 +326,7 @@ function CampaignsPageContent() {
     },
   })
 
-  const handleNewCampaign = () => {
-    navigate("/campaigns/create")
-  };
+
 
   return (
     <PageWrapper isLoading={isDataLoading}>
@@ -306,145 +346,222 @@ function CampaignsPageContent() {
       />
 
       <div className="flex flex-col">
-          <DataTable
-            isLoading={isDataLoading}
-            views={{
-              options: [
-                { label: "All campaigns", value: "all", count: campaigns.length },
-                { label: "Scheduled", value: "scheduled", count: campaigns.filter(c => c.status === "Active").length },
-                { label: "Draft", value: "draft", count: campaigns.filter(c => c.status === "Draft").length },
-                { label: "Sent", value: "sent", count: campaigns.filter(c => c.status === "Completed").length }
-              ],
-              selectedView: selectedView,
-              onViewChange: setSelectedView
-            }}
-            searchConfig={{
-              placeholder: "Search campaigns...",
-              searchColumns: ['name'],
-              table: table
-            }}
-                filters={[
-                  {
-                    key: "type",
-                    label: "Type",
-                    options: typeOptions,
-                    selectedValues: typeFilter,
-                    onSelectionChange: setTypeFilter,
-                    onClear: () => setTypeFilter([]),
-                    searchable: true,
-                    searchPlaceholder: "Search types...",
-                    searchQuery: typeSearchQuery,
-                    onSearchChange: setTypeSearchQuery,
-                    filteredOptions: filteredTypeOptions
-                  }
-                ]}
-                pagination={{
-                  currentPage: table.getState().pagination.pageIndex + 1,
-                  totalPages: table.getPageCount(),
-                  totalItems: table.getFilteredRowModel().rows.length,
-                  itemsPerPage: table.getState().pagination.pageSize,
-                  onPrevious: () => table.previousPage(),
-                  onNext: () => table.nextPage(),
-                  hasPrevious: table.getCanPreviousPage(),
-                  hasNext: table.getCanNextPage(),
-                  onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-                  pageSizeOptions: [15, 20, 30]
-                }}
-                footerLabel={`Showing ${table.getRowModel().rows.length} campaigns${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
-              >
-                  {table.getSelectedRowModel().rows.length > 0 ? (
-                    <DataTableSelectionHeader
-                      selectedCount={table.getSelectedRowModel().rows.length}
-                      onClearSelection={() => table.resetRowSelection()}
-                      onSelectAll={() => table.toggleAllRowsSelected()}
-                      onSelectAllOnPage={() => {
-                        table.getRowModel().rows.forEach(row => row.toggleSelected(true))
-                      }}
-                      totalCount={table.getFilteredRowModel().rows.length}
-                      showCount={table.getRowModel().rows.length}
-                      selectedCountOnCurrentPage={table.getRowModel().rows.filter(row => row.getIsSelected()).length}
-                      audience="campaigns"
-                      columnCount={table.getVisibleFlatColumns().length}
-                      rightActions={
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => {
-                              // TODO: Implement duplicate functionality
-                            }}
-                          >
-                            Duplicate
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => {
-                              // TODO: Implement see analytics functionality
-                            }}
-                          >
-                            See analytics
-                          </Button>
-                        </>
-                      }
-                    />
-                  ) : (
-                    <DataTableHeader>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        headerGroup.headers.map((header) => {
-                          return (
-                            <DataTableHead key={header.id}>
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
-                            </DataTableHead>
-                          )
-                        })
-                      ))}
-                    </DataTableHeader>
-                  )}
-                  <DataTableBody>
-                    {table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <DataTableRow
-                          key={row.id}
-                          selected={row.getIsSelected()}
-                          className="group cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => navigate(`/campaigns/${row.original.id}`)}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <DataTableCell 
-                              key={cell.id}
-                              columnId={cell.column.id}
-                              clickable={cell.column.id === "select"}
-                              onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </DataTableCell>
-                          ))}
-                        </DataTableRow>
-                      ))
-                    ) : (
-                      <DataTableRow>
-                        <DataTableCell
-                          colSpan={columns.length}
-                          className="h-24 text-center"
-                        >
-                          No results.
-                        </DataTableCell>
-                      </DataTableRow>
-                    )}
-                  </DataTableBody>
-          </DataTable>
+        <DataTable
+          isLoading={isDataLoading}
+          views={{
+            options: [
+              { label: "All campaigns", value: "all", count: campaigns.length },
+              { label: "Scheduled", value: "scheduled", count: campaigns.filter(c => c.status === "Active").length },
+              { label: "Draft", value: "draft", count: campaigns.filter(c => c.status === "Draft").length },
+              { label: "Sent", value: "sent", count: campaigns.filter(c => c.status === "Completed").length }
+            ],
+            selectedView: selectedView,
+            onViewChange: setSelectedView
+          }}
+          searchConfig={{
+            placeholder: "Search campaigns...",
+            searchColumns: ['name'],
+            table: table
+          }}
+          filters={[
+            {
+              key: "type",
+              label: "Type",
+              options: typeOptions,
+              selectedValues: typeFilter,
+              onSelectionChange: setTypeFilter,
+              onClear: () => setTypeFilter([]),
+              searchable: true,
+              searchPlaceholder: "Search types...",
+              searchQuery: typeSearchQuery,
+              onSearchChange: setTypeSearchQuery,
+              filteredOptions: filteredTypeOptions
+            }
+          ]}
+          pagination={{
+            currentPage: table.getState().pagination.pageIndex + 1,
+            totalPages: table.getPageCount(),
+            totalItems: table.getFilteredRowModel().rows.length,
+            itemsPerPage: table.getState().pagination.pageSize,
+            onPrevious: () => table.previousPage(),
+            onNext: () => table.nextPage(),
+            hasPrevious: table.getCanPreviousPage(),
+            hasNext: table.getCanNextPage(),
+            onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
+            pageSizeOptions: [15, 20, 30]
+          }}
+          footerLabel={`Showing ${table.getRowModel().rows.length} campaigns${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
+        >
+          {table.getSelectedRowModel().rows.length > 0 ? (
+            <DataTableSelectionHeader
+              selectedCount={table.getSelectedRowModel().rows.length}
+              onClearSelection={() => table.resetRowSelection()}
+              onSelectAll={() => table.toggleAllRowsSelected()}
+              onSelectAllOnPage={() => {
+                table.getRowModel().rows.forEach(row => row.toggleSelected(true))
+              }}
+              totalCount={table.getFilteredRowModel().rows.length}
+              showCount={table.getRowModel().rows.length}
+              selectedCountOnCurrentPage={table.getRowModel().rows.filter(row => row.getIsSelected()).length}
+              audience="campaigns"
+              columnCount={table.getVisibleFlatColumns().length}
+              rightActions={
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      // TODO: Implement duplicate functionality
+                    }}
+                  >
+                    Duplicate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      // TODO: Implement see analytics functionality
+                    }}
+                  >
+                    See analytics
+                  </Button>
+                </>
+              }
+            />
+          ) : (
+            <DataTableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                headerGroup.headers.map((header) => {
+                  return (
+                    <DataTableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </DataTableHead>
+                  )
+                })
+              ))}
+            </DataTableHeader>
+          )}
+          <DataTableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <DataTableRow
+                  key={row.id}
+                  selected={row.getIsSelected()}
+                  className="group cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/campaigns/${row.original.id}`)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <DataTableCell
+                      key={cell.id}
+                      columnId={cell.column.id}
+                      clickable={cell.column.id === "select"}
+                      onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </DataTableCell>
+                  ))}
+                </DataTableRow>
+              ))
+            ) : (
+              <DataTableRow>
+                <DataTableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </DataTableCell>
+              </DataTableRow>
+            )}
+          </DataTableBody>
+        </DataTable>
       </div>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] flex flex-col gap-0 p-0 overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Create New Campaign</DialogTitle>
+            <DialogDescription>
+              Start a new campaign to engage with your customers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 p-4 overflow-y-auto">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Campaign Name <span className="text-destructive">*</span></Label>
+              <Input
+                id="name"
+                value={newCampaignName}
+                onChange={(e) => setNewCampaignName(e.target.value)}
+                placeholder="e.g. Summer Sale 2024"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Campaign Goal</Label>
+              <RadioGroup
+                value={newCampaignType}
+                onValueChange={(val) => setNewCampaignType(val as "broadcast" | "condition")}
+                className="grid grid-cols-1 gap-4"
+              >
+                <Label
+                  htmlFor="broadcast"
+                  className={cn(
+                    "flex flex-row items-start gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all",
+                    newCampaignType === "broadcast" ? "border-primary bg-primary/5" : "border-border"
+                  )}
+                >
+                  <RadioGroupItem value="broadcast" id="broadcast" className="mt-1" />
+                  <div className="grid gap-1 leading-none">
+                    <div className="font-semibold">Broadcast Campaign</div>
+                    <div className="text-sm text-muted-foreground font-normal">
+                      Send a one-time message to a list of recipients (SMS, WhatsApp, Email).
+                    </div>
+                  </div>
+                </Label>
+
+                <div className={cn(
+                  "rounded-md border p-4 transition-all",
+                  newCampaignType === "condition" ? "border-primary bg-primary/5" : "border-border hover:bg-accent hover:text-accent-foreground"
+                )}>
+                  <Label
+                    htmlFor="condition"
+                    className="flex flex-row items-start gap-4 cursor-pointer"
+                  >
+                    <RadioGroupItem value="condition" id="condition" className="mt-1" />
+                    <div className="grid gap-1 leading-none flex-1">
+                      <div className="font-semibold">Condition-based Campaign</div>
+                      <div className="text-sm text-muted-foreground font-normal">
+                        Trigger messages when specific events occur defined by your conditions.
+                      </div>
+
+
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleProceedToCreate}
+              disabled={!newCampaignName.trim()}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }

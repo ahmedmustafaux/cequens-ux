@@ -1,6 +1,6 @@
 import * as React from "react"
-import { 
-  Cloud, 
+import {
+  Cloud,
   CheckCircle2,
   Loader2,
   ArrowLeft,
@@ -73,7 +73,7 @@ const integrations: ThirdPartyIntegration[] = [
     id: "shopify",
     name: "Shopify",
     description: "Sync customers from your Shopify store",
-    logo: "https://cdn.shopify.com/shopifycloud/brochure/assets/brand-assets/shopify-logo-primary-logo-456baa801ee66a0a435671082365958316831c9960c480451dd0330bcdae304f.svg",
+    logo: "/assets/shopify.png",
     connected: false,
   },
 ]
@@ -83,9 +83,9 @@ interface ContactsImportDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function ContactsImportDialog({ 
-  open, 
-  onOpenChange 
+export function ContactsImportDialog({
+  open,
+  onOpenChange
 }: ContactsImportDialogProps) {
   const [selectedIntegration, setSelectedIntegration] = React.useState<ThirdPartyIntegration | null>(null)
   const [isConnecting, setIsConnecting] = React.useState(false)
@@ -146,12 +146,12 @@ export function ContactsImportDialog({
 
   const handleSync = async () => {
     if (!selectedIntegration) return
-    
+
     setIsSyncing(true)
-    
+
     // Simulate sync process
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Update sync history
     const newHistory: SyncHistory = {
       id: Date.now().toString(),
@@ -184,7 +184,7 @@ export function ContactsImportDialog({
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return "Just now"
     if (diffInHours < 24) return `${diffInHours}h ago`
     const diffInDays = Math.floor(diffInHours / 24)
@@ -206,14 +206,14 @@ export function ContactsImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className={cn(
-          "max-h-[85vh] overflow-hidden flex flex-col gap-2",
+          "max-h-[85vh] overflow-hidden flex flex-col gap-0",
           selectedIntegration?.connected ? "max-w-5xl" : "max-w-2xl"
         )}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogHeader>
           {selectedIntegration ? (
             <div className="flex items-center gap-4">
               <Button
@@ -226,8 +226,8 @@ export function ContactsImportDialog({
               </Button>
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 rounded-lg bg-background border flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <img 
-                    src={selectedIntegration.logo} 
+                  <img
+                    src={selectedIntegration.logo}
                     alt={selectedIntegration.name}
                     className="w-6 h-6 object-contain"
                   />
@@ -258,7 +258,7 @@ export function ContactsImportDialog({
           )}
         </DialogHeader>
 
-        <div className="flex-1 px-6 pb-6">
+        <div className="flex-1 p-4">
           {selectedIntegration ? (
             // Integration Detail View
             <div className="space-y-6">
@@ -314,8 +314,8 @@ export function ContactsImportDialog({
                           Quick Actions
                         </h3>
                         <div className="grid grid-cols-2 gap-3">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="justify-start gap-2 h-auto py-3"
                             onClick={handleSync}
                             disabled={isSyncing}
@@ -437,8 +437,8 @@ export function ContactsImportDialog({
                                         <AlertCircle className="w-3 h-3 text-warning-foreground" />
                                       )}
                                     </div>
-                                    <Badge 
-                                      variant="outline" 
+                                    <Badge
+                                      variant="outline"
                                       className={cn("capitalize text-xs", getStatusColor(history.status))}
                                     >
                                       {history.status}
@@ -475,7 +475,7 @@ export function ContactsImportDialog({
                   <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                     Authorize Cequens to access your {selectedIntegration.name} contacts and keep them in sync automatically.
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => handleConnect(selectedIntegration.id)}
                     disabled={isConnecting}
                     className="gap-2"
@@ -511,8 +511,8 @@ export function ContactsImportDialog({
                     )}
                   >
                     <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-background border flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={integration.logo} 
+                      <img
+                        src={integration.logo}
                         alt={integration.name}
                         className="w-8 h-8 object-contain"
                         onError={(e) => {
