@@ -1,5 +1,5 @@
 import * as React from "react"
-import { CalendarIcon, Check } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import { format } from "date-fns"
 import { type DateRange } from "react-day-picker"
 import { Button } from "@/components/ui/button"
@@ -24,12 +24,12 @@ interface TimeFilterProps {
   isLoading?: boolean
   mode?: "simple" | "advanced" // New prop to control complexity
 }
-export function TimeFilter({ 
-  value, 
-  onValueChange, 
-  className, 
+export function TimeFilter({
+  value,
+  onValueChange,
+  className,
   isLoading = false,
-  mode = "simple" 
+  mode = "simple"
 }: TimeFilterProps) {
   // Convert string value to DateRange for advanced mode
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
@@ -80,10 +80,10 @@ export function TimeFilter({
   // Helper function to convert DateRange to string
   function convertDateRangeToString(range: DateRange | undefined): string {
     if (!range?.from || !range?.to) return "30d"
-    
+
     const now = new Date()
     const daysDiff = Math.ceil((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24))
-    
+
     if (daysDiff <= 7) return "7d"
     if (daysDiff <= 30) return "30d"
     if (daysDiff <= 90) return "90d"
@@ -128,57 +128,57 @@ export function TimeFilter({
   // Helper function to check which shortcut is currently active
   const getActiveShortcut = React.useMemo(() => {
     if (mode === "simple") return null
-    
+
     const currentRange = isOpen ? tempDateRange : dateRange
     if (!currentRange?.from || !currentRange?.to) return null
     const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    
+
     const currentFrom = normalizeDate(currentRange.from)
     const currentTo = normalizeDate(currentRange.to)
     const today = normalizeDate(new Date())
     const yesterday = normalizeDate(new Date(Date.now() - 24 * 60 * 60 * 1000))
-    
+
     // Check for Today
     if (currentFrom.getTime() === today.getTime() && currentTo.getTime() === today.getTime()) {
       return "Today"
     }
-    
+
     // Check for Yesterday
     if (currentFrom.getTime() === yesterday.getTime() && currentTo.getTime() === yesterday.getTime()) {
       return "Yesterday"
     }
-    
+
     // Check for Last 7 days
     const last7DaysStart = normalizeDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
     if (currentFrom.getTime() === last7DaysStart.getTime() && currentTo.getTime() === today.getTime()) {
       return "Last 7 days"
     }
-    
+
     // Check for Last 30 days
     const last30DaysStart = normalizeDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
     if (currentFrom.getTime() === last30DaysStart.getTime() && currentTo.getTime() === today.getTime()) {
       return "Last 30 days"
     }
-    
+
     // Check for Last 90 days
     const last90DaysStart = normalizeDate(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))
     if (currentFrom.getTime() === last90DaysStart.getTime() && currentTo.getTime() === today.getTime()) {
       return "Last 90 days"
     }
-    
+
     // Check for This month
     const thisMonthStart = normalizeDate(new Date(today.getFullYear(), today.getMonth(), 1))
     if (currentFrom.getTime() === thisMonthStart.getTime() && currentTo.getTime() === today.getTime()) {
       return "This month"
     }
-    
+
     // Check for Last month
     const lastMonthStart = normalizeDate(new Date(today.getFullYear(), today.getMonth() - 1, 1))
     const lastMonthEnd = normalizeDate(new Date(today.getFullYear(), today.getMonth(), 0))
     if (currentFrom.getTime() === lastMonthStart.getTime() && currentTo.getTime() === lastMonthEnd.getTime()) {
       return "Last month"
     }
-    
+
     return null
   }, [dateRange, tempDateRange, isOpen, mode])
   // Predefined date range shortcuts
@@ -268,7 +268,7 @@ export function TimeFilter({
           <ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
           <ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
         </ToggleGroup>
-        
+
         {/* Mobile Select */}
         <Select value={stringValue} onValueChange={handleStringValueChange}>
           <SelectTrigger
@@ -300,7 +300,7 @@ export function TimeFilter({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-auto justify-between font-normal"
+            className="h-8 rounded-full p-1 pl-3 pr-2 text-xs font-normal"
           >
             {dateRange?.from && dateRange?.to ? (
               <>
@@ -310,13 +310,13 @@ export function TimeFilter({
                     dateRange.from.getDate() === today.getDate() &&
                     dateRange.from.getMonth() === today.getMonth() &&
                     dateRange.from.getFullYear() === today.getFullYear()
-                  
+
                   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
                   const isYesterday = dateRange.from.getTime() === dateRange.to.getTime() &&
                     dateRange.from.getDate() === yesterday.getDate() &&
                     dateRange.from.getMonth() === yesterday.getMonth() &&
                     dateRange.from.getFullYear() === yesterday.getFullYear()
-                  
+
                   if (isToday) return "Today"
                   if (isYesterday) return "Yesterday"
                   return `${format(dateRange.from, "MMM dd")} - ${format(dateRange.to, "MMM dd, yyyy")}`
@@ -325,14 +325,14 @@ export function TimeFilter({
             ) : (
               "Select date range"
             )}
-            <CalendarIcon className="ml-2 h-4 w-4" />
+            <ChevronDown className="ml-1 h-3 w-3 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-0" 
-          align="start" 
-          side="bottom" 
-          sideOffset={4} 
+        <PopoverContent
+          className="w-auto p-0"
+          align="start"
+          side="bottom"
+          sideOffset={4}
           alignOffset={-200}
           avoidCollisions={true}
           collisionPadding={16}
@@ -350,9 +350,8 @@ export function TimeFilter({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`w-full justify-between text-sm whitespace-nowrap px-2 py-1 h-auto ${
-                            isActive ? "bg-accent text-accent-foreground" : ""
-                          }`}
+                          className={`w-full justify-between text-sm whitespace-nowrap px-2 py-1 h-auto ${isActive ? "bg-accent text-accent-foreground" : ""
+                            }`}
                           onClick={() => setTempDateRange(shortcut.getValue())}
                         >
                           <span className={isActive ? "font-medium" : ""}>{shortcut.label}</span>
@@ -365,7 +364,7 @@ export function TimeFilter({
                 </div>
               </div>
             </div>
-            
+
             {/* Calendar */}
             <div className="p-3">
               <Calendar
@@ -384,7 +383,7 @@ export function TimeFilter({
               />
             </div>
           </div>
-          
+
           {/* Apply/Cancel Buttons */}
           <div className="flex justify-end gap-2 p-3 border-t border-border">
             <Button

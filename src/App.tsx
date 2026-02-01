@@ -3,7 +3,7 @@ import { AuthProvider } from '@/hooks/use-auth'
 import { OnboardingProvider } from '@/contexts/onboarding-context'
 import { Toaster } from '@/components/ui/sonner'
 import { ProtectedRoute, PublicRoute } from '@/components/ProtectedRoute'
-import { UpdateBanner } from '@/components/UpdateBanner'
+
 // appConfig removed as it's not used in Vite version
 
 // Layout components
@@ -72,7 +72,7 @@ import ProfilePage from '@/pages/ProfilePage'
 function App() {
   return (
     <AuthProvider>
-      <UpdateBanner />
+
       <OnboardingProvider>
         <Routes>
           {/* Public routes */}

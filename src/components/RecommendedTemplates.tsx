@@ -13,7 +13,7 @@ import { ChatText, EnvelopeSimple } from "phosphor-react"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+
 
 import {
   workflowTemplates,
@@ -272,113 +272,90 @@ export function RecommendedTemplates({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {/* ---------------- Tabs ---------------- */}
-          <TabsList className="inline-flex h-9 gap-2 rounded-lg p-[3px]">
-            <TabsTrigger value="for-you">
-              <User className="w-4 h-4 mr-1" /> For you
-            </TabsTrigger>
-            <TabsTrigger value="broadcasting">
-              <Megaphone className="w-4 h-4 mr-1" /> Campaigns
-            </TabsTrigger>
-            <TabsTrigger value="ai-powered">
-              <Sparkles className="w-4 h-4 mr-1" /> AI Powered
-            </TabsTrigger>
-            <TabsTrigger value="apis">
-              <Code className="w-4 h-4 mr-1" /> APIs
-            </TabsTrigger>
-            <TabsTrigger value="inbox">
-              <Inbox className="w-4 h-4 mr-1" /> Inbox
-            </TabsTrigger>
-          </TabsList>
+        {/* ---------------- Cards ---------------- */}
+        <div className="relative">
+          {/* Left Arrow */}
+          <div
+            className={cn(
+              "absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-card to-transparent z-10 flex items-center justify-center transition-all duration-300",
+              showLeftArrow
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 -translate-x-2 pointer-events-none"
+            )}
+          >
+            <button
+              onClick={() => scroll("left")}
+              className="w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
 
-          {/* ---------------- Cards ---------------- */}
-          <TabsContent value={activeTab}>
-            <div className="relative">
-              {/* Left Arrow */}
-              <div
-                className={cn(
-                  "absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-card to-transparent z-10 flex items-center justify-center transition-all duration-300",
-                  showLeftArrow
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 -translate-x-2 pointer-events-none"
-                )}
-              >
-                <button
-                  onClick={() => scroll("left")}
-                  className="w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
+          {/* Right Arrow */}
+          <div
+            className={cn(
+              "absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-card to-transparent z-10 flex items-center justify-center transition-all duration-300",
+              showRightArrow
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-2 pointer-events-none"
+            )}
+          >
+            <button
+              onClick={() => scroll("right")}
+              className="w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
 
-              {/* Right Arrow */}
-              <div
-                className={cn(
-                  "absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-card to-transparent z-10 flex items-center justify-center transition-all duration-300",
-                  showRightArrow
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 translate-x-2 pointer-events-none"
-                )}
+          <div
+            ref={scrollRef}
+            onScroll={updateArrows}
+            className="flex gap-4 overflow-x-auto hide-scrollbar"
+          >
+            {filteredTemplates.map((template) => (
+              <Card
+                key={template.id}
+                className="w-[320px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer"
               >
-                <button
-                  onClick={() => scroll("right")}
-                  className="w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div
-                ref={scrollRef}
-                onScroll={updateArrows}
-                className="flex gap-4 overflow-x-auto hide-scrollbar"
-              >
-                {filteredTemplates.map((template) => (
-                  <Card
-                    key={template.id}
-                    className="w-[320px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex gap-2">
-                        {template.apps.map((app) => (
-                          <div
-                            key={app.name}
-                            className="w-8 h-8 rounded-lg border flex items-center justify-center"
-                          >
-                            {renderAppIcon(app)}
-                          </div>
-                        ))}
+                <CardHeader className="pb-3">
+                  <div className="flex gap-2">
+                    {template.apps.map((app) => (
+                      <div
+                        key={app.name}
+                        className="w-8 h-8 rounded-lg border flex items-center justify-center"
+                      >
+                        {renderAppIcon(app)}
                       </div>
+                    ))}
+                  </div>
 
-                      <h3 className="text-sm font-medium mt-3 line-clamp-2">
-                        {template.title}
-                      </h3>
-                    </CardHeader>
+                  <h3 className="text-sm font-medium mt-3 line-clamp-2">
+                    {template.title}
+                  </h3>
+                </CardHeader>
 
-                    <CardContent className="pt-0">
-                      <div className="flex flex-wrap gap-1.5">
-                        {template.tags?.map((tag) => {
-                          const config = BADGE_CONFIG[tag]
-                          return (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className={cn("text-xs", config?.styles)}
-                            >
-                              {config?.icon}
-                              {tag}
-                            </Badge>
-                          )
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-1.5">
+                    {template.tags?.map((tag) => {
+                      const config = BADGE_CONFIG[tag]
+                      return (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className={cn("text-xs", config?.styles)}
+                        >
+                          {config?.icon}
+                          {tag}
+                        </Badge>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

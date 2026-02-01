@@ -51,11 +51,11 @@ export default function DashboardPage() {
         // Ignore errors
       }
     }
-    
+
     window.addEventListener('storage', handleStorageChange)
     // Also check on interval to catch local changes
     const interval = setInterval(handleStorageChange, 500)
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
@@ -65,17 +65,17 @@ export default function DashboardPage() {
   // Convert DateRange to timeRange string for components
   const getTimeRangeFromDateRange = (range: DateRange | undefined): string => {
     if (!range || !range.from || !range.to) return "30d"
-    
+
     const diffTime = Math.abs(range.to.getTime() - range.from.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays <= 7) return "7d"
     if (diffDays <= 30) return "30d"
     return "90d"
   }
-  
+
   const timeRange = getTimeRangeFromDateRange(dateRange)
-  
+
   // Dynamic title based on date range
   useTimeRangeTitle(timeRange)
 
@@ -91,22 +91,21 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 flex flex-col gap-4">
             <PageHeader
               title="Home"
-              description="Monitor your communication platform performance"
-              showBreadcrumbs={false}
-              showFilters={true}
-              filters={<TimeFilter value={dateRange} onValueChange={(value) => {
+              titleSuffix={<TimeFilter value={dateRange} onValueChange={(value) => {
                 if (value && typeof value === 'object') {
                   setDateRange(value as DateRange)
                 }
               }} isLoading={isMetricsLoading} mode="advanced" />}
+              description="Monitor your communication platform performance"
+              showBreadcrumbs={false}
               isLoading={isMetricsLoading}
             />
 
             {/* Statistics Cards */}
-            <SectionCards 
-              timeRange={timeRange} 
-              metrics={metrics} 
-              isLoading={isMetricsLoading} 
+            <SectionCards
+              timeRange={timeRange}
+              metrics={metrics}
+              isLoading={isMetricsLoading}
               isEmpty={isNewUser}
               error={metricsError}
             />
@@ -120,6 +119,11 @@ export default function DashboardPage() {
 
           {/* Right 1/3: Case Studies (Featured Content) - Show skeleton until metrics load */}
           <div className="lg:col-span-1 flex flex-col gap-4">
+            <PageHeader
+              title="New releases"
+              description="Stay up to date with the latest features"
+              showBreadcrumbs={false}
+            />
             <FeaturedContentCard showDismiss={false} isLoading={isMetricsLoading} />
           </div>
         </div>
