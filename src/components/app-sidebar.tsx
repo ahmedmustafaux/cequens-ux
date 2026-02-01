@@ -19,11 +19,15 @@ import {
   Brain,
   Code,
   CreditCard,
+  MessageCircle,
+  Instagram,
+  Phone,
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import { useAuth } from "@/hooks/use-auth"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +35,13 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
 } from "@/components/ui/sidebar"
+import { useNavigationContext } from "@/hooks/use-navigation-context"
+import { getActiveChannels } from "@/lib/channel-utils"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 const data = {
   navMain: [
     {
@@ -40,36 +50,52 @@ const data = {
       icon: Home,
     },
     {
-      title: "Campaigns",
+      title: "Inbox",
+      url: "https://console.cequens.com/chat-dashboard/#/inbox",
+      icon: Inbox,
+      external: true,
+    },
+    {
+      title: "Engage",
       url: "/campaigns",
       icon: Megaphone,
       items: [
         {
-          title: "Automation",
-          url: "/campaigns/automation",
-          icon: Lightbulb,
+          title: "Campaigns",
+          url: "/campaigns",
         },
         {
-          title: "Settings",
-          url: "/campaigns/settings",
-          icon: Settings,
+          title: "Journey Builder",
+          url: "/automation/journey",
+        },
+        {
+          title: "Message Templates",
+          url: "/automation/templates",
+        },
+        {
+          title: "Use Cases",
+          url: "/use-cases",
+          badge: "New",
         },
       ],
     },
     {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
+      title: "AI & Bots",
+      url: "/automation/bots",
+      icon: Bot,
+      badge: "New",
       items: [
         {
-          title: "Requests",
-          url: "/inbox/requests",
-          icon: MessageSquare,
+          title: "My AI Agents",
+          url: "/automation/bots",
         },
         {
-          title: "Settings",
-          url: "/inbox/settings",
-          icon: Settings,
+          title: "Knowledge Base",
+          url: "/automation/kb",
+        },
+        {
+          title: "Bot Templates",
+          url: "/automation/bot-templates",
         },
       ],
     },
@@ -79,51 +105,55 @@ const data = {
       icon: Users,
       items: [
         {
+          title: "All Contacts",
+          url: "/contacts",
+        },
+        {
           title: "Segments",
           url: "/contacts/segments",
-          icon: Layout,
         },
         {
-          title: "Tags & Attributes",
+          title: "Tags",
           url: "/contacts/tags",
-          icon: Tags,
+        },
+        {
+          title: "Custom Attributes",
+          url: "/contacts/attributes",
         },
       ],
-    },
-    {
-      title: "Automation Hub",
-      url: "/automation",
-      icon: Bot,
-      items: [
-        {
-          title: "Journey Builder",
-          url: "/automation/journey",
-          icon: Boxes,
-        },
-        {
-          title: "Templates",
-          url: "/automation/templates",
-          icon: FileText,
-        },
-        {
-          title: "Bot Studio",
-          url: "/automation/bots",
-          icon: Brain,
-        },
-      ],
-    },
-    {
-      title: "Channels",
-      url: "/channels",
-      icon: Globe,
     },
     {
       title: "Analytics",
       url: "/analytics",
       icon: BarChart3,
+      items: [
+        {
+          title: "Performance Dashboard",
+          url: "/analytics/performance",
+        },
+        {
+          title: "Campaign Analytics",
+          url: "/analytics/campaigns",
+        },
+        {
+          title: "Conversation Metrics",
+          url: "/analytics/conversations",
+        },
+        {
+          title: "Channel Reports",
+          url: "/analytics/channels",
+        },
+        {
+          title: "Agent Performance",
+          url: "/analytics/agent",
+        },
+        {
+          title: "Custom Reports",
+          url: "/analytics/custom",
+        },
+      ],
     },
   ],
-  navClouds: [],
   navSecondary: [
     {
       title: "Developer Hub",
@@ -131,32 +161,20 @@ const data = {
       icon: Code,
       items: [
         {
-          title: "API Docs",
+          title: "API Keys",
+          url: "/developer-apis/keys",
+        },
+        {
+          title: "Webhooks",
+          url: "/developer-apis/webhooks",
+        },
+        {
+          title: "Documentation",
           url: "/developer-apis/docs",
         },
         {
-          title: "SMS API",
-          url: "/developer-apis/sms",
-        },
-        {
-          title: "Voice API",
-          url: "/developer-apis/voice",
-        },
-        {
-          title: "WhatsApp Business API",
-          url: "/developer-apis/whatsapp",
-        },
-        {
-          title: "Push Notification API",
-          url: "/developer-apis/push",
-        },
-        {
-          title: "OTP API",
-          url: "/developer-apis/otp",
-        },
-        {
-          title: "Bot APIs",
-          url: "/developer-apis/bots",
+          title: "API Logs",
+          url: "/developer-apis/logs",
         },
       ],
     },
@@ -166,24 +184,24 @@ const data = {
       icon: Settings,
       items: [
         {
-          title: "Account Settings",
+          title: "Account Information",
           url: "/settings/profile",
+        },
+        {
+          title: "Company & Compliance",
+          url: "/settings/company",
         },
         {
           title: "Team Management",
           url: "/settings/organization",
         },
         {
-          title: "Audience Export",
-          url: "/settings/contacts-export",
+          title: "Security & Logs",
+          url: "/settings/security",
         },
         {
           title: "Integrations",
           url: "/settings/plugins",
-        },
-        {
-          title: "System Preferences",
-          url: "/settings/preferences",
         },
       ],
     },
@@ -191,13 +209,109 @@ const data = {
       title: "Billing",
       url: "/billing",
       icon: CreditCard,
+      items: [
+        {
+          title: "Plans & Features",
+          url: "/billing/plans",
+        },
+        {
+          title: "Usage & Credits",
+          url: "/billing/usage",
+        },
+        {
+          title: "Payment Methods",
+          url: "/billing/payments",
+        },
+        {
+          title: "Invoice History",
+          url: "/billing/invoices",
+        },
+      ],
+    },
+    {
+      title: "Support",
+      url: "/support",
+      icon: Lightbulb,
+      items: [
+        {
+          title: "Help Center",
+          url: "/support/help",
+        },
+        {
+          title: "Best Practices",
+          url: "/support/best-practices",
+        },
+        {
+          title: "FAQs",
+          url: "/support/faqs",
+        },
+      ],
     },
   ],
 }
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
+
+function ChannelPrompter() {
+  const [activeChannels, setActiveChannels] = React.useState<string[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const { isActive, navigateTo } = useNavigationContext()
+
+  React.useEffect(() => {
+    setActiveChannels(getActiveChannels())
+    setLoading(false)
+
+    const handleChannelChange = (e: any) => {
+      setActiveChannels(e.detail.channelIds)
+    }
+    window.addEventListener('activeChannelsChanged', handleChannelChange)
+    return () => window.removeEventListener('activeChannelsChanged', handleChannelChange)
+  }, [])
+
+  const channelIsActive = isActive("/channels")
+
+  return (
+    <SidebarGroup className="py-2 px-2">
+      <div className={cn(
+        "rounded-xl border transition-all duration-300 overflow-hidden",
+        activeChannels.length === 0
+          ? "bg-primary/[0.03] border-primary/20 shadow-sm"
+          : "bg-transparent border-transparent"
+      )}>
+        {activeChannels.length === 0 && (
+          <div
+            className="p-2.5 flex items-center justify-around border-b border-primary/10 bg-primary/[0.02] cursor-pointer hover:bg-primary/[0.05] transition-colors"
+            onClick={() => navigateTo('/channels')}
+          >
+            <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="size-3.5 opacity-80" />
+            <img src="/icons/Instagram.svg" alt="Instagram" className="size-3.5 opacity-80" />
+            <img src="/icons/Messenger.png" alt="Messenger" className="size-3.5 opacity-80" />
+            <ChatText weight="fill" className="size-3.5 text-primary/60" />
+            <EnvelopeSimple weight="fill" className="size-3.5 text-primary/60" />
+            <PhoneIcon weight="fill" className="size-3.5 text-primary/60" />
+          </div>
+        )}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={channelIsActive}
+              onClick={() => navigateTo("/channels")}
+              className={cn(
+                "w-full",
+                activeChannels.length === 0 && "hover:bg-primary/5"
+              )}
+            >
+              <Globe className={cn("size-4", activeChannels.length === 0 && "text-primary")} />
+              <span className={cn(activeChannels.length === 0 && "font-semibold text-primary")}>Channels</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </div>
+    </SidebarGroup>
+  )
+}
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth()
-  
+
   // Create user data for NavUser component
   const userData = {
     name: user?.name || "User",
@@ -209,19 +323,22 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-       
-                <img
-                  src="/Logo.svg" 
-                  alt={getAppName()} 
-                  className="ml-1 py-2 w-25 h-auto"
-                />
-      
+
+            <img
+              src="/Logo.svg"
+              alt={getAppName()}
+              className="ml-1 py-2 w-25 h-auto"
+            />
+
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <div className="mt-auto flex flex-col">
+          <ChannelPrompter />
+          <NavSecondary items={data.navSecondary} />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />
