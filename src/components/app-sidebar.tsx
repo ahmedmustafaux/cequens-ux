@@ -47,7 +47,7 @@ import { getActiveChannels } from "@/lib/channel-utils"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 const data = {
-  // Group 1: Home, Inbox, Engage, Verify, AI & Bots
+  // Group 1: Home, Inbox, Engage, Verify, AI & Bots, Developer Hub
   navMain: [
     {
       title: "Home",
@@ -99,8 +99,31 @@ const data = {
         },
       ],
     },
+    {
+      title: "Developer Hub",
+      url: "/developer-apis",
+      icon: Code,
+      items: [
+        {
+          title: "API Keys",
+          url: "/developer-apis/keys",
+        },
+        {
+          title: "Webhooks",
+          url: "/developer-apis/webhooks",
+        },
+        {
+          title: "Documentation",
+          url: "/developer-apis/docs",
+        },
+        {
+          title: "API Logs",
+          url: "/developer-apis/logs",
+        },
+      ],
+    },
   ],
-  // Group 2: Audience, Library, Dev Hub
+  // Group 2: Audience, Library
   navGroup2: [
     {
       title: "Audience",
@@ -141,29 +164,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Developer Hub",
-      url: "/developer-apis",
-      icon: Code,
-      items: [
-        {
-          title: "API Keys",
-          url: "/developer-apis/keys",
-        },
-        {
-          title: "Webhooks",
-          url: "/developer-apis/webhooks",
-        },
-        {
-          title: "Documentation",
-          url: "/developer-apis/docs",
-        },
-        {
-          title: "API Logs",
-          url: "/developer-apis/logs",
-        },
-      ],
-    },
+
   ],
   // Group 3: Analytics
   navGroup3: [
@@ -199,7 +200,7 @@ const data = {
       ],
     },
   ],
-  // Secondary: Settings, Billing, Support (Dev Hub moved to Group 2)
+  // Secondary: Settings, Billing, Support
   navSecondary: [
     {
       title: "Settings",
