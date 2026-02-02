@@ -8,6 +8,16 @@ export interface UpdateLog {
 
 export const UPDATE_LOGS: UpdateLog[] = [
     {
+        id: 'update-feb-02-verify-and-visuals',
+        date: 'Feb 02',
+        title: 'Verify Tab & Visual Refinements',
+        content: `• Feature: Added new 'Verify' tab to sidebar with corresponding Coming Soon page.
+• UI: Updated Signup page visual assets to SVGs and refined spacing (removed top padding).
+• UX: Enhanced external link icons to 'ArrowUpRight' in navigation.
+• Refinement: Improved Dev Updates Drawer layout and 'Mark all as read' button positioning.`,
+        type: 'feature'
+    },
+    {
         id: 'update-feb-01-campaign-targeting',
         date: 'Feb 01',
         title: 'Rich Campaign Targeting',

@@ -44,17 +44,17 @@ export default function SignupPage() {
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const storySteps = [
     {
-      image: "/visual/Image1.png",
+      image: "/visual/Image1.svg",
       title: "a place for everything",
       description: "Communication, Marketing, Supporting and security in one dashboard."
     },
     {
-      image: "/visual/Image2.png",
+      image: "/visual/Image2.svg",
       title: "Seamless Integration",
       description: "Connect with all your favorite platforms and services in one place."
     },
     {
-      image: "/visual/Image3.png",
+      image: "/visual/Image3.svg",
       title: "Powerful Analytics",
       description: "Get insights and make data-driven decisions with comprehensive reports."
     }
@@ -656,10 +656,11 @@ export default function SignupPage() {
           >
 
             {/* Small top margin for spacing */}
-            <div className="pt-16"></div>
+            {/* Small top margin for spacing - REMOVED */}
+
 
             {/* Visual Content */}
-            <div className="flex-1 flex flex-col items-center justify-center relative">
+            <div className="flex-1 flex flex-col items-center justify-start relative">
               {/* Image Placeholder - Container */}
               <div className="w-full relative">
                 {storySteps.map((step, index) => (

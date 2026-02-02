@@ -23,6 +23,7 @@ import {
   Instagram,
   Phone,
   Library,
+  ShieldCheck,
 
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
@@ -39,12 +40,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarGroup,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
 import { getActiveChannels } from "@/lib/channel-utils"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 const data = {
+  // Group 1: Home, Inbox, Engage, Verify, AI & Bots
   navMain: [
     {
       title: "Home",
@@ -73,6 +76,11 @@ const data = {
       ],
     },
     {
+      title: "Verify",
+      url: "/verify",
+      icon: ShieldCheck,
+    },
+    {
       title: "AI & Bots",
       url: "/automation/bots",
       icon: Bot,
@@ -91,6 +99,9 @@ const data = {
         },
       ],
     },
+  ],
+  // Group 2: Audience, Library, Dev Hub
+  navGroup2: [
     {
       title: "Audience",
       url: "/contacts",
@@ -131,6 +142,32 @@ const data = {
       ],
     },
     {
+      title: "Developer Hub",
+      url: "/developer-apis",
+      icon: Code,
+      items: [
+        {
+          title: "API Keys",
+          url: "/developer-apis/keys",
+        },
+        {
+          title: "Webhooks",
+          url: "/developer-apis/webhooks",
+        },
+        {
+          title: "Documentation",
+          url: "/developer-apis/docs",
+        },
+        {
+          title: "API Logs",
+          url: "/developer-apis/logs",
+        },
+      ],
+    },
+  ],
+  // Group 3: Analytics
+  navGroup3: [
+    {
       title: "Analytics",
       url: "/analytics",
       icon: BarChart3,
@@ -162,30 +199,8 @@ const data = {
       ],
     },
   ],
+  // Secondary: Settings, Billing, Support (Dev Hub moved to Group 2)
   navSecondary: [
-    {
-      title: "Developer Hub",
-      url: "/developer-apis",
-      icon: Code,
-      items: [
-        {
-          title: "API Keys",
-          url: "/developer-apis/keys",
-        },
-        {
-          title: "Webhooks",
-          url: "/developer-apis/webhooks",
-        },
-        {
-          title: "Documentation",
-          url: "/developer-apis/docs",
-        },
-        {
-          title: "API Logs",
-          url: "/developer-apis/logs",
-        },
-      ],
-    },
     {
       title: "Settings",
       url: "/settings",
@@ -342,7 +357,19 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        {/* Main Group (Home, Inbox, Engage, Verify, AI & Bots) */}
         <NavMain items={data.navMain} />
+
+        <SidebarSeparator className="mx-0" />
+
+        {/* Secondary Group (Audience, Library, Dev Hub) */}
+        <NavMain items={data.navGroup2} />
+
+        <SidebarSeparator className="mx-0" />
+
+        {/* Analytics Group */}
+        <NavMain items={data.navGroup3} />
+
         <div className="mt-auto flex flex-col">
           <ChannelPrompter />
           <NavSecondary items={data.navSecondary} />

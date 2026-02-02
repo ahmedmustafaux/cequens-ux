@@ -72,6 +72,7 @@ import AutomationBotTemplatesPage from '@/pages/AutomationBotTemplatesPage'
 import ContactsAttributesPage from '@/pages/ContactsAttributesPage'
 import UseCasesPage from '@/pages/UseCasesPage'
 import LibraryPage from '@/pages/LibraryPage'
+import VerifyPage from '@/pages/VerifyPage'
 import AnalyticsPerformancePage from '@/pages/AnalyticsPerformancePage'
 import AnalyticsCampaignsPage from '@/pages/AnalyticsCampaignsPage'
 import AnalyticsConversationsPage from '@/pages/AnalyticsConversationsPage'
@@ -132,6 +133,17 @@ function App() {
           <Route path="/onboarding" element={
             <ProtectedRoute>
               <NewUserOnboardingPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Verify Route */}
+          <Route path="/verify" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <VerifyPage />
+                </DashboardLayout>
+              </RootLayout>
             </ProtectedRoute>
           } />
 
