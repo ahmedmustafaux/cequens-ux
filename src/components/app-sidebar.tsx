@@ -22,6 +22,8 @@ import {
   MessageCircle,
   Instagram,
   Phone,
+  Library,
+
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -68,15 +70,6 @@ const data = {
           title: "Journey Builder",
           url: "/automation/journey",
         },
-        {
-          title: "Message Templates",
-          url: "/automation/templates",
-        },
-        {
-          title: "Use Cases",
-          url: "/use-cases",
-          badge: "New",
-        },
       ],
     },
     {
@@ -118,6 +111,22 @@ const data = {
         {
           title: "Custom Attributes",
           url: "/contacts/attributes",
+        },
+      ],
+    },
+    {
+      title: "Library",
+      url: "/library",
+      icon: Library,
+      items: [
+        {
+          title: "Message Templates",
+          url: "/automation/templates",
+        },
+        {
+          title: "Use Cases",
+          url: "/use-cases",
+          badge: "New",
         },
       ],
     },

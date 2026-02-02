@@ -2,7 +2,7 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Check, ChevronRight, Loader2, Code, AppWindow } from "lucide-react"
+import { Check, ChevronRight, Loader2, Code, AppWindow, LogOut } from "lucide-react"
 import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useOnboarding } from "@/contexts/onboarding-context"
@@ -484,6 +484,13 @@ export default function NewUserOnboardingPage() {
       {/* Theme Switcher - Top Right Corner */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <ThemeSwitcher />
+      </div>
+
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+        <Button variant="ghost" size="sm" onClick={logout} className="gap-2">
+          <LogOut className="h-4 w-4 rotate-180" />
+          Logout
+        </Button>
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-16">

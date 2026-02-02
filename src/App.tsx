@@ -67,6 +67,29 @@ import SettingsPreferencesPage from '@/pages/SettingsPreferencesPage'
 import SettingsSupportPage from '@/pages/SettingsSupportPage'
 import BillingPage from '@/pages/BillingPage'
 import ProfilePage from '@/pages/ProfilePage'
+import AutomationKbPage from '@/pages/AutomationKbPage'
+import AutomationBotTemplatesPage from '@/pages/AutomationBotTemplatesPage'
+import ContactsAttributesPage from '@/pages/ContactsAttributesPage'
+import UseCasesPage from '@/pages/UseCasesPage'
+import LibraryPage from '@/pages/LibraryPage'
+import AnalyticsPerformancePage from '@/pages/AnalyticsPerformancePage'
+import AnalyticsCampaignsPage from '@/pages/AnalyticsCampaignsPage'
+import AnalyticsConversationsPage from '@/pages/AnalyticsConversationsPage'
+import AnalyticsChannelsPage from '@/pages/AnalyticsChannelsPage'
+import AnalyticsAgentPage from '@/pages/AnalyticsAgentPage'
+import AnalyticsCustomPage from '@/pages/AnalyticsCustomPage'
+import DeveloperApisKeysPage from '@/pages/DeveloperApisKeysPage'
+import DeveloperApisWebhooksPage from '@/pages/DeveloperApisWebhooksPage'
+import DeveloperApisLogsPage from '@/pages/DeveloperApisLogsPage'
+import SettingsCompanyPage from '@/pages/SettingsCompanyPage'
+import SettingsSecurityPage from '@/pages/SettingsSecurityPage'
+import BillingPlansPage from '@/pages/BillingPlansPage'
+import BillingUsagePage from '@/pages/BillingUsagePage'
+import BillingPaymentsPage from '@/pages/BillingPaymentsPage'
+import BillingInvoicesPage from '@/pages/BillingInvoicesPage'
+import SupportHelpPage from '@/pages/SupportHelpPage'
+import SupportBestPracticesPage from '@/pages/SupportBestPracticesPage'
+import SupportFaqsPage from '@/pages/SupportFaqsPage'
 
 
 function App() {
@@ -127,6 +150,60 @@ function App() {
               <RootLayout>
                 <DashboardLayout>
                   <AnalyticsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/performance" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsPerformancePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/campaigns" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsCampaignsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/conversations" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsConversationsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/channels" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsChannelsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/agent" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsAgentPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/custom" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsCustomPage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>
@@ -212,6 +289,15 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
+          <Route path="/contacts/attributes" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <ContactsAttributesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/contacts/:id/edit" element={
             <ProtectedRoute>
               <RootLayout>
@@ -289,6 +375,42 @@ function App() {
               <RootLayout>
                 <DashboardLayout>
                   <AutomationTemplatesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/use-cases" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <UseCasesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/library" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <LibraryPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation/kb" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationKbPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/automation/bot-templates" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AutomationBotTemplatesPage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>
@@ -429,6 +551,33 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
+          <Route path="/developer-apis/keys" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisKeysPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/webhooks" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisWebhooksPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/developer-apis/logs" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <DeveloperApisLogsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/developer-apis/sms" element={
             <ProtectedRoute>
               <RootLayout>
@@ -503,6 +652,24 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
+          <Route path="/settings/company" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsCompanyPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings/security" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SettingsSecurityPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/settings/organization" element={
             <ProtectedRoute>
               <RootLayout>
@@ -548,6 +715,33 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
+          <Route path="/support/help" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SupportHelpPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/support/best-practices" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SupportBestPracticesPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/support/faqs" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <SupportFaqsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
 
           {/* Billing & Profile Routes */}
           <Route path="/billing" element={
@@ -555,6 +749,42 @@ function App() {
               <RootLayout>
                 <DashboardLayout>
                   <BillingPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/billing/plans" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <BillingPlansPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/billing/usage" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <BillingUsagePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/billing/payments" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <BillingPaymentsPage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/billing/invoices" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <BillingInvoicesPage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>
