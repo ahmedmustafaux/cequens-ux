@@ -2,14 +2,14 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
+import {
   Sparkles,
   Minimize2,
   Maximize2,
-  Check, 
+  Check,
   ChevronDown,
-  ChevronRight, 
-  Users, 
+  ChevronRight,
+  Users,
   Send,
   Settings,
   Lock,
@@ -60,7 +60,7 @@ interface GettingStartedGuideFloatingProps {
   onDismiss?: () => void
 }
 
-export function GettingStartedGuideFloating({ 
+export function GettingStartedGuideFloating({
   industry = "ecommerce",
   channels = [],
   goals = [],
@@ -68,7 +68,7 @@ export function GettingStartedGuideFloating({
   onDismiss
 }: GettingStartedGuideFloatingProps) {
   const { user } = useAuth()
-  
+
   // Persona state with localStorage persistence
   const STORAGE_KEY_PERSONA = 'cequens-setup-guide-persona'
   const [persona, setPersona] = useState<Persona>(() => {
@@ -101,11 +101,11 @@ export function GettingStartedGuideFloating({
         // Ignore errors
       }
     }
-    
+
     window.addEventListener('storage', handleStorageChange)
     // Also check on interval to catch local changes
     const interval = setInterval(handleStorageChange, 500)
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
@@ -172,7 +172,7 @@ export function GettingStartedGuideFloating({
   useEffect(() => {
     // Business persona: 5 steps for ecommerce (3 + 0 + 2), 8 steps for others (3 + 3 + 2)
     // API persona: 9 steps (3 + 3 + 3)
-    const total = persona === "business" 
+    const total = persona === "business"
       ? (industry === "ecommerce" ? 5 : 8)
       : 9
     setTotalSteps(total)
@@ -207,7 +207,7 @@ export function GettingStartedGuideFloating({
     window.addEventListener('activeChannelsChanged', handleActiveChannelsChange)
     // Check on mount as well
     handleActiveChannelsChange()
-    
+
     return () => {
       window.removeEventListener('activeChannelsChanged', handleActiveChannelsChange)
     }
@@ -263,16 +263,16 @@ export function GettingStartedGuideFloating({
     }
 
     updateProgress()
-    
+
     // Listen for storage changes
     const handleStorageChange = () => {
       updateProgress()
     }
-    
+
     window.addEventListener('storage', handleStorageChange)
     // Also check on interval to catch local changes
     const interval = setInterval(updateProgress, 500)
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
@@ -294,7 +294,7 @@ export function GettingStartedGuideFloating({
 
     if (persona === "business") {
       // BUSINESS PERSONA (MARKETEER) STEPS
-      
+
       // Step 1: Configure your channel
       steps.push({
         id: "step-1",
@@ -468,7 +468,7 @@ export function GettingStartedGuideFloating({
       })
     } else {
       // API PERSONA (DEVELOPER) STEPS
-      
+
       // Step 1: Generate API Key
       steps.push({
         id: "step-1",
@@ -605,7 +605,7 @@ export function GettingStartedGuideFloating({
   // Helper function to check if a step is a goal step
   function isGoalStep(stepTitle: string): boolean {
     if (persona !== "business" || goals.length === 0) return false
-    
+
     // Map goal IDs to step titles that should be tagged
     const goalStepMapping: Record<string, string[]> = {
       "goal-2": ["Send your first campaign"], // Marketing campaigns
@@ -616,7 +616,7 @@ export function GettingStartedGuideFloating({
       "goal-7": ["Add your audience", "Send your first campaign"], // Customer retention
       "goal-9": ["Configure your channel"], // Multi-channel messaging
     }
-    
+
     // Check if any selected goal maps to this step title
     return goals.some(goalId => {
       const mappedSteps = goalStepMapping[goalId] || []
@@ -626,12 +626,12 @@ export function GettingStartedGuideFloating({
 
   // Track if we've initialized expanded steps on this mount/persona
   const hasInitializedExpanded = React.useRef(false)
-  
+
   // Reset initialization flag when persona changes
   useEffect(() => {
     hasInitializedExpanded.current = false
   }, [persona])
-  
+
   // Initialize expanded steps - always expand first incomplete step on mount/refresh
   useEffect(() => {
     if (!hasInitializedExpanded.current && setupSteps.length > 0) {
@@ -649,14 +649,14 @@ export function GettingStartedGuideFloating({
   // Auto-expand next incomplete step when a step is completed (if the completed step was expanded)
   useEffect(() => {
     // Find any completed step that is currently expanded
-    const expandedCompletedStep = setupSteps.find(step => 
+    const expandedCompletedStep = setupSteps.find(step =>
       completedSteps.has(step.id) && expandedSteps.has(step.id)
     )
-    
+
     if (expandedCompletedStep) {
       const currentIndex = setupSteps.findIndex(step => step.id === expandedCompletedStep.id)
       const nextIncomplete = setupSteps.slice(currentIndex + 1).find(step => !completedSteps.has(step.id))
-      
+
       if (nextIncomplete) {
         setExpandedSteps(prev => {
           const newExpanded = new Set(prev)
@@ -702,17 +702,17 @@ export function GettingStartedGuideFloating({
     setCompletedSteps(prev => {
       const newSet = new Set(prev)
       const wasCompleted = newSet.has(stepId)
-      
+
       if (wasCompleted) {
         newSet.delete(stepId)
       } else {
         newSet.add(stepId)
-        
+
         // If step was just completed and was expanded, expand the next incomplete step
         if (expandedSteps.has(stepId)) {
           const currentIndex = setupSteps.findIndex(step => step.id === stepId)
           const nextIncomplete = setupSteps.slice(currentIndex + 1).find(step => !newSet.has(step.id))
-          
+
           if (nextIncomplete) {
             setExpandedSteps(prev => {
               const newExpanded = new Set(prev)
@@ -730,7 +730,7 @@ export function GettingStartedGuideFloating({
           }
         }
       }
-      
+
       return newSet
     })
   }
@@ -825,10 +825,10 @@ export function GettingStartedGuideFloating({
                   <div className={cn("flex items-start", contentGap, "pt-2")}>
                     {/* Image on the left */}
                     <div className="w-[35%] flex-shrink-0 flex items-start pt-3 hidden md:block">
-                      <img 
+                      <img
                         src={`/steps/${getStepImageName(step.title)}`}
                         alt={step.title}
-                        className="w-full aspect-square rounded-lg object-cover"
+                        className="w-full h-full rounded-lg object-cover"
                       />
                     </div>
 
@@ -946,39 +946,39 @@ export function GettingStartedGuideFloating({
           </div>
         </div>
 
-          {/* Greeting message with persona dropdown - only show when not minimized */}
-          {!isMinimized && (
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm">
-                  👋 Hello, {userName}! Let's get started as a
-                </span>
-                {/* Persona Switcher */}
-                <Select value={persona} onValueChange={(value) => setPersona(value as Persona)}>
-                  <SelectTrigger className="w-auto h-auto bg-card py-1 px-2 border border-border shadow-none [&_[data-slot=select-value]]:hidden hover:bg-muted/50">
-                    <SelectValue />
-                    <span className="text-sm font-semibold">
-                      {persona === "business" ? "Marketeer" : "Developer"}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="business" className="text-sm">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" />
-                        <span>Marketeer</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="api" className="text-sm">
-                      <div className="flex items-center gap-2">
-                        <Code className="w-4 h-4" />
-                        <span>Developer</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Greeting message with persona dropdown - only show when not minimized */}
+        {!isMinimized && (
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm">
+                👋 Hello, {userName}! Let's get started as a
+              </span>
+              {/* Persona Switcher */}
+              <Select value={persona} onValueChange={(value) => setPersona(value as Persona)}>
+                <SelectTrigger className="w-auto h-auto bg-card py-1 px-2 border border-border shadow-none [&_[data-slot=select-value]]:hidden hover:bg-muted/50">
+                  <SelectValue />
+                  <span className="text-sm font-semibold">
+                    {persona === "business" ? "Marketeer" : "Developer"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="business" className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Marketeer</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="api" className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <Code className="w-4 h-4" />
+                      <span>Developer</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+          </div>
+        )}
       </CardHeader>
 
       <AnimatePresence>
@@ -997,7 +997,7 @@ export function GettingStartedGuideFloating({
                   const isSendCampaignStep = step.id === "step-3"
                   const isChannelConfigured = completedSteps.has("step-1")
                   const isLocked = isSendCampaignStep && !isChannelConfigured
-                  
+
                   return renderStepItem(step, isCompleted, isExpanded, isLocked, "inline")
                 })}
               </div>
