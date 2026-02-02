@@ -45,8 +45,8 @@ export default function SignupPage() {
   const storySteps = [
     {
       image: "/visual/Image1.svg",
-      title: "a place for everything",
-      description: "Communication, Marketing, Supporting and security in one dashboard."
+      title: "One Communication Platform",
+      description: "Connect with your customers on their favorite channels."
     },
     {
       image: "/visual/Image2.svg",
