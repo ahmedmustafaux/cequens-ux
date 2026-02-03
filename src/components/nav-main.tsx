@@ -128,7 +128,7 @@ export function NavMain({
                               <span>{subItem.title}</span>
                               {subItem.external && (
                                 <div className="ml-auto flex items-center justify-center size-4">
-                                  <ArrowUpRight className="size-4" />
+                                  <ArrowUpRight className="size-4 text-muted-foreground" />
                                 </div>
                               )}
                               {subItem.badge && (
@@ -154,7 +154,7 @@ export function NavMain({
                     <span>{item.title}</span>
                     {item.external && (
                       <div className="ml-auto flex items-center justify-center size-4">
-                        <ArrowUpRight className="size-4" />
+                        <ArrowUpRight className="size-4 text-muted-foreground" />
                       </div>
                     )}
                     {item.badge && (
