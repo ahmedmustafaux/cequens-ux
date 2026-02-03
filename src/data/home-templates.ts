@@ -90,42 +90,7 @@ export function getAppIcon(name: string): AppIcon {
 
 // Template data
 export const workflowTemplates: WorkflowTemplate[] = [
-  {
-    id: "fb-leads-sheets",
-    title: "Capture New Leads from Facebook, Analyze Their Details, and Log Them into Google Sheets",
-    description: "Automatically capture leads from Facebook, extract their information using AI, and organize everything in Google Sheets.",
-    apps: [getAppIcon("facebook"), getAppIcon("google-sheets")],
-    isAIPowered: true,
-    categories: ["ai-workflow", "most-popular"],
-    tags: ["AI Powered", "API"],
-    industries: ["ecommerce", "retail"],
-    goals: ["goal-4"], // Lead generation
-    channels: ["channel-5"] // Messenger
-  },
-  {
-    id: "sheets-chatgpt-insights",
-    title: "Receive automatic updates in Google Sheets with ChatGPT insights",
-    description: "Get AI-powered insights and analysis automatically added to your Google Sheets from ChatGPT.",
-    apps: [getAppIcon("google-sheets"), getAppIcon("chatgpt")],
-    isAIPowered: true,
-    categories: ["ai-workflow"],
-    tags: ["AI Powered", "API"],
-    industries: ["ecommerce", "technology", "finance"],
-    goals: ["goal-8"], // Analytics & reporting
-    channels: ["channel-3"] // Email
-  },
-  {
-    id: "gmail-ai-replies",
-    title: "Instantly Respond to New Emails with AI-Powered Replies and Google AI Studio",
-    description: "Automatically generate intelligent email responses using AI to improve customer service efficiency.",
-    apps: [getAppIcon("gmail"), getAppIcon("google-ai-studio")],
-    isAIPowered: true,
-    categories: ["ai-workflow"],
-    tags: ["AI Powered"],
-    industries: ["technology", "ecommerce"],
-    goals: ["goal-3"], // Support automation
-    channels: ["channel-3"] // Email
-  },
+
   {
     id: "whatsapp-order-confirmation",
     title: "Send Order Confirmations via WhatsApp Automatically",
@@ -246,18 +211,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     goals: ["goal-3", "goal-8"], // Support automation, Analytics
     channels: ["channel-2", "channel-1", "channel-3"]
   },
-  {
-    id: "ai-message-translation",
-    title: "AI Message Translation & Localization",
-    description: "Automatically translate customer messages and responses to support global customers in their language.",
-    apps: [getAppIcon("google-ai-studio"), getAppIcon("whatsapp")],
-    isAIPowered: true,
-    categories: ["ai-workflow"],
-    tags: ["AI Powered", "API"],
-    industries: ["ecommerce", "technology", "retail"],
-    goals: ["goal-3"], // Support automation
-    channels: ["channel-2", "channel-1", "channel-3"]
-  },
+
   {
     id: "ai-personalized-recommendations",
     title: "AI-Powered Personalized Product Recommendations",
@@ -270,18 +224,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     goals: ["goal-2", "goal-4"], // Marketing campaigns, Lead generation
     channels: ["channel-2", "channel-3"]
   },
-  {
-    id: "ai-conversation-summaries",
-    title: "AI-Generated Conversation Summaries",
-    description: "Automatically generate summaries of customer conversations for better team collaboration and insights.",
-    apps: [getAppIcon("chatgpt"), getAppIcon("google-sheets")],
-    isAIPowered: true,
-    categories: ["ai-workflow"],
-    tags: ["AI Powered", "API"],
-    industries: ["ecommerce", "technology", "finance"],
-    goals: ["goal-8"], // Analytics & reporting
-    channels: ["channel-2", "channel-1", "channel-3"]
-  },
+
   {
     id: "healthcare-appointment-whatsapp",
     title: "Healthcare Appointment Reminders via WhatsApp",
@@ -395,14 +338,5 @@ export interface FeaturedContent {
 
 // Featured content items
 export const featuredContent: FeaturedContent[] = [
-  {
-    id: "sheets-automation",
-    title: "6 Google Sheets automation ideas to organize your work",
-    description: "Want AI and automation to improve your spreadsheet workflows? Get ideas and templates for connecting the king of sheets to the rest of your tech stack.",
-    readTime: "4 min",
-    apps: ["google-sheets", "facebook", "microsoft-teams", "gmail"],
-    cta: {
-      label: "Read the post"
-    }
-  }
+
 ]

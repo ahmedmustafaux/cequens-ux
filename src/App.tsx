@@ -91,6 +91,7 @@ import BillingInvoicesPage from '@/pages/BillingInvoicesPage'
 import SupportHelpPage from '@/pages/SupportHelpPage'
 import SupportBestPracticesPage from '@/pages/SupportBestPracticesPage'
 import SupportFaqsPage from '@/pages/SupportFaqsPage'
+import NotFoundPage from '@/pages/NotFoundPage'
 
 
 function App() {
@@ -812,7 +813,7 @@ function App() {
           } />
 
           {/* Redirect unmatched routes to login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Toaster />
       </OnboardingProvider>

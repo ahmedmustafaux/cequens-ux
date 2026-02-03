@@ -8,6 +8,16 @@ export interface UpdateLog {
 
 export const UPDATE_LOGS: UpdateLog[] = [
     {
+        id: 'update-feb-03-dashboard-404',
+        date: 'Feb 03',
+        title: 'Dashboard & Navigation Polish',
+        content: `• Feature: Added custom 404 "Page Not Found" page.
+• Dashboard: Renamed "Explore solution" to "Recommended use cases" with enhanced UI cards.
+• Navigation: Reordered sidebar to prioritize "Developer Hub".
+• Cleanup: Refined template filtering and card layouts.`,
+        type: 'improvement'
+    },
+    {
         id: 'update-feb-02-verify-and-visuals',
         date: 'Feb 02',
         title: 'Verify Tab & Visual Refinements',

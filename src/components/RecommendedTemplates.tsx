@@ -129,6 +129,10 @@ const filterTemplatesByTab = (
   }
 }
 
+import { Button } from "@/components/ui/button"
+
+import { useNavigationContext } from "@/hooks/use-navigation-context"
+
 /* ------------------------------------------------------------------ */
 /* Component */
 /* ------------------------------------------------------------------ */
@@ -140,6 +144,7 @@ export function RecommendedTemplates({
   className?: string
   isLoading?: boolean
 }) {
+  const { navigateTo } = useNavigationContext()
   const { onboardingData } = useOnboarding()
   const [activeTab, setActiveTab] = React.useState("for-you")
 
@@ -267,8 +272,16 @@ export function RecommendedTemplates({
 
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Explore Solutions</h2>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <h2 className="text-xl font-semibold">Recommended use cases</h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => navigateTo('/use-cases')}
+        >
+          Explore all use cases <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -316,40 +329,44 @@ export function RecommendedTemplates({
             {filteredTemplates.map((template) => (
               <Card
                 key={template.id}
-                className="w-[320px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer"
+                className="w-[320px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer flex flex-col"
               >
-                <CardHeader className="pb-3">
-                  <div className="flex gap-2">
-                    {template.apps.map((app) => (
-                      <div
-                        key={app.name}
-                        className="w-8 h-8 rounded-lg border flex items-center justify-center"
-                      >
-                        {renderAppIcon(app)}
-                      </div>
-                    ))}
-                  </div>
-
-                  <h3 className="text-sm font-medium mt-3 line-clamp-2">
-                    {template.title}
-                  </h3>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-1.5">
+                <CardHeader>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {template.tags?.map((tag) => {
                       const config = BADGE_CONFIG[tag]
                       return (
                         <Badge
                           key={tag}
                           variant="outline"
-                          className={cn("text-xs", config?.styles)}
+                          className={cn("text-xs px-2 py-0.5", config?.styles)}
                         >
                           {config?.icon}
                           {tag}
                         </Badge>
                       )
                     })}
+                  </div>
+
+                  <h3 className="text-md leading-[1.4] line-clamp-2">
+                    {template.title}
+                  </h3>
+                </CardHeader>
+
+                <CardContent className="flex-1 flex flex-col gap-4">
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {template.description}
+                  </p>
+
+                  <div className="flex gap-2 mt-auto">
+                    {template.apps.map((app) => (
+                      <div
+                        key={app.name}
+                        className="w-8 h-8 rounded-lg border flex items-center justify-center bg-background"
+                      >
+                        {renderAppIcon(app)}
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
