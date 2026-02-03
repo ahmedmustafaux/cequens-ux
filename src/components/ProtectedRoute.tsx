@@ -1,3 +1,4 @@
+import { Spinner } from "@/components/ui/spinner"
 import { useAuth } from "@/hooks/use-auth"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { Navigate, useLocation } from "react-router-dom"
@@ -16,8 +17,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border-primary"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <Spinner className="h-10 w-10 text-primary" />
       </div>
     )
   }
@@ -35,16 +36,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     // 1. onboardingCompleted is explicitly false
     // 2. onboardingCompleted is undefined/null (default to needing onboarding)
     // 3. userType is "newUser" and onboardingCompleted is not explicitly true
-    const userNeedsOnboarding = 
-      user.onboardingCompleted === false || 
+    const userNeedsOnboarding =
+      user.onboardingCompleted === false ||
       user.onboardingCompleted === undefined ||
       user.onboardingCompleted === null ||
       (user.userType === "newUser" && user.onboardingCompleted !== true)
-    
-    const needsOnboarding = 
-      (userNeedsOnboarding || !hasCompletedOnboarding) && 
+
+    const needsOnboarding =
+      (userNeedsOnboarding || !hasCompletedOnboarding) &&
       currentPath !== "/onboarding"
-    
+
     if (needsOnboarding) {
       return <Navigate to="/onboarding" replace />
     }
@@ -65,8 +66,8 @@ export function PublicRoute({ children }: PublicRouteProps) {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border-primary"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <Spinner className="h-10 w-10 text-primary" />
       </div>
     )
   }

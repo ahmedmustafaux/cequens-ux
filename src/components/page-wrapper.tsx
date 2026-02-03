@@ -6,7 +6,7 @@ interface PageWrapperProps {
   isLoading?: boolean // Keep the prop but ignore it
 }
 
-export function PageWrapper({ 
+export function PageWrapper({
   children,
   isLoading: _ = false // Ignore the loading prop
 }: PageWrapperProps) {

@@ -113,8 +113,8 @@ interface DataTableCellProps {
   clickable?: boolean
 }
 // Main DataTable component
-function DataTable({ 
-  children, 
+function DataTable({
+  children,
   className,
   showFooter = true,
   footerContent,
@@ -129,8 +129,8 @@ function DataTable({
 }: DataTableProps) {
   const tableRef = React.useRef<HTMLDivElement>(null)
   // Integrate table search if searchConfig is provided
-  useTableSearch({ 
-    table: searchConfig?.table, 
+  useTableSearch({
+    table: searchConfig?.table,
     searchColumns: searchConfig?.searchColumns || ['name'],
     columnFilters: searchConfig?.table?.getState().columnFilters || [],
     globalFilter: searchConfig?.table?.getState().globalFilter || ""
@@ -157,7 +157,7 @@ function DataTable({
                       }}
                       minWidth="320px"
                     />
-                    
+
                     {/* Toggle Column and Sorting Controls - Only on Small Screens */}
                     {showControls && searchConfig?.table && (
                       <div className="flex items-center gap-1 sm:hidden">
@@ -272,86 +272,86 @@ function DataTable({
               {/* Right Side - Table Controls */}
               {showControls && searchConfig?.table && (
                 <div className="hidden sm:flex items-center gap-2">
-                    <DropdownMenu>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <ArrowUpDownIcon className="h-4 w-4" />
-                              <span className="sr-only">Sort</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="center">
-                          <p>Sort table</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {searchConfig.table
-                          .getAllColumns()
-                          .filter((column: any) => column.getCanSort()) // eslint-disable-line @typescript-eslint/no-explicit-any
-                          .map((column: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                            const isSorted = column.getIsSorted()
-                            return (
-                              <DropdownMenuItem
-                                key={column.id}
-                                onClick={() => {
-                                  if (isSorted === false) {
-                                    column.toggleSorting(false)
-                                  } else if (isSorted === "asc") {
-                                    column.toggleSorting(true)
-                                  } else {
-                                    column.clearSorting()
-                                  }
-                                }}
-                                className="capitalize"
-                              >
-                                {column.id}
-                                {isSorted === "asc" && " ↑"}
-                                {isSorted === "desc" && " ↓"}
-                              </DropdownMenuItem>
-                            )
-                          })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <DropdownMenu>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <Columns3 className="h-4 w-4" />
-                              <span className="sr-only">Edit columns</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="center">
-                          <p>Toggle columns</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <DropdownMenuContent align="end">
-                        {searchConfig.table
-                          .getAllColumns()
-                          .filter((column: any) => column.getCanHide()) // eslint-disable-line @typescript-eslint/no-explicit-any
-                          .map((column: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                            return (
-                              <DropdownMenuCheckboxItem
-                                key={column.id}
-                                className="capitalize"
-                                checked={column.getIsVisible()}
-                                onCheckedChange={(value) =>
-                                  column.toggleVisibility(!!value)
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <ArrowUpDownIcon className="h-4 w-4" />
+                            <span className="sr-only">Sort</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="center">
+                        <p>Sort table</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {searchConfig.table
+                        .getAllColumns()
+                        .filter((column: any) => column.getCanSort()) // eslint-disable-line @typescript-eslint/no-explicit-any
+                        .map((column: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                          const isSorted = column.getIsSorted()
+                          return (
+                            <DropdownMenuItem
+                              key={column.id}
+                              onClick={() => {
+                                if (isSorted === false) {
+                                  column.toggleSorting(false)
+                                } else if (isSorted === "asc") {
+                                  column.toggleSorting(true)
+                                } else {
+                                  column.clearSorting()
                                 }
-                              >
-                                {column.columnDef.meta?.displayName || column.id}
-                              </DropdownMenuCheckboxItem>
-                            )
-                          })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
+                              }}
+                              className="capitalize"
+                            >
+                              {column.id}
+                              {isSorted === "asc" && " ↑"}
+                              {isSorted === "desc" && " ↓"}
+                            </DropdownMenuItem>
+                          )
+                        })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <Columns3 className="h-4 w-4" />
+                            <span className="sr-only">Edit columns</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="center">
+                        <p>Toggle columns</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end">
+                      {searchConfig.table
+                        .getAllColumns()
+                        .filter((column: any) => column.getCanHide()) // eslint-disable-line @typescript-eslint/no-explicit-any
+                        .map((column: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                          return (
+                            <DropdownMenuCheckboxItem
+                              key={column.id}
+                              className="capitalize"
+                              checked={column.getIsVisible()}
+                              onCheckedChange={(value) =>
+                                column.toggleVisibility(!!value)
+                              }
+                            >
+                              {column.columnDef.meta?.displayName || column.id}
+                            </DropdownMenuCheckboxItem>
+                          )
+                        })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -359,8 +359,8 @@ function DataTable({
       {/* Table container with content-fitted height */}
       <div className="w-full flex flex-col mb-2 relative" data-table-container>
         {isLoading ? (
-          <TableSkeleton 
-            rows={loadingRows} 
+          <TableSkeleton
+            rows={loadingRows}
             columns={4}
           />
         ) : (
@@ -375,7 +375,7 @@ function DataTable({
                           {views.options.map((view) => {
                             const isSelected = views.selectedView === view.value
                             const handleClick = () => views.onViewChange(view.value)
-                            
+
                             if (isSelected && views.renderSelectedView) {
                               return (
                                 <React.Fragment key={view.value}>
@@ -383,7 +383,7 @@ function DataTable({
                                 </React.Fragment>
                               )
                             }
-                            
+
                             return (
                               <Button
                                 key={view.value}
@@ -410,7 +410,7 @@ function DataTable({
                 {children}
               </table>
             </div>
-            
+
             {/* Footer - Outside table container with 0 gap */}
             {showFooter && (pagination || footerLabel || footerContent) && (
               <DataTableFooter
@@ -426,10 +426,10 @@ function DataTable({
   )
 }
 // Fixed Footer Component
-function DataTableFooter({ 
-  pagination, 
-  footerLabel, 
-  footerContent 
+function DataTableFooter({
+  pagination,
+  footerLabel,
+  footerContent
 }: {
   pagination?: DataTableProps['pagination']
   footerLabel?: string
@@ -460,7 +460,7 @@ function DataTableFooter({
             </div>
           )}
         </div>
-        
+
         {/* Second line - Pagination controls */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {pagination ? (
@@ -486,12 +486,12 @@ function DataTableFooter({
                   </Select>
                 </div>
               )}
-              
+
               {/* Page info */}
               <div className="text-muted-foreground text-sm">
                 Page {pagination.currentPage} of {pagination.totalPages}
               </div>
-              
+
               {/* Pagination buttons */}
               <div className="flex items-center gap-1">
                 <Button
@@ -535,9 +535,9 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   rightActions?: React.ReactNode
   className?: string
   columnCount?: number
-}>(({ 
-  selectedCount, 
-  onClearSelection, 
+}>(({
+  selectedCount,
+  onClearSelection,
   onSelectAll,
   onSelectAllOnPage,
   totalCount,
@@ -548,7 +548,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   className,
   columnCount = 99
 }, ref) => {
-  const allPageItemsSelected = selectedCountOnCurrentPage !== undefined 
+  const allPageItemsSelected = selectedCountOnCurrentPage !== undefined
     ? selectedCountOnCurrentPage >= (showCount ?? totalCount)
     : false
   // Calculate colSpan: total columns minus the select column (which is always 1)
@@ -559,10 +559,10 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
         <TableHead>
           <Checkbox
             checked={
-              selectedCount === 0 
-                ? false 
-                : selectedCount === totalCount 
-                  ? true 
+              selectedCount === 0
+                ? false
+                : selectedCount === totalCount
+                  ? true
                   : "indeterminate"
             }
             onCheckedChange={(checked) => {
@@ -576,17 +576,17 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
         </TableHead>
         <TableHead colSpan={colSpan}>
           <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm font-medium cursor-pointer text-foreground hover:text-accent-foreground h-6">
-                    {selectedCount} selected
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                </DropdownMenuTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm font-medium cursor-pointer text-foreground hover:text-accent-foreground h-6">
+                  {selectedCount} selected
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {!allPageItemsSelected && (
-                  <DropdownMenuItem 
-                    onClick={onSelectAllOnPage || onSelectAll} 
+                  <DropdownMenuItem
+                    onClick={onSelectAllOnPage || onSelectAll}
                     className="cursor-pointer"
                   >
                     Select all {showCount ?? totalCount} in this page
@@ -651,7 +651,7 @@ function DataTableBody({ children, className }: DataTableBodyProps) {
 // DataTable Row component
 function DataTableRow({ children, className, selected, onClick }: DataTableRowProps) {
   return (
-    <tr 
+    <tr
       className={cn(
         "border-b border-border hover:bg-accent data-[state=selected]:bg-muted", // Use same background as body
         selected && "bg-accent", // Apply selected state styling
@@ -677,11 +677,11 @@ function DataTableHead({ children, className, width }: DataTableHeadProps) {
   )
 }
 // DataTable Cell component
-function DataTableCell({ 
-  children, 
-  className, 
-  colSpan, 
-  columnId, 
+function DataTableCell({
+  children,
+  className,
+  colSpan,
+  columnId,
   autoHighlight = false,
   highlightClassName,
   onClick,
@@ -697,14 +697,14 @@ function DataTableCell({
       return React.Children.map(children, (child) => {
         if (typeof child === 'string') {
           return (
-            <AutoHighlight 
-              text={child} 
+            <AutoHighlight
+              text={child}
               columnId={columnId}
               highlightClassName={highlightClassName}
             />
           )
         }
-        
+
         if (React.isValidElement(child)) {
           // If the child is a React element, recursively process its children
           const childProps = child.props as any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -716,7 +716,7 @@ function DataTableCell({
           }
           return child
         }
-        
+
         return child
       })
     }
@@ -728,7 +728,7 @@ function DataTableCell({
       // Check if the click target is the checkbox itself
       const target = event.target as HTMLElement
       const isCheckbox = target.closest('[data-slot="checkbox"]')
-      
+
       // If it's not the checkbox, handle the click and stop propagation
       if (!isCheckbox) {
         event.stopPropagation() // Prevent row click handler from being triggered
@@ -737,12 +737,12 @@ function DataTableCell({
     }
   }
   return (
-    <td 
+    <td
       className={cn(
         "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
         clickable && "cursor-pointer hover:bg-accent",
         className
-      )} 
+      )}
       colSpan={colSpan}
       onClick={handleClick}
     >

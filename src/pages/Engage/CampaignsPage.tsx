@@ -213,7 +213,7 @@ function CampaignsPageContent() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 15,
+    pageSize: 50,
   })
   // Fetch campaigns from database
   const { data: campaigns = [], isLoading: isDataLoading, error } = useCampaigns()
@@ -388,7 +388,7 @@ function CampaignsPageContent() {
             hasPrevious: table.getCanPreviousPage(),
             hasNext: table.getCanNextPage(),
             onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-            pageSizeOptions: [15, 20, 30]
+            pageSizeOptions: [50, 100, 200]
           }}
           footerLabel={`Showing ${table.getRowModel().rows.length} campaigns${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
         >

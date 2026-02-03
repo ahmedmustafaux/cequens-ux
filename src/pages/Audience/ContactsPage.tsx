@@ -95,7 +95,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 15,
+    pageSize: 50,
   })
 
   // Filter states
@@ -576,7 +576,7 @@ const ContactsPageContent = (): React.JSX.Element => {
             hasPrevious: table.getCanPreviousPage(),
             hasNext: table.getCanNextPage(),
             onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-            pageSizeOptions: [15, 20, 30]
+            pageSizeOptions: [50, 100, 200]
           }}
           footerLabel={`Showing ${table.getRowModel().rows.length} contacts${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
         >

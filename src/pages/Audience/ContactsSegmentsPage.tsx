@@ -645,7 +645,7 @@ function ContactsSegmentsPageContent() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 15,
+    pageSize: 50,
   })
   const isDataLoading = segmentsLoading || contactsLoading
   // Track pending filter changes for the selected segment
@@ -1581,7 +1581,7 @@ function ContactsSegmentsPageContent() {
               hasPrevious: table.getCanPreviousPage(),
               hasNext: table.getCanNextPage(),
               onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-              pageSizeOptions: [15, 20, 30],
+              pageSizeOptions: [50, 100, 200],
             }}
             footerLabel={`Showing ${table.getRowModel().rows.length} contact${table.getRowModel().rows.length !== 1 ? "s" : ""}${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ""}`}
           >

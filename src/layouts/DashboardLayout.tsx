@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { NavigationProvider, useNavigationContext } from "@/hooks/use-navigation-context"
 import { useAuth } from "@/hooks/use-auth"
+import { Spinner } from "@/components/ui/spinner"
 import { NotificationProvider } from "@/contexts/notification-context"
 import { CreateContactProvider, useCreateContactContext } from "@/contexts/create-contact-context"
 import { CreateContactSheet } from "@/components/create-contact-sheet"
@@ -79,7 +80,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
               isLoading={isNavigating}
             />
           </div>
-          
+
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-6">
             <PageWrapper>
@@ -99,11 +100,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Show nothing while checking authentication
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <Spinner className="h-10 w-10 text-primary" />
       </div>
     )
   }

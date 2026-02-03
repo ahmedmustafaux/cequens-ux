@@ -94,19 +94,19 @@ function TableCaption({
   )
 }
 // Skeleton variants for Table components
-function TableSkeleton({ 
-  rows = 5, 
-  columns = 4, 
-  className, 
-  ...props 
-}: React.ComponentProps<"div"> & { 
+function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
   rows?: number
-  columns?: number 
+  columns?: number
 }) {
   return (
     <div
       data-slot="table-skeleton"
-      className={cn("relative w-full overflow-x-auto bg-card", className)}
+      className={cn("relative w-full overflow-x-auto bg-card border rounded-md", className)}
       {...props}
     >
       <table className="w-full caption-bottom text-sm">
@@ -134,10 +134,10 @@ function TableSkeleton({
     </div>
   )
 }
-function TableRowSkeleton({ 
-  columns = 4, 
-  className, 
-  ...props 
+function TableRowSkeleton({
+  columns = 4,
+  className,
+  ...props
 }: React.ComponentProps<"tr"> & { columns?: number }) {
   return (
     <tr
