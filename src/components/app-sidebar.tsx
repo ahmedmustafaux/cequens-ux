@@ -99,29 +99,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Developer Hub",
-      url: "/developer-apis",
-      icon: Code,
-      items: [
-        {
-          title: "API Keys",
-          url: "/developer-apis/keys",
-        },
-        {
-          title: "Webhooks",
-          url: "/developer-apis/webhooks",
-        },
-        {
-          title: "Documentation",
-          url: "/developer-apis/docs",
-        },
-        {
-          title: "API Logs",
-          url: "/developer-apis/logs",
-        },
-      ],
-    },
+
   ],
   // Group 2: Audience, Library
   navGroup2: [
@@ -200,8 +178,32 @@ const data = {
       ],
     },
   ],
+
   // Secondary: Settings, Billing, Support
   navSecondary: [
+    {
+      title: "Developer Hub",
+      url: "/developer-apis",
+      icon: Code,
+      items: [
+        {
+          title: "API Keys",
+          url: "/developer-apis/keys",
+        },
+        {
+          title: "Webhooks",
+          url: "/developer-apis/webhooks",
+        },
+        {
+          title: "Documentation",
+          url: "/developer-apis/docs",
+        },
+        {
+          title: "API Logs",
+          url: "/developer-apis/logs",
+        },
+      ],
+    },
     {
       title: "Settings",
       url: "/settings",
