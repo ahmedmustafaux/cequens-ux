@@ -62,16 +62,16 @@ const data = {
     },
     {
       title: "Engage",
-      url: "/campaigns",
+      url: "/engage/campaigns",
       icon: Megaphone,
       items: [
         {
           title: "Campaigns",
-          url: "/campaigns",
+          url: "/engage/campaigns",
         },
         {
           title: "Journey Builder",
-          url: "/automation/journey",
+          url: "/engage/journey",
         },
       ],
     },
@@ -105,24 +105,24 @@ const data = {
   navGroup2: [
     {
       title: "Audience",
-      url: "/contacts",
+      url: "/audience/contacts",
       icon: Users,
       items: [
         {
           title: "All Contacts",
-          url: "/contacts",
+          url: "/audience/contacts",
         },
         {
           title: "Segments",
-          url: "/contacts/segments",
+          url: "/audience/segments",
         },
         {
           title: "Tags",
-          url: "/contacts/tags",
+          url: "/audience/tags",
         },
         {
           title: "Custom Attributes",
-          url: "/contacts/attributes",
+          url: "/audience/attributes",
         },
       ],
     },
@@ -133,11 +133,11 @@ const data = {
       items: [
         {
           title: "Message Templates",
-          url: "/automation/templates",
+          url: "/library/templates",
         },
         {
           title: "Use Cases",
-          url: "/use-cases",
+          url: "/library/use-cases",
           badge: "New",
         },
       ],
@@ -152,28 +152,20 @@ const data = {
       icon: BarChart3,
       items: [
         {
-          title: "Performance Dashboard",
-          url: "/analytics/performance",
+          title: "Overview",
+          url: "/analytics/overview",
         },
         {
-          title: "Campaign Analytics",
+          title: "Campaigns",
           url: "/analytics/campaigns",
         },
         {
-          title: "Conversation Metrics",
+          title: "Conversations",
           url: "/analytics/conversations",
         },
         {
-          title: "Channel Reports",
-          url: "/analytics/channels",
-        },
-        {
-          title: "Agent Performance",
-          url: "/analytics/agent",
-        },
-        {
-          title: "Custom Reports",
-          url: "/analytics/custom",
+          title: "APIs",
+          url: "/analytics/apis",
         },
       ],
     },

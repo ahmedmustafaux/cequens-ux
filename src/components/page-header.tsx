@@ -34,6 +34,7 @@ import {
 import { ActionCenter } from "@/components/action-center"
 import { DevUpdatesDrawer } from "@/components/dev-updates-drawer"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useNavigationContext } from "@/hooks/use-navigation-context"
 
 interface BreadcrumbItem {
   label: string
@@ -129,6 +130,7 @@ export function PageHeader({
   const location = useLocation()
   const pathname = location.pathname
   const isMobile = useIsMobile()
+  const { breadcrumbOverrides } = useNavigationContext()
 
   // Component-level skeleton state for breadcrumbs
   const [showBreadcrumbSkeleton, setShowBreadcrumbSkeleton] = React.useState(false)
@@ -161,43 +163,38 @@ export function PageHeader({
       currentPath += `/${segment}`
       const isLast = index === segments.length - 1
 
-      // Special handling for contact pages
-      if (segments[0] === "contacts" && segments.length === 2 && isLast) {
-        // Check if it's a create page, segments, tags, or contact detail page
-        if (segment === "create") {
-          breadcrumbs.push({
-            label: "Create new contact",
-            href: currentPath,
-            isCurrent: isLast
-          })
-        } else if (segment === "segments") {
-          breadcrumbs.push({
-            label: "Segments",
-            href: currentPath,
-            isCurrent: isLast
-          })
-        } else if (segment === "tags") {
-          breadcrumbs.push({
-            label: "Tags & Attributes",
-            href: currentPath,
-            isCurrent: isLast
-          })
-        } else {
-          // This is a contact detail page, show "Audience member details"
-          breadcrumbs.push({
-            label: "Contact details",
-            href: currentPath,
-            isCurrent: isLast
-          })
-        }
+      // Check for override
+      if (breadcrumbOverrides[segment]) {
+        breadcrumbs.push({
+          label: breadcrumbOverrides[segment],
+          href: currentPath,
+          isCurrent: isLast
+        })
+        return
+      }
+
+      // Special handling for audience/contacts
+      if (segment === "audience") {
+        breadcrumbs.push({
+          label: "Audience",
+          href: currentPath,
+          isCurrent: isLast
+        })
+      } else if (segment === "contacts") {
+        breadcrumbs.push({
+          label: "Contacts",
+          href: currentPath,
+          isCurrent: isLast
+        })
+      } else if (segment === "create") {
+        breadcrumbs.push({
+          label: "Create New",
+          href: currentPath,
+          isCurrent: isLast
+        })
       } else {
-        // Special handling for "contacts" -> "Audience"
-        let label = segment.charAt(0).toUpperCase() + segment.slice(1)
-        if (segment === "contacts") {
-          label = "Audience"
-        } else if (segment === "getting-started") {
-          label = "Guide"
-        }
+        // Default label: capitalize and replace hyphens
+        let label = segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
 
         breadcrumbs.push({
           label,
@@ -208,7 +205,7 @@ export function PageHeader({
     })
 
     return breadcrumbs
-  }, [pathname, customBreadcrumbs])
+  }, [pathname, customBreadcrumbs, breadcrumbOverrides])
 
   // Render action button
   const renderActionButton = (action: ActionButton, key: string) => {

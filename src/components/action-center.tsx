@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { 
-  Field, 
-  FieldContent 
+import {
+  Field,
+  FieldContent
 } from '@/components/ui/field'
-import { 
-  InputGroup, 
-  InputGroupInput, 
-  InputGroupAddon 
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon
 } from '@/components/ui/input-group'
 import { Button } from '@/components/ui/button'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
- 
+
 import { Search, ArrowUp, ArrowDown, Command, X, Users, MessageSquare, BarChart3, Settings, Plus, FileText, Calendar, Bell, Mail, Phone, Globe, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -54,21 +54,21 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   }>>([])
   const navigate = useNavigate()
   const { open: openCreateContactSheet } = useCreateContactContext()
-  
+
   // Minimal debounce (100ms) for real-time feel
   const [debouncedQuery, setDebouncedQuery] = useState("")
-  
+
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query)
     }, 100) // 100ms debounce for real-time feel
     return () => clearTimeout(timer)
   }, [query])
-  
+
   // Fetch contacts from database with search
   // placeholderData keeps previous results visible during loading for smooth transitions
   const { data: contacts = [] } = useContacts(debouncedQuery || undefined)
-  
+
   const quickActions: ActionItem[] = [
     {
       id: 'create-contact',
@@ -146,11 +146,11 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   const allActions = [...quickActions]
   const filteredActions = query.trim()
     ? allActions.filter(action => {
-        const searchTerm = query.toLowerCase()
-        return action.title.toLowerCase().includes(searchTerm) ||
-               (action.description?.toLowerCase() || '').includes(searchTerm) ||
-               action.category.toLowerCase().includes(searchTerm)
-      })
+      const searchTerm = query.toLowerCase()
+      return action.title.toLowerCase().includes(searchTerm) ||
+        (action.description?.toLowerCase() || '').includes(searchTerm) ||
+        action.category.toLowerCase().includes(searchTerm)
+    })
     : allActions
   // Audience search (top 5) - contacts are already filtered by database
   const displayedContacts = query.trim() ? contacts.slice(0, 5) : []
@@ -165,7 +165,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   // Function to save search result
   const saveSearchResult = (item: any, searchQuery: string) => {
     if (!item) return
-    
+
     let resultItem: {
       id: string
       title: string
@@ -197,7 +197,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     else {
       const trimmedQuery = searchQuery.trim()
       if (!trimmedQuery || trimmedQuery.length < 2) return
-      
+
       resultItem = {
         id: `search-${Date.now()}`,
         title: trimmedQuery,
@@ -211,10 +211,10 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       return [resultItem, ...filtered].slice(0, 5) // Keep only last 5 searches
     })
   }
-  
+
   const scrollSelectedIntoView = (index: number) => {
     if (!contentRef.current || index < 0) return
-    
+
     // Calculate total available items
     const recentSearchesCount = !query.trim() ? Math.min(3, latestSearches.length) : 0
     const totalItems = recentSearchesCount + displayedContacts.length + filteredActions.length
@@ -239,18 +239,18 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     const contactsCount = displayedContacts.length
     const actionsCount = filteredActions.length
     const totalItems = recentSearchesCount + contactsCount + actionsCount
-    
+
     const getNextValidIndex = (currentIndex: number, isUp: boolean): number => {
       if (totalItems === 0) return -1;
-      
+
       // If no index selected yet
       if (currentIndex < 0) {
         return isUp ? totalItems - 1 : 0;
       }
-      
+
       // Simple circular navigation
-      return isUp 
-        ? (currentIndex - 1 + totalItems) % totalItems 
+      return isUp
+        ? (currentIndex - 1 + totalItems) % totalItems
         : (currentIndex + 1) % totalItems;
     }
     switch (e.key) {
@@ -290,7 +290,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
           }
           // Handle contacts
           if ('phone' in selectedItem) {
-            navigate(`/contacts/${selectedItem.id}`)
+            navigate(`/audience/contacts/${selectedItem.id}`)
             onClose()
             return
           }
@@ -307,7 +307,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   }
   const handleLatestSearchClick = (searchResult: any) => {
     if (searchResult.type === 'contact' && searchResult.originalItem) {
-      navigate(`/contacts/${searchResult.originalItem.id}`)
+      navigate(`/audience/contacts/${searchResult.originalItem.id}`)
       onClose()
     } else if (searchResult.type === 'action' && searchResult.originalItem) {
       searchResult.originalItem.action()
@@ -317,21 +317,21 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   }
   const handleItemClick = (item: any, index: number) => {
     setSelectedIndex(index)
-    
+
     // Handle latest search clicks (search result objects)
     if (item.id && item.type) {
       handleLatestSearchClick(item)
       return
     }
-    
+
     // Save the search result if user clicked on a search result
     if (query.trim()) {
       saveSearchResult(item, query)
     }
-    
+
     // Handle contacts
     if ('phone' in item) {
-      navigate(`/contacts/${item.id}`)
+      navigate(`/audience/contacts/${item.id}`)
       onClose()
       return
     }
@@ -376,11 +376,11 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                         saveSearchResult(allItems[selectedIndex], query)
                       }
                     }
-                    
+
                     if (selectedIndex < displayedContacts.length) {
                       // Handle contact item
                       const contact = allItems[selectedIndex] as any
-                      navigate(`/contacts/${contact.id}`)
+                      navigate(`/audience/contacts/${contact.id}`)
                       onClose()
                     } else {
                       // Handle action item
@@ -427,33 +427,33 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                         return <Search className="h-4 w-4" />
                     }
                   }
-                  
+
                   return (
-                  <motion.div
-                    key={searchResult.id}
-                    data-item-index={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    className={cn(
-                      "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
-                      selectedIndex === index ? "bg-muted" : "hover:bg-muted/100"
-                    )}
-                    onClick={() => handleItemClick(searchResult, index)}
-                  >
-                    <div className={cn(
-                      "h-8 w-8 rounded-md flex items-center justify-center",
-                      searchResult.type === 'contact' ? "bg-muted" :
-                      searchResult.type === 'action' ? "bg-primary/10 border border-border-primary/20 text-primary" :
-                      "bg-muted"
-                    )}>
-                      {getIcon()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{searchResult.title}</div>
-                      <div className="text-xs text-muted-foreground truncate">{searchResult.subtitle}</div>
-                    </div>
-                  </motion.div>
+                    <motion.div
+                      key={searchResult.id}
+                      data-item-index={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className={cn(
+                        "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
+                        selectedIndex === index ? "bg-muted" : "hover:bg-muted/100"
+                      )}
+                      onClick={() => handleItemClick(searchResult, index)}
+                    >
+                      <div className={cn(
+                        "h-8 w-8 rounded-md flex items-center justify-center",
+                        searchResult.type === 'contact' ? "bg-muted" :
+                          searchResult.type === 'action' ? "bg-primary/10 border border-border-primary/20 text-primary" :
+                            "bg-muted"
+                      )}>
+                        {getIcon()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{searchResult.title}</div>
+                        <div className="text-xs text-muted-foreground truncate">{searchResult.subtitle}</div>
+                      </div>
+                    </motion.div>
                   )
                 })}
               </div>
@@ -473,27 +473,28 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                     const recentSearchesCount = !query.trim() ? Math.min(3, latestSearches.length) : 0
                     const globalIndex = recentSearchesCount + index
                     return (
-                    <motion.div
-                      key={contact.id}
-                      data-item-index={globalIndex}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className={cn(
-                        "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
-                        selectedIndex === globalIndex ? "bg-muted" : "hover:bg-muted/100"
-                      )}
-                      onClick={() => handleItemClick(contact, globalIndex)}
-                    >
-                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                        <Users className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'}</div>
-                        <div className="text-xs text-muted-foreground truncate">{contact.phone}</div>
-                      </div>
-                    </motion.div>
-                  )})}
+                      <motion.div
+                        key={contact.id}
+                        data-item-index={globalIndex}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className={cn(
+                          "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
+                          selectedIndex === globalIndex ? "bg-muted" : "hover:bg-muted/100"
+                        )}
+                        onClick={() => handleItemClick(contact, globalIndex)}
+                      >
+                        <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'}</div>
+                          <div className="text-xs text-muted-foreground truncate">{contact.phone}</div>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               </motion.div>
             )}

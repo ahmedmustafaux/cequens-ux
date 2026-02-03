@@ -12,86 +12,110 @@ import LoginLayout from '@/layouts/LoginLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 
 // Pages
-import LoginPage from '@/pages/LoginPage'
-import SignupPage from '@/pages/SignupPage'
-import EmailConfirmationPage from '@/pages/EmailConfirmationPage'
-import PhoneVerificationPage from '@/pages/PhoneVerificationPage'
-import NewUserOnboardingPage from '@/pages/NewUserOnboardingPage'
-import DashboardPage from '@/pages/DashboardPage'
-import AnalyticsPage from '@/pages/AnalyticsPage'
-import CampaignsPage from '@/pages/CampaignsPage'
-import CampaignsCreatePage from '@/pages/CampaignsCreatePage'
-import CampaignsSettingsPage from '@/pages/CampaignsSettingsPage'
-import CampaignsTemplatesPage from '@/pages/CampaignsTemplatesPage'
-import CampaignsAiBotsPage from '@/pages/CampaignsAiBotsPage'
-import CampaignsAutomationPage from '@/pages/CampaignsAutomationPage'
-import ContactsPage from '@/pages/ContactsPage'
-import ContactsEditPage from '@/pages/ContactsEditPage'
-import ContactDetailPage from '@/pages/ContactDetailPage'
-import ContactsSegmentsPage from '@/pages/ContactsSegmentsPage'
-import ContactsTagsPage from '@/pages/ContactsTagsPage'
-import MessagesPage from '@/pages/MessagesPage'
-import InboxPage from '@/pages/InboxPage'
-import InboxRequestsPage from '@/pages/InboxRequestsPage'
-import InboxSettingsPage from '@/pages/InboxSettingsPage'
-import AutomationPage from '@/pages/AutomationPage'
-import AutomationJourneyPage from '@/pages/AutomationJourneyPage'
-import AutomationTemplatesPage from '@/pages/AutomationTemplatesPage'
-import AutomationBotsPage from '@/pages/AutomationBotsPage'
-import ChannelsPage from '@/pages/ChannelsPage'
-import ChannelsSmsPage from '@/pages/ChannelsSmsPage'
-import ChannelsWhatsAppPage from '@/pages/ChannelsWhatsAppPage'
-import ChannelsMessengerPage from '@/pages/ChannelsMessengerPage'
-import ChannelsInstagramPage from '@/pages/ChannelsInstagramPage'
-import ChannelsApplePage from '@/pages/ChannelsApplePage'
-import ChannelsEmailPage from '@/pages/ChannelsEmailPage'
-import ChannelsCallPage from '@/pages/ChannelsCallPage'
-import ChannelsPushPage from '@/pages/ChannelsPushPage'
-import ChannelsRcsPage from '@/pages/ChannelsRcsPage'
-import NotificationsPage from '@/pages/NotificationsPage'
-import SettingsPage from '@/pages/SettingsPage'
-import DeveloperApisPage from '@/pages/DeveloperApisPage'
-import DeveloperApisListingPage from '@/pages/DeveloperApisListingPage'
-import DeveloperApisDocsPage from '@/pages/DeveloperApisDocsPage'
-import DeveloperApisSmsPage from '@/pages/DeveloperApisSmsPage'
-import DeveloperApisVoicePage from '@/pages/DeveloperApisVoicePage'
-import DeveloperApisWhatsappPage from '@/pages/DeveloperApisWhatsappPage'
-import DeveloperApisPushPage from '@/pages/DeveloperApisPushPage'
-import DeveloperApisOtpPage from '@/pages/DeveloperApisOtpPage'
-import DeveloperApisBotsPage from '@/pages/DeveloperApisBotsPage'
-import SettingsProfilePage from '@/pages/SettingsProfilePage'
-import SettingsOrganizationPage from '@/pages/SettingsOrganizationPage'
-import SettingsContactsExportPage from '@/pages/SettingsContactsExportPage'
-import SettingsPluginsPage from '@/pages/SettingsPluginsPage'
-import SettingsPreferencesPage from '@/pages/SettingsPreferencesPage'
-import SettingsSupportPage from '@/pages/SettingsSupportPage'
-import BillingPage from '@/pages/BillingPage'
-import ProfilePage from '@/pages/ProfilePage'
-import AutomationKbPage from '@/pages/AutomationKbPage'
-import AutomationBotTemplatesPage from '@/pages/AutomationBotTemplatesPage'
-import ContactsAttributesPage from '@/pages/ContactsAttributesPage'
-import UseCasesPage from '@/pages/UseCasesPage'
-import LibraryPage from '@/pages/LibraryPage'
-import VerifyPage from '@/pages/VerifyPage'
-import AnalyticsPerformancePage from '@/pages/AnalyticsPerformancePage'
-import AnalyticsCampaignsPage from '@/pages/AnalyticsCampaignsPage'
-import AnalyticsConversationsPage from '@/pages/AnalyticsConversationsPage'
-import AnalyticsChannelsPage from '@/pages/AnalyticsChannelsPage'
-import AnalyticsAgentPage from '@/pages/AnalyticsAgentPage'
-import AnalyticsCustomPage from '@/pages/AnalyticsCustomPage'
-import DeveloperApisKeysPage from '@/pages/DeveloperApisKeysPage'
-import DeveloperApisWebhooksPage from '@/pages/DeveloperApisWebhooksPage'
-import DeveloperApisLogsPage from '@/pages/DeveloperApisLogsPage'
-import SettingsCompanyPage from '@/pages/SettingsCompanyPage'
-import SettingsSecurityPage from '@/pages/SettingsSecurityPage'
-import BillingPlansPage from '@/pages/BillingPlansPage'
-import BillingUsagePage from '@/pages/BillingUsagePage'
-import BillingPaymentsPage from '@/pages/BillingPaymentsPage'
-import BillingInvoicesPage from '@/pages/BillingInvoicesPage'
-import SupportHelpPage from '@/pages/SupportHelpPage'
-import SupportBestPracticesPage from '@/pages/SupportBestPracticesPage'
-import SupportFaqsPage from '@/pages/SupportFaqsPage'
-import NotFoundPage from '@/pages/NotFoundPage'
+// Pages
+// Auth
+import LoginPage from '@/pages/Auth/LoginPage'
+import SignupPage from '@/pages/Auth/SignupPage'
+import EmailConfirmationPage from '@/pages/Auth/EmailConfirmationPage'
+import PhoneVerificationPage from '@/pages/Auth/PhoneVerificationPage'
+import NewUserOnboardingPage from '@/pages/Auth/NewUserOnboardingPage'
+
+// General
+import DashboardPage from '@/pages/General/DashboardPage'
+import NotFoundPage from '@/pages/General/NotFoundPage'
+import NotificationsPage from '@/pages/General/NotificationsPage'
+import ProfilePage from '@/pages/General/ProfilePage'
+import VerifyPage from '@/pages/General/VerifyPage'
+
+// Analytics
+import AnalyticsPage from '@/pages/Analytics/AnalyticsPage'
+import AnalyticsPerformancePage from '@/pages/Analytics/AnalyticsPerformancePage'
+import AnalyticsCampaignsPage from '@/pages/Analytics/AnalyticsCampaignsPage'
+import AnalyticsConversationsPage from '@/pages/Analytics/AnalyticsConversationsPage'
+import AnalyticsApisPage from '@/pages/Analytics/AnalyticsApisPage'
+
+// Engage
+import CampaignsPage from '@/pages/Engage/CampaignsPage'
+import CampaignsCreatePage from '@/pages/Engage/CampaignsCreatePage'
+import CampaignsSettingsPage from '@/pages/Engage/CampaignsSettingsPage'
+import CampaignsAiBotsPage from '@/pages/Engage/CampaignsAiBotsPage'
+import CampaignsAutomationPage from '@/pages/Engage/CampaignsAutomationPage'
+import AutomationJourneyPage from '@/pages/Engage/AutomationJourneyPage'
+
+// Audience
+import ContactsPage from '@/pages/Audience/ContactsPage'
+import ContactsEditPage from '@/pages/Audience/ContactsEditPage'
+import ContactDetailPage from '@/pages/Audience/ContactDetailPage'
+import ContactsSegmentsPage from '@/pages/Audience/ContactsSegmentsPage'
+import ContactsTagsPage from '@/pages/Audience/ContactsTagsPage'
+import ContactsAttributesPage from '@/pages/Audience/ContactsAttributesPage'
+
+// Inbox
+import MessagesPage from '@/pages/Inbox/MessagesPage'
+import InboxPage from '@/pages/Inbox/InboxPage'
+import InboxRequestsPage from '@/pages/Inbox/InboxRequestsPage'
+import InboxSettingsPage from '@/pages/Inbox/InboxSettingsPage'
+
+// Automation
+import AutomationPage from '@/pages/Automation/AutomationPage'
+import AutomationBotsPage from '@/pages/Automation/AutomationBotsPage'
+import AutomationKbPage from '@/pages/Automation/AutomationKbPage'
+
+// Library
+import LibraryPage from '@/pages/Library/LibraryPage'
+import UseCasesPage from '@/pages/Library/UseCasesPage'
+import CampaignsTemplatesPage from '@/pages/Library/CampaignsTemplatesPage'
+import AutomationTemplatesPage from '@/pages/Library/AutomationTemplatesPage'
+import AutomationBotTemplatesPage from '@/pages/Library/AutomationBotTemplatesPage'
+
+// Channels
+import ChannelsPage from '@/pages/Channels/ChannelsPage'
+import ChannelsSmsPage from '@/pages/Channels/ChannelsSmsPage'
+import ChannelsWhatsAppPage from '@/pages/Channels/ChannelsWhatsAppPage'
+import ChannelsMessengerPage from '@/pages/Channels/ChannelsMessengerPage'
+import ChannelsInstagramPage from '@/pages/Channels/ChannelsInstagramPage'
+import ChannelsApplePage from '@/pages/Channels/ChannelsApplePage'
+import ChannelsEmailPage from '@/pages/Channels/ChannelsEmailPage'
+import ChannelsCallPage from '@/pages/Channels/ChannelsCallPage'
+import ChannelsPushPage from '@/pages/Channels/ChannelsPushPage'
+import ChannelsRcsPage from '@/pages/Channels/ChannelsRcsPage'
+
+// Settings
+import SettingsPage from '@/pages/Settings/SettingsPage'
+import SettingsProfilePage from '@/pages/Settings/SettingsProfilePage'
+import SettingsOrganizationPage from '@/pages/Settings/SettingsOrganizationPage'
+import SettingsContactsExportPage from '@/pages/Settings/SettingsContactsExportPage'
+import SettingsPluginsPage from '@/pages/Settings/SettingsPluginsPage'
+import SettingsPreferencesPage from '@/pages/Settings/SettingsPreferencesPage'
+import SettingsSupportPage from '@/pages/Settings/SettingsSupportPage'
+import SettingsCompanyPage from '@/pages/Settings/SettingsCompanyPage'
+import SettingsSecurityPage from '@/pages/Settings/SettingsSecurityPage'
+
+// Developer APIs
+import DeveloperApisPage from '@/pages/Developer/DeveloperApisPage'
+import DeveloperApisListingPage from '@/pages/Developer/DeveloperApisListingPage'
+import DeveloperApisDocsPage from '@/pages/Developer/DeveloperApisDocsPage'
+import DeveloperApisSmsPage from '@/pages/Developer/DeveloperApisSmsPage'
+import DeveloperApisVoicePage from '@/pages/Developer/DeveloperApisVoicePage'
+import DeveloperApisWhatsappPage from '@/pages/Developer/DeveloperApisWhatsappPage'
+import DeveloperApisPushPage from '@/pages/Developer/DeveloperApisPushPage'
+import DeveloperApisOtpPage from '@/pages/Developer/DeveloperApisOtpPage'
+import DeveloperApisBotsPage from '@/pages/Developer/DeveloperApisBotsPage'
+import DeveloperApisKeysPage from '@/pages/Developer/DeveloperApisKeysPage'
+import DeveloperApisWebhooksPage from '@/pages/Developer/DeveloperApisWebhooksPage'
+import DeveloperApisLogsPage from '@/pages/Developer/DeveloperApisLogsPage'
+
+// Billing
+import BillingPage from '@/pages/Billing/BillingPage'
+import BillingPlansPage from '@/pages/Billing/BillingPlansPage'
+import BillingUsagePage from '@/pages/Billing/BillingUsagePage'
+import BillingPaymentsPage from '@/pages/Billing/BillingPaymentsPage'
+import BillingInvoicesPage from '@/pages/Billing/BillingInvoicesPage'
+
+// Support
+import SupportHelpPage from '@/pages/Support/SupportHelpPage'
+import SupportBestPracticesPage from '@/pages/Support/SupportBestPracticesPage'
+import SupportFaqsPage from '@/pages/Support/SupportFaqsPage'
 
 
 function App() {
@@ -167,11 +191,20 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/analytics/performance" element={
+          <Route path="/analytics/overview" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
                   <AnalyticsPerformancePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics/apis" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <AnalyticsApisPage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>
@@ -194,34 +227,8 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/analytics/channels" element={
-            <ProtectedRoute>
-              <RootLayout>
-                <DashboardLayout>
-                  <AnalyticsChannelsPage />
-                </DashboardLayout>
-              </RootLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/analytics/agent" element={
-            <ProtectedRoute>
-              <RootLayout>
-                <DashboardLayout>
-                  <AnalyticsAgentPage />
-                </DashboardLayout>
-              </RootLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/analytics/custom" element={
-            <ProtectedRoute>
-              <RootLayout>
-                <DashboardLayout>
-                  <AnalyticsCustomPage />
-                </DashboardLayout>
-              </RootLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/campaigns" element={
+
+          <Route path="/engage/campaigns" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -230,7 +237,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/campaigns/create" element={
+          <Route path="/engage/campaigns/create" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -239,7 +246,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/campaigns/settings" element={
+          <Route path="/engage/campaigns/settings" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -248,7 +255,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/campaigns/templates" element={
+          <Route path="/engage/campaigns/templates" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -257,7 +264,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/campaigns/ai-bots" element={
+          <Route path="/engage/campaigns/ai-bots" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -266,7 +273,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/campaigns/automation" element={
+          <Route path="/engage/campaigns/automation" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -275,7 +282,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts" element={
+          <Route path="/audience/contacts" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -284,7 +291,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts/segments" element={
+          <Route path="/audience/segments" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -293,7 +300,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts/tags" element={
+          <Route path="/audience/tags" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -302,7 +309,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts/attributes" element={
+          <Route path="/audience/attributes" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -311,7 +318,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts/:id/edit" element={
+          <Route path="/audience/contacts/:id/edit" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -320,7 +327,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/contacts/:id" element={
+          <Route path="/audience/contacts/:id" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -374,7 +381,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/automation/journey" element={
+          <Route path="/engage/journey" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -383,7 +390,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/automation/templates" element={
+          <Route path="/library/templates" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
@@ -392,7 +399,7 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/use-cases" element={
+          <Route path="/library/use-cases" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
