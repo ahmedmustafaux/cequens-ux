@@ -285,7 +285,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                         </div>
 
                         {/* Right: Close Actions - 2 cols (matches spacer) */}
-                        <div className="col-span-2 hidden xl:flex justify-end">
+                        <div className="absolute top-4 right-4">
                             <Button
                                 variant="outline"
                                 size="icon"
@@ -310,8 +310,8 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                 <div className="col-span-12 md:col-span-3 xl:col-span-2 flex flex-col gap-6">
                                     <div className="rounded-xl border bg-background shadow-sm overflow-hidden py-2">
                                         {settingsNav.map((group, i) => (
-                                            <div key={i} className="mb-2 last:mb-0">
-                                                <h4 className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            <div key={i} className="mb-4 last:mb-0">
+                                                <h4 className="px-5 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     {group.category}
                                                 </h4>
                                                 <div className="space-y-0.5 px-2">
