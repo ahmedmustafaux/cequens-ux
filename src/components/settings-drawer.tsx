@@ -311,7 +311,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                     <div className="rounded-xl border bg-background shadow-sm overflow-hidden py-2">
                                         {settingsNav.map((group, i) => (
                                             <div key={i} className="mb-4 last:mb-0">
-                                                <h4 className="px-5 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                <h4 className="px-5 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                                     {group.category}
                                                 </h4>
                                                 <div className="space-y-0.5 px-2">
