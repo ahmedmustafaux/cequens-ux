@@ -689,7 +689,7 @@ export default function NotificationsPage() {
                           <div className="space-y-4">
                             {groupNotificationsByDate(filteredNotifications).map(([dateGroup, groupedNotifications]) => (
                               <div key={dateGroup} className="space-y-2">
-                                <div className="z-10 bg-background/95 backdrop-blur-sm px-4">
+                                <div className="z-10 backdrop-blur-sm px-4">
                                   <h3 className="text-sm font-medium text-muted-foreground">
                                     {dateGroup}
                                   </h3>

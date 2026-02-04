@@ -42,6 +42,16 @@ import {
     InputGroupAddon
 } from "@/components/ui/input-group"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+    Item,
+    ItemContent,
+    ItemTitle,
+    ItemDescription,
+    ItemGroup,
+} from "@/components/ui/item"
+import { toast } from "sonner"
 
 const settingsNav = [
     {
@@ -85,8 +95,41 @@ interface SettingsDrawerProps {
 
 export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
     const [activeTab, setActiveTab] = React.useState("company")
-    const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
     const [isBouncing, setIsBouncing] = React.useState(false)
+
+    // Settings State
+    const [notificationSettings, setNotificationSettings] = React.useState({
+        emailNotifications: true,
+        pushNotifications: true,
+        autoArchive: false,
+        showPriority: true,
+        notificationPosition: "top-right"
+    })
+
+    // Initial state for change tracking
+    const [initialNotificationSettings, setInitialNotificationSettings] = React.useState(notificationSettings)
+
+    // Load saved settings
+    React.useEffect(() => {
+        const savedPosition = localStorage.getItem("toast-position")
+        if (savedPosition) {
+            setNotificationSettings(prev => ({ ...prev, notificationPosition: savedPosition }))
+            setInitialNotificationSettings(prev => ({ ...prev, notificationPosition: savedPosition }))
+        }
+    }, [])
+
+    // Derive unsaved changes
+    const unsavedChangesCount = React.useMemo(() => {
+        let count = 0
+        if (notificationSettings.emailNotifications !== initialNotificationSettings.emailNotifications) count++
+        if (notificationSettings.pushNotifications !== initialNotificationSettings.pushNotifications) count++
+        if (notificationSettings.autoArchive !== initialNotificationSettings.autoArchive) count++
+        if (notificationSettings.showPriority !== initialNotificationSettings.showPriority) count++
+        if (notificationSettings.notificationPosition !== initialNotificationSettings.notificationPosition) count++
+        return count
+    }, [notificationSettings, initialNotificationSettings])
+
+    const hasUnsavedChanges = unsavedChangesCount > 0
 
     // Find current tab details
     const currentTab = settingsNav
@@ -130,7 +173,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                             <div className="size-8 bg-gray-100 rounded-lg flex items-center justify-center text-foreground shrink-0">
                                 <Settings className="size-4" />
                             </div>
-                            <span className="font-semibold text-lg hover:opacity-80 transition-opacity cursor-pointer" onClick={() => setHasUnsavedChanges(!hasUnsavedChanges)}>Settings</span>
+                            <span className="font-semibold text-lg hover:opacity-80 transition-opacity cursor-pointer">Settings</span>
                         </div>
 
                         {/* Center: Search OR Actions - 6 cols (matches content) */}
@@ -141,20 +184,30 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                         "bg-muted/50 rounded-full px-1.5 py-1.5 flex items-center justify-between gap-3 border w-full",
                                         isBouncing && "animate-shake ring-2 ring-destructive/50 ring-offset-2"
                                     )}>
-                                        <span className="text-xs font-medium text-muted-foreground px-2">2 unsaved changes</span>
+                                        <span className="text-xs font-medium text-muted-foreground px-2">
+                                            {unsavedChangesCount} unsaved change{unsavedChangesCount > 1 ? 's' : ''}
+                                        </span>
                                         <div className="flex items-center gap-1">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
                                                 className="h-7 rounded-full px-3 text-xs hover:bg-background"
-                                                onClick={() => setHasUnsavedChanges(false)}
+                                                onClick={() => setNotificationSettings(initialNotificationSettings)}
                                             >
                                                 Discard
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 className="h-7 rounded-full px-3 text-xs"
-                                                onClick={() => setHasUnsavedChanges(false)}
+                                                onClick={() => {
+                                                    // Save to localStorage
+                                                    localStorage.setItem("toast-position", notificationSettings.notificationPosition)
+                                                    window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: notificationSettings.notificationPosition }))
+                                                    toast.success("Settings saved successfully")
+
+                                                    // Update initial state to match current
+                                                    setInitialNotificationSettings(notificationSettings)
+                                                }}
                                             >
                                                 Save
                                             </Button>
@@ -244,27 +297,191 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                         <Separator />
 
                                         <div className="p-6 space-y-8">
-                                            {/* Placeholder Content */}
-                                            <div className="space-y-6">
-                                                <div className="p-10 rounded-xl border-2 border-dashed border-muted bg-muted/5 flex flex-col items-center justify-center text-center gap-2 text-muted-foreground">
-                                                    <div className="size-12 rounded-full bg-muted/20 flex items-center justify-center">
-                                                        <currentTab.icon className="size-6" />
-                                                    </div>
-                                                    <p className="font-medium">Configure your {currentTab.title}</p>
-                                                    <p className="text-xs max-w-xs">Settings and configuration options for this section will appear here.</p>
-                                                </div>
+                                            {currentTab.id === "notifications" ? (
+                                                <div className="space-y-6 animate-in fade-in duration-300 slide-in-from-bottom-4">
+                                                    <ItemGroup className="border rounded-xl bg-background overflow-hidden">
+                                                        <Item
+                                                            size="default"
+                                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                            onClick={() => {
+                                                                setNotificationSettings(prev => ({ ...prev, emailNotifications: !prev.emailNotifications }));
+                                                            }}
+                                                        >
+                                                            <ItemContent>
+                                                                <div className="px-4 py-3 flex items-start gap-3">
+                                                                    <Checkbox
+                                                                        id="email-notifications"
+                                                                        checked={notificationSettings.emailNotifications}
+                                                                        onCheckedChange={(checked) => {
+                                                                            setNotificationSettings(prev => ({ ...prev, emailNotifications: !!checked }))
+                                                                        }}
+                                                                        className="mt-0.5"
+                                                                    />
+                                                                    <div>
+                                                                        <ItemTitle>Email Notifications</ItemTitle>
+                                                                        <ItemDescription className="text-xs mt-1">Receive notifications via email</ItemDescription>
+                                                                    </div>
+                                                                </div>
+                                                            </ItemContent>
+                                                        </Item>
 
-                                                <div className="space-y-4 pt-4">
-                                                    <div className="space-y-2">
-                                                        <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                                                        <div className="h-10 w-full bg-muted/30 rounded" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                                                        <div className="h-10 w-full bg-muted/30 rounded" />
+                                                        <Separator />
+
+                                                        <Item
+                                                            size="default"
+                                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                            onClick={() => {
+                                                                setNotificationSettings(prev => ({ ...prev, pushNotifications: !prev.pushNotifications }));
+                                                            }}
+                                                        >
+                                                            <ItemContent>
+                                                                <div className="px-4 py-3 flex items-start gap-3">
+                                                                    <Checkbox
+                                                                        id="push-notifications"
+                                                                        checked={notificationSettings.pushNotifications}
+                                                                        onCheckedChange={(checked) => {
+                                                                            setNotificationSettings(prev => ({ ...prev, pushNotifications: !!checked }))
+                                                                        }}
+                                                                        className="mt-0.5"
+                                                                    />
+                                                                    <div>
+                                                                        <ItemTitle>Push Notifications</ItemTitle>
+                                                                        <ItemDescription className="text-xs mt-1">Show browser notifications</ItemDescription>
+                                                                    </div>
+                                                                </div>
+                                                            </ItemContent>
+                                                        </Item>
+
+                                                        <Separator />
+
+                                                        <Item
+                                                            size="default"
+                                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                            onClick={() => {
+                                                                setNotificationSettings(prev => ({ ...prev, autoArchive: !prev.autoArchive }));
+                                                            }}
+                                                        >
+                                                            <ItemContent>
+                                                                <div className="px-4 py-3 flex items-start gap-3">
+                                                                    <Checkbox
+                                                                        id="auto-archive"
+                                                                        checked={notificationSettings.autoArchive}
+                                                                        onCheckedChange={(checked) => {
+                                                                            setNotificationSettings(prev => ({ ...prev, autoArchive: !!checked }))
+                                                                        }}
+                                                                        className="mt-0.5"
+                                                                    />
+                                                                    <div>
+                                                                        <ItemTitle>Auto Archive</ItemTitle>
+                                                                        <ItemDescription className="text-xs mt-1">Archive read notifications after 30 days</ItemDescription>
+                                                                    </div>
+                                                                </div>
+                                                            </ItemContent>
+                                                        </Item>
+
+                                                        <Separator />
+
+                                                        <Item
+                                                            size="default"
+                                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                            onClick={() => {
+                                                                setNotificationSettings(prev => ({ ...prev, showPriority: !prev.showPriority }));
+                                                            }}
+                                                        >
+                                                            <ItemContent>
+                                                                <div className="px-4 py-3 flex items-start gap-3">
+                                                                    <Checkbox
+                                                                        id="show-priority"
+                                                                        checked={notificationSettings.showPriority}
+                                                                        onCheckedChange={(checked) => {
+                                                                            setNotificationSettings(prev => ({ ...prev, showPriority: !!checked }))
+                                                                        }}
+                                                                        className="mt-0.5"
+                                                                    />
+                                                                    <div>
+                                                                        <ItemTitle>Show Priority Badges</ItemTitle>
+                                                                        <ItemDescription className="text-xs mt-1">Display priority indicators</ItemDescription>
+                                                                    </div>
+                                                                </div>
+                                                            </ItemContent>
+                                                        </Item>
+                                                    </ItemGroup>
+
+                                                    <div className="py-4">
+                                                        <h3 className="text-sm font-medium mb-3">Notification position</h3>
+                                                        <RadioGroup
+                                                            value={notificationSettings.notificationPosition}
+                                                            onValueChange={(value) => {
+                                                                setNotificationSettings(prev => ({ ...prev, notificationPosition: value }));
+                                                                toast.info("Notification position preview", {
+                                                                    description: "This is how notifications will appear",
+                                                                    position: value as any
+                                                                });
+                                                            }}
+                                                            className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                                                        >
+                                                            {["top-right", "bottom-right", "bottom-center"].map((pos) => (
+                                                                <div key={pos} className="flex flex-col items-center">
+                                                                    <div
+                                                                        className="w-full cursor-pointer group"
+                                                                        onClick={() => {
+                                                                            setNotificationSettings(prev => ({ ...prev, notificationPosition: pos }));
+                                                                            toast.info("Notification position preview", {
+                                                                                description: "This is how notifications will appear",
+                                                                                position: pos as any
+                                                                            });
+                                                                        }}
+                                                                    >
+                                                                        <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
+                                                                            <div className="w-full h-full p-2">
+                                                                                <div className="overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative">
+                                                                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                                                                    <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                                                                    <div className="absolute top-4 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                                                                    <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                                                                    <div className={cn(
+                                                                                        "absolute m-0.5 w-1/3 h-3 bg-muted-foreground/40 rounded-sm border border-border-muted flex items-center justify-center group-hover:bg-primary/70 group-hover:border-border-primary transition-colors",
+                                                                                        pos === "top-right" && "top-0 right-0",
+                                                                                        pos === "bottom-right" && "bottom-0 right-0",
+                                                                                        pos === "bottom-center" && "bottom-0 left-1/2 transform -translate-x-1/2"
+                                                                                    )}>
+                                                                                        <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center space-x-2 justify-center mt-2">
+                                                                            <RadioGroupItem value={pos} id={pos} />
+                                                                            <label htmlFor={pos} className="text-sm capitalize">{pos.replace("-", " ")}</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </RadioGroup>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    <div className="p-10 rounded-xl border-2 border-dashed border-muted bg-muted/5 flex flex-col items-center justify-center text-center gap-2 text-muted-foreground">
+                                                        <div className="size-12 rounded-full bg-muted/20 flex items-center justify-center">
+                                                            <currentTab.icon className="size-6" />
+                                                        </div>
+                                                        <p className="font-medium">Configure your {currentTab.title}</p>
+                                                        <p className="text-xs max-w-xs">Settings and configuration options for this section will appear here.</p>
+                                                    </div>
+
+                                                    <div className="space-y-4 pt-4">
+                                                        <div className="space-y-2">
+                                                            <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                                                            <div className="h-10 w-full bg-muted/30 rounded" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                                                            <div className="h-10 w-full bg-muted/30 rounded" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
