@@ -107,7 +107,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
 
                         {/* Left: Title - 2 cols (matches sidebar) */}
                         <div className="col-span-12 md:col-span-3 xl:col-span-2 flex items-center gap-3">
-                            <div className="size-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0">
+                            <div className="size-8 bg-gray-100 rounded-lg flex items-center justify-center text-foreground shrink-0">
                                 <Settings className="size-4" />
                             </div>
                             <span className="font-semibold text-lg hover:opacity-80 transition-opacity cursor-pointer" onClick={() => setHasUnsavedChanges(!hasUnsavedChanges)}>Settings</span>
