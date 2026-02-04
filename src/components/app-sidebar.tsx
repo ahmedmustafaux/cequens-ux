@@ -41,11 +41,13 @@ import {
   SidebarMenuButton,
   SidebarGroup,
   SidebarSeparator,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
 import { getActiveChannels } from "@/lib/channel-utils"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
 const data = {
   // Group 1: Home, Inbox, Engage, Verify, AI & Bots, Developer Hub
   navMain: [
@@ -314,11 +316,12 @@ function ChannelPrompter() {
               onClick={() => navigateTo("/channels")}
               className={cn(
                 "w-full",
-                activeChannels.length === 0 && "hover:bg-primary/5"
+                activeChannels.length === 0 && "hover:bg-primary/5",
+                activeChannels.length === 0 && channelIsActive && "data-[active=true]:bg-primary/5 rounded-t-none rounded-b-xl"
               )}
             >
-              <Globe className={cn("size-4", activeChannels.length === 0 && "text-primary")} />
-              <span className={cn(activeChannels.length === 0 && "font-semibold text-primary")}>Channels</span>
+              <Globe className="size-4" />
+              <span>Channels</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

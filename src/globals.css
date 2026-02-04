@@ -97,7 +97,7 @@
 }
 
 :root {
-  --background: oklch(1 0 0); 
+  --background: oklch(1 0 0);
   --foreground: oklch(0.1450 0 0);
   --layout: oklch(0.9850 0 0);
   --card: oklch(1 0 0);
@@ -242,6 +242,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
@@ -249,6 +250,7 @@
 }
 
 @layer components {
+
   /* Smooth sidebar sub-menu animations */
   [data-sidebar="menu-sub"] {
     transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out, height 0.2s ease-in-out;
@@ -281,6 +283,7 @@
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(100%);
     }
@@ -292,9 +295,7 @@
     cursor: pointer;
   }
 
-  [data-sidebar="menu-button"][data-active="true"] {
-    transform: translateX(2px);
-  }
+
 
   /* Sub-menu items pointer cursor */
   [data-sidebar="menu-sub-button"] {
@@ -503,7 +504,8 @@
 }
 
 /* Fixed width responsive design utilities */
-html, body {
+html,
+body {
   max-width: 100vw;
   overflow-x: hidden;
   overflow-y: auto;
@@ -516,14 +518,14 @@ html, body {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
-  
+
   /* Ensure text doesn't overflow on mobile */
   .mobile-text-truncate {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
+
   /* Flexible container for mobile */
   .mobile-flex-container {
     display: flex;
@@ -559,7 +561,8 @@ html, body {
 /* Fallback for devices without safe area support */
 @media (max-width: 768px) {
   .mobile-safe-area {
-    padding-bottom: 1.5rem; /* 24px fallback for mobile devices */
+    padding-bottom: 1.5rem;
+    /* 24px fallback for mobile devices */
   }
 }
 
@@ -572,10 +575,13 @@ html, body {
 
 /* Hide scrollbar for horizontal scrolling containers */
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
