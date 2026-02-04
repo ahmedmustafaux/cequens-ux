@@ -47,6 +47,8 @@ import { useNavigationContext } from "@/hooks/use-navigation-context"
 import { getActiveChannels } from "@/lib/channel-utils"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+// Settings Drawer
+import { SettingsDrawer } from "@/components/settings-drawer"
 
 const data = {
   // Group 1: Home, Inbox, Engage, Verify, AI & Bots, Developer Hub
@@ -225,48 +227,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Billing",
-      url: "/billing",
-      icon: CreditCard,
-      items: [
-        {
-          title: "Plans & Features",
-          url: "/billing/plans",
-        },
-        {
-          title: "Usage & Credits",
-          url: "/billing/usage",
-        },
-        {
-          title: "Payment Methods",
-          url: "/billing/payments",
-        },
-        {
-          title: "Invoice History",
-          url: "/billing/invoices",
-        },
-      ],
-    },
-    {
-      title: "Support",
-      url: "/support",
-      icon: Lightbulb,
-      items: [
-        {
-          title: "Help Center",
-          url: "/support/help",
-        },
-        {
-          title: "Best Practices",
-          url: "/support/best-practices",
-        },
-        {
-          title: "FAQs",
-          url: "/support/faqs",
-        },
-      ],
-    },
+
   ],
 }
 
@@ -332,6 +293,7 @@ function ChannelPrompter() {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth()
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
 
   // Create user data for NavUser component
   const userData = {
@@ -339,43 +301,62 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     email: user?.email || "user@example.com",
     avatar: "", // Use empty string to trigger Avatar fallback with initials
   }
+
+  // Modified NavSecondary items to handle Settings click
+  const navSecondaryItems = React.useMemo(() => {
+    return data.navSecondary.map(item => {
+      if (item.title === "Settings") {
+        return {
+          ...item,
+          items: [], // Remove sub-items as requested
+          url: "#", // Prevent navigation
+          onClick: () => setSettingsOpen(true),
+        }
+      }
+      return item
+    })
+  }, [])
+
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
+    <>
+      <Sidebar collapsible="offcanvas" {...props}>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
 
-            <img
-              src="/Logo.svg"
-              alt={getAppName()}
-              className="ml-1 py-2 w-25 h-auto"
-            />
+              <img
+                src="/Logo.svg"
+                alt={getAppName()}
+                className="ml-1 py-2 w-25 h-auto"
+              />
 
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        {/* Main Group (Home, Inbox, Engage, Verify, AI & Bots) */}
-        <NavMain items={data.navMain} />
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          {/* Main Group (Home, Inbox, Engage, Verify, AI & Bots) */}
+          <NavMain items={data.navMain} />
 
-        <SidebarSeparator className="mx-0" />
+          <SidebarSeparator className="mx-0" />
 
-        {/* Secondary Group (Audience, Library, Dev Hub) */}
-        <NavMain items={data.navGroup2} />
+          {/* Secondary Group (Audience, Library, Dev Hub) */}
+          <NavMain items={data.navGroup2} />
 
-        <SidebarSeparator className="mx-0" />
+          <SidebarSeparator className="mx-0" />
 
-        {/* Analytics Group */}
-        <NavMain items={data.navGroup3} />
+          {/* Analytics Group */}
+          <NavMain items={data.navGroup3} />
 
-        <div className="mt-auto flex flex-col">
-          <ChannelPrompter />
-          <NavSecondary items={data.navSecondary} />
-        </div>
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={userData} />
-      </SidebarFooter>
-    </Sidebar>
+          <div className="mt-auto flex flex-col">
+            <ChannelPrompter />
+            <NavSecondary items={navSecondaryItems} />
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={userData} />
+        </SidebarFooter>
+      </Sidebar>
+      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   )
 }

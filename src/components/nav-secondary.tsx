@@ -22,6 +22,7 @@ export function NavSecondary({
     title: string
     url: string
     icon: LucideIcon
+    onClick?: () => void
     items?: {
       title: string
       url: string
@@ -57,9 +58,13 @@ export function NavSecondary({
     )
   }
 
-  const handleNavigation = (e: React.MouseEvent, url: string) => {
+  const handleNavigation = (e: React.MouseEvent, item: any) => {
     e.preventDefault()
-    navigateTo(url)
+    if (item.onClick) {
+      item.onClick()
+      return
+    }
+    navigateTo(item.url)
   }
 
   return (
@@ -86,7 +91,7 @@ export function NavSecondary({
                           toggleItem(item.title)
                         } else {
                           // If clicking on the main button, navigate to the main page
-                          handleNavigation(e, item.url)
+                          handleNavigation(e, item)
                         }
                       }}
                     >
@@ -125,7 +130,7 @@ export function NavSecondary({
                 ) : (
                   <SidebarMenuButton
                     isActive={itemIsActive}
-                    onClick={(e) => handleNavigation(e, item.url)}
+                    onClick={(e) => handleNavigation(e, item)}
                   >
                     <item.icon />
                     <span>{item.title}</span>
