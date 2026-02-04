@@ -86,19 +86,39 @@ interface SettingsDrawerProps {
 export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
     const [activeTab, setActiveTab] = React.useState("company")
     const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
+    const [isBouncing, setIsBouncing] = React.useState(false)
 
     // Find current tab details
     const currentTab = settingsNav
         .flatMap(g => g.items)
         .find(i => i.id === activeTab) || settingsNav[0].items[0]
 
+    const handleOpenChange = (newOpen: boolean) => {
+        if (!newOpen && hasUnsavedChanges) {
+            setIsBouncing(true)
+            setTimeout(() => setIsBouncing(false), 800)
+            return
+        }
+        onOpenChange(newOpen)
+    }
+
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
             <SheetContent
                 side="bottom"
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 className="h-[95vh] rounded-t-xl p-0 overflow-hidden bg-secondary outline-none shadow-2xl [&>button]:hidden"
             >
+                <style>{`
+                    @keyframes shake {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-4px); }
+                        75% { transform: translateX(4px); }
+                    }
+                    .animate-shake {
+                        animation: shake 0.2s ease-in-out 3;
+                    }
+                `}</style>
                 {/* Header - Fixed */}
                 <div className="h-16 border-b bg-background shrink-0 z-50 relative w-full">
                     <div className="grid grid-cols-12 gap-6 px-4 md:px-8 max-w-[1600px] mx-auto h-full items-center">
@@ -116,31 +136,36 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                         {/* Center: Search OR Actions - 6 cols (matches content) */}
                         <div className="col-span-12 md:col-span-9 xl:col-span-6 flex justify-center">
                             {hasUnsavedChanges ? (
-                                <div className="bg-muted/50 rounded-full px-1.5 py-1.5 flex items-center gap-3 border animate-in fade-in zoom-in-95 duration-200">
-                                    <span className="text-xs font-medium text-muted-foreground px-2">2 unsaved changes</span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 rounded-full px-3 text-xs hover:bg-background"
-                                            onClick={() => setHasUnsavedChanges(false)}
-                                        >
-                                            Discard
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            className="h-7 rounded-full px-3 text-xs"
-                                            onClick={() => setHasUnsavedChanges(false)}
-                                        >
-                                            Save
-                                        </Button>
+                                <div className="w-full animate-in fade-in zoom-in-95 duration-200">
+                                    <div className={cn(
+                                        "bg-muted/50 rounded-full px-1.5 py-1.5 flex items-center justify-between gap-3 border w-full",
+                                        isBouncing && "animate-shake ring-2 ring-destructive/50 ring-offset-2"
+                                    )}>
+                                        <span className="text-xs font-medium text-muted-foreground px-2">2 unsaved changes</span>
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 rounded-full px-3 text-xs hover:bg-background"
+                                                onClick={() => setHasUnsavedChanges(false)}
+                                            >
+                                                Discard
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="h-7 rounded-full px-3 text-xs"
+                                                onClick={() => setHasUnsavedChanges(false)}
+                                            >
+                                                Save
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="w-full">
                                     <Field className="w-full">
                                         <FieldContent>
-                                            <InputGroup className="bg-background border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-full gap-2 px-3 py-1.5 h-10">
+                                            <InputGroup className="bg-background border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-full gap-2 py-1.5 h-10 rounded-lg">
                                                 <InputGroupAddon>
                                                     <Search className="h-4 w-4 text-muted-foreground" />
                                                 </InputGroupAddon>
@@ -163,7 +188,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                 variant="outline"
                                 size="icon"
                                 className="size-8"
-                                onClick={() => onOpenChange(false)}
+                                onClick={() => handleOpenChange(false)}
                             >
                                 <X className="size-4" />
                             </Button>

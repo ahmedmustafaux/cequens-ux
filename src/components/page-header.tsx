@@ -291,7 +291,7 @@ export function PageHeader({
               {!isMobile && showSearch && (
                 <Field className="w-auto">
                   <FieldContent>
-                    <InputGroup className="bg-background border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
+                    <InputGroup className="bg-background border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4 rounded-lg">
                       <div className="flex items-center gap-2">
                         <InputGroupAddon>
                           <Search className="h-3.5 w-3.5" />
