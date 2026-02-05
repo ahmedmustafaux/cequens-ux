@@ -247,7 +247,7 @@ export function PageHeader({
   if (!title && !description) {
     return (
       <>
-        <header className="flex h-(--header-height) shrink-0 items-center border-b border-border transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
+        <header className="flex h-(--header-height) shrink-0 items-center transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
           <div className="flex w-full items-center px-4 lg:px-6 py-4 min-w-0">
             {/* Left side - Sidebar trigger and breadcrumbs */}
             <div className="flex items-center gap-2 sm:gap-2 flex-shrink-0">
