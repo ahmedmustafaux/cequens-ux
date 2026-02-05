@@ -19,7 +19,7 @@ const products: Product[] = [
     name: "Engage",
     description: "Automated campaigns",
     icon: Megaphone,
-    url: "/campaigns",
+    url: "/engage/campaigns",
   },
   {
     id: "inbox",

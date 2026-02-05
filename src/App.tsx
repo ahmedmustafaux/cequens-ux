@@ -162,7 +162,7 @@ function App() {
           } />
 
           {/* Verify Route */}
-          <Route path="/verify" element={
+          <Route path="/analytics/verify" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>

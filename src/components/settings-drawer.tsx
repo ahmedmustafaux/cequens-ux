@@ -198,7 +198,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
             <SheetContent
                 side="bottom"
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="h-[95vh] rounded-t-xl p-0 overflow-hidden bg-secondary outline-none shadow-2xl [&>button]:hidden"
+                className="h-[94vh] rounded-t-xl p-0 overflow-hidden bg-secondary outline-none shadow-2xl"
             >
                 <style>{`
                     @keyframes shake {

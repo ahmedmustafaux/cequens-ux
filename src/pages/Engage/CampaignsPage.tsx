@@ -234,11 +234,16 @@ function CampaignsPageContent() {
     setIsCreateDialogOpen(true)
   }
 
-  const handleProceedToCreate = () => {
-    navigate("/campaigns/create", {
+  const handleProceedToCreate = (type?: "broadcast" | "condition") => {
+    const selectedType = type || newCampaignType;
+    if (!newCampaignName.trim()) {
+      toast.error("Please enter a campaign name first");
+      return;
+    }
+    navigate("/engage/campaigns/create", {
       state: {
         name: newCampaignName,
-        type: newCampaignType === "broadcast" ? "Broadcast" : "Condition-based"
+        type: selectedType === "broadcast" ? "Broadcast" : "Condition-based"
       }
     })
     setIsCreateDialogOpen(false)
@@ -455,7 +460,7 @@ function CampaignsPageContent() {
                   key={row.id}
                   selected={row.getIsSelected()}
                   className="group cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate(`/campaigns/${row.original.id}`)}
+                  onClick={() => navigate(`/engage/campaigns/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <DataTableCell
@@ -511,38 +516,42 @@ function CampaignsPageContent() {
                 onValueChange={(val) => setNewCampaignType(val as "broadcast" | "condition")}
                 className="grid grid-cols-1 gap-4"
               >
-                <Label
-                  htmlFor="broadcast"
+                <div
                   className={cn(
                     "flex flex-row items-start gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all",
                     newCampaignType === "broadcast" ? "border-primary bg-primary/5" : "border-border"
                   )}
+                  onClick={() => handleProceedToCreate("broadcast")}
                 >
                   <RadioGroupItem value="broadcast" id="broadcast" className="mt-1" />
-                  <div className="grid gap-1 leading-none">
+                  <Label
+                    htmlFor="broadcast"
+                    className="grid gap-1 leading-none cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="font-semibold">Broadcast Campaign</div>
                     <div className="text-sm text-muted-foreground font-normal">
                       Send a one-time message to a list of recipients (SMS, WhatsApp, Email).
                     </div>
-                  </div>
-                </Label>
+                  </Label>
+                </div>
 
-                <div className={cn(
-                  "rounded-md border p-4 transition-all",
-                  newCampaignType === "condition" ? "border-primary bg-primary/5" : "border-border hover:bg-accent hover:text-accent-foreground"
-                )}>
+                <div
+                  className={cn(
+                    "flex flex-row items-start gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all",
+                    newCampaignType === "condition" ? "border-primary bg-primary/5" : "border-border"
+                  )}
+                  onClick={() => handleProceedToCreate("condition")}
+                >
+                  <RadioGroupItem value="condition" id="condition" className="mt-1" />
                   <Label
                     htmlFor="condition"
-                    className="flex flex-row items-start gap-4 cursor-pointer"
+                    className="grid gap-1 leading-none flex-1 cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <RadioGroupItem value="condition" id="condition" className="mt-1" />
-                    <div className="grid gap-1 leading-none flex-1">
-                      <div className="font-semibold">Condition-based Campaign</div>
-                      <div className="text-sm text-muted-foreground font-normal">
-                        Trigger messages when specific events occur defined by your conditions.
-                      </div>
-
-
+                    <div className="font-semibold">Condition-based Campaign</div>
+                    <div className="text-sm text-muted-foreground font-normal">
+                      Trigger messages when specific events occur defined by your conditions.
                     </div>
                   </Label>
                 </div>
@@ -554,7 +563,7 @@ function CampaignsPageContent() {
               Cancel
             </Button>
             <Button
-              onClick={handleProceedToCreate}
+              onClick={() => handleProceedToCreate()}
               disabled={!newCampaignName.trim()}
             >
               Continue

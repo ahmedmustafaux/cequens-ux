@@ -221,7 +221,7 @@ export default function CampaignsCreatePage() {
         setPendingNavigation(window.location.pathname)
         setShowDiscardDialog(true)
         // Push current state back to prevent navigation
-        window.history.pushState(null, "", "/campaigns/create")
+        window.history.pushState(null, "", "/engage/campaigns/create")
       }
     }
 
@@ -238,13 +238,13 @@ export default function CampaignsCreatePage() {
   const prevLocationRef = React.useRef(location.pathname)
   React.useEffect(() => {
     // Only intercept if we're trying to navigate away from this page
-    if (location.pathname !== "/campaigns/create" && prevLocationRef.current === "/campaigns/create") {
+    if (location.pathname !== "/engage/campaigns/create" && prevLocationRef.current === "/engage/campaigns/create") {
       if (isDirty && !shouldBlockNavigation) {
         // Prevent navigation and show dialog
         setPendingNavigation(location.pathname)
         setShowDiscardDialog(true)
         // Navigate back to prevent the navigation
-        window.history.pushState(null, "", "/campaigns/create")
+        window.history.pushState(null, "", "/engage/campaigns/create")
         return
       }
     }
@@ -703,13 +703,13 @@ export default function CampaignsCreatePage() {
     if (isDirty) {
       setShowDiscardDialog(true)
     } else {
-      navigate("/campaigns")
+      navigate("/engage/campaigns")
     }
   }
 
   const handleDiscard = () => {
     setShowDiscardDialog(false)
-    const targetPath = pendingNavigation || "/campaigns"
+    const targetPath = pendingNavigation || "/engage/campaigns"
     setPendingNavigation(null)
     setIsDirty(false) // Reset dirty state before navigation
     setShouldBlockNavigation(true) // Allow navigation
@@ -764,7 +764,7 @@ export default function CampaignsCreatePage() {
           ? "Campaign scheduled successfully!"
           : "Campaign created successfully!"
       )
-      navigate("/campaigns")
+      navigate("/engage/campaigns")
     } catch (error) {
       console.error("Error creating campaign:", error)
       toast.error("Failed to create campaign. Please try again.")

@@ -187,7 +187,11 @@ export default function ContactDetailPage() {
     <PageWrapper>
       <PageHeaderProfile
         title={displayName}
-        description={`Contact from ${contact.countryISO}`}
+        titleSuffix={
+          <div className="w-5 h-5 flex-shrink-0 overflow-hidden rounded-full border border-border/50">
+            <CircleFlag countryCode={contact.countryISO.toLowerCase()} className="w-full h-full" />
+          </div>
+        }
         avatar={{
           src: "", // No image source available
           fallback: contact.avatar,
@@ -195,15 +199,10 @@ export default function ContactDetailPage() {
         }}
         onBack={handleBack}
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-            <Button variant="outline" size="sm">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
         }
       />
 

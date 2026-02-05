@@ -69,7 +69,7 @@ const productInfo: Record<string, ProductInfo> = {
     icon: <Megaphone className="w-8 h-8" />,
     gradient: "from-indigo-500 to-blue-500",
     ctaText: "Create Campaign",
-    ctaLink: "/campaigns"
+    ctaLink: "/engage/campaigns"
   }
 }
 
@@ -117,7 +117,7 @@ const getProductTitle = (productId: string, industry: string): string => {
       technology: "Announce features"
     }
   }
-  
+
   return titles[productId]?.[industry] || `Use ${productInfo[productId]?.name || "Product"}`
 }
 
@@ -323,14 +323,14 @@ interface IndustryUseCasesProps {
 
 export function IndustryUseCases({ industry, isLoading = false }: IndustryUseCasesProps) {
   const [activeProductIndex, setActiveProductIndex] = React.useState(0)
-  
+
   // Get use cases for the industry
   const useCases = clientBenefitsByIndustry[industry] || clientBenefitsByIndustry.ecommerce
-  
+
   // Group use cases by product
   const productsWithUseCases = React.useMemo(() => {
     const productMap = new Map<string, UseCaseItem[]>()
-    
+
     useCases.forEach((useCase) => {
       useCase.products.forEach((productId) => {
         if (!productMap.has(productId)) {
@@ -339,7 +339,7 @@ export function IndustryUseCases({ industry, isLoading = false }: IndustryUseCas
         productMap.get(productId)!.push(useCase)
       })
     })
-    
+
     // Convert to array and filter to only include products that have info
     return Array.from(productMap.entries())
       .filter(([productId]) => productInfo[productId])
@@ -348,17 +348,17 @@ export function IndustryUseCases({ industry, isLoading = false }: IndustryUseCas
         useCases
       }))
   }, [useCases])
-  
+
   const goToProduct = (index: number) => {
     if (index >= 0 && index < productsWithUseCases.length) {
       setActiveProductIndex(index)
     }
   }
-  
+
   const goToNext = () => {
     setActiveProductIndex((prev) => (prev + 1) % productsWithUseCases.length)
   }
-  
+
   const goToPrevious = () => {
     setActiveProductIndex((prev) => (prev - 1 + productsWithUseCases.length) % productsWithUseCases.length)
   }

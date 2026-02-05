@@ -330,7 +330,7 @@ export function GettingStartedGuideFloating({
         completed: false,
         action: {
           label: "Create campaign",
-          href: "/campaigns/create"
+          href: "/engage/campaigns/create"
         }
       })
 
@@ -358,7 +358,7 @@ export function GettingStartedGuideFloating({
           completed: false,
           action: {
             label: "Create templates",
-            href: "/campaigns/templates"
+            href: "/engage/campaigns/templates"
           }
         })
         steps.push({
@@ -403,7 +403,7 @@ export function GettingStartedGuideFloating({
           completed: false,
           action: {
             label: "Create templates",
-            href: "/campaigns/templates"
+            href: "/engage/campaigns/templates"
           }
         })
       } else {
@@ -427,7 +427,7 @@ export function GettingStartedGuideFloating({
           completed: false,
           action: {
             label: "Create templates",
-            href: "/campaigns/templates"
+            href: "/engage/campaigns/templates"
           }
         })
         steps.push({

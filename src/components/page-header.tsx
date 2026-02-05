@@ -494,6 +494,7 @@ interface PageHeaderProfileProps {
   }
   onBack: () => void
   actions?: ReactNode
+  titleSuffix?: ReactNode
   className?: string
   isLoading?: boolean
 }
@@ -504,6 +505,7 @@ export function PageHeaderProfile({
   avatar,
   onBack,
   actions,
+  titleSuffix,
   className = "",
   isLoading = false // Ignored
 }: PageHeaderProfileProps) {
@@ -530,7 +532,10 @@ export function PageHeaderProfile({
         )}
 
         <div className="space-y-1 min-w-0">
-          <h1 className="text-xl font-semibold tracking-wide truncate">{title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-wide truncate">{title}</h1>
+            {titleSuffix}
+          </div>
           {description && (
             <p className="text-sm text-muted-foreground truncate">{description}</p>
           )}

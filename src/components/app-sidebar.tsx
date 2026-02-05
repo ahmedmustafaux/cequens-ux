@@ -80,11 +80,6 @@ const data = {
       ],
     },
     {
-      title: "Verify",
-      url: "/verify",
-      icon: ShieldCheck,
-    },
-    {
       title: "AI & Bots",
       url: "/automation/bots",
       icon: Bot,
@@ -166,6 +161,10 @@ const data = {
         {
           title: "Conversations",
           url: "/analytics/conversations",
+        },
+        {
+          title: "Verify",
+          url: "/analytics/verify",
         },
         {
           title: "APIs",

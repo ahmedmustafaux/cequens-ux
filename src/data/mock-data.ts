@@ -144,7 +144,7 @@ export const mockCampaigns: Campaign[] = [
 const parseLastMessageToDate = (lastMessage: string): Date => {
   const now = new Date();
   const lowerMessage = lastMessage.toLowerCase();
-  
+
   if (lowerMessage.includes("minute")) {
     const minutes = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
     return new Date(now.getTime() - minutes * 60 * 1000);
@@ -633,7 +633,7 @@ export const mockContacts: Contact[] = [
   // Parse name into firstName and lastName if not already set
   let firstName = contact.firstName
   let lastName = contact.lastName
-  
+
   if (!firstName && !lastName && contact.name) {
     const nameParts = contact.name.trim().split(/\s+/)
     if (nameParts.length === 1) {
@@ -646,7 +646,7 @@ export const mockContacts: Contact[] = [
       lastName = nameParts.slice(1).join(" ")
     }
   }
-  
+
   return {
     ...contact,
     firstName: firstName || "",
@@ -798,24 +798,24 @@ export const navigationData = {
     },
     {
       title: "Campaigns",
-      url: "/campaigns",
+      url: "/engage/campaigns",
       icon: "IconPhoneCall",
       items: [
         {
           title: "All Campaigns",
-          url: "/campaigns",
+          url: "/engage/campaigns",
         },
         {
           title: "Templates",
-          url: "/campaigns/templates",
+          url: "/engage/campaigns/templates",
         },
         {
           title: "AI Bots",
-          url: "/campaigns/ai-bots",
+          url: "/engage/campaigns/ai-bots",
         },
         {
           title: "Settings",
-          url: "/campaigns/settings",
+          url: "/engage/campaigns/settings",
         },
       ],
     },
@@ -923,7 +923,7 @@ export const mockNotifications: Notification[] = [
 export const getDashboardChartData = (range: string): DashboardChartDataPoint[] => {
   const today = new Date()
   let numDays: number
-  
+
   switch (range) {
     case "7d":
       numDays = 7
@@ -937,19 +937,19 @@ export const getDashboardChartData = (range: string): DashboardChartDataPoint[] 
     default:
       numDays = 30
   }
-  
+
   // Generate data for each day in the range
   const dataPoints = Array.from({ length: numDays }, (_, i) => {
     const date = new Date(today)
     date.setDate(today.getDate() - (numDays - 1 - i))
-    
+
     // Format the day as "MMM DD" (e.g., "Jan 15")
     const formattedDate = date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric"
     })
-    
-    return { 
+
+    return {
       date,
       period: formattedDate
     }
@@ -981,37 +981,37 @@ export const getDashboardChartData = (range: string): DashboardChartDataPoint[] 
  */
 export const getDashboardMetrics = (): DashboardMetrics => {
   // Generate random metrics data
-  
+
   // Random message count between 20,000 and 500,000
   const randomMessages = Math.floor(Math.random() * 480000) + 20000
   const formattedMessages = randomMessages.toLocaleString()
-  
+
   // Random delivery rate between 95% and 99.9%
   const randomDelivery = (95 + Math.random() * 4.9).toFixed(1)
-  
+
   // Random active senders between 300 and 5,000
   const randomSenders = Math.floor(Math.random() * 4700) + 300
   const formattedSenders = randomSenders.toLocaleString()
-  
+
   // Random response rate between 25% and 40%
   const randomResponse = (25 + Math.random() * 15).toFixed(1)
-  
+
   // Random change percentages between -5% and +25%
   const getRandomChange = () => {
     const changeValue = Math.random() * 30 - 5
     const changeFormatted = changeValue.toFixed(1)
     return (changeValue > 0 ? "+" : "") + changeFormatted + "%"
   }
-  
+
   // Determine trend based on change value
-  const getTrend = (change: string): "up" | "down" => 
+  const getTrend = (change: string): "up" | "down" =>
     change.startsWith("+") ? "up" : "down"
-  
+
   const messagesChange = getRandomChange()
   const deliveryChange = getRandomChange()
   const sendersChange = getRandomChange()
   const responseChange = getRandomChange()
-  
+
   return {
     messagesSent: { value: formattedMessages, change: messagesChange, trend: getTrend(messagesChange) },
     deliveryRate: { value: randomDelivery + "%", change: deliveryChange, trend: getTrend(deliveryChange) },
@@ -1025,12 +1025,12 @@ export const getDashboardMetrics = (): DashboardMetrics => {
 // ============================================================================
 
 export const assigneeConfig = {
-  available: { 
-    label: "Available", 
+  available: {
+    label: "Available",
     color: "bg-success/10 text-success-foreground border-border-success"
   },
-  unavailable: { 
-    label: "Unavailable", 
+  unavailable: {
+    label: "Unavailable",
     color: "bg-muted text-muted-foreground border-border-muted"
   }
 };
@@ -1414,7 +1414,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-02-01")
   },
-  
+
   // MEDIA Templates (Image)
   {
     id: "template-media-1",
@@ -1503,7 +1503,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-02-15")
   },
-  
+
   // MEDIA Templates (Video)
   {
     id: "template-media-3",
@@ -1545,7 +1545,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-02-20")
   },
-  
+
   // MEDIA Templates (Document)
   {
     id: "template-media-4",
@@ -1587,7 +1587,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-02-25")
   },
-  
+
   // INTERACTIVE Templates with Buttons
   {
     id: "template-interactive-1",
@@ -1672,7 +1672,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-03-05")
   },
-  
+
   // AUTHENTICATION Templates
   {
     id: "template-auth-1",
@@ -1731,7 +1731,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-03-12")
   },
-  
+
   // Complex Templates with Multiple Components
   {
     id: "template-complex-1",
@@ -1786,7 +1786,7 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     ],
     createdAt: new Date("2024-03-15")
   },
-  
+
   // Simple Text Only
   {
     id: "template-simple-1",

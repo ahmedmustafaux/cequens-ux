@@ -775,7 +775,7 @@ function ContactsSegmentsPageContent() {
 
     // Navigate to create campaign page with selected contacts
     // In a real app, you might pass the contact IDs as query params or state
-    navigate("/campaigns/create", {
+    navigate("/engage/campaigns/create", {
       state: { selectedContactIds },
     })
   }, [rowSelection, navigate])
