@@ -535,3 +535,58 @@ export async function updateContactsAttribute(userId: string, contactIds: string
   })
 }
 
+/**
+ * Remove a specific tag name from all contacts that have it
+ * @param userId - The ID of the user who owns the contacts
+ * @param tagName - The name of the tag to remove
+ */
+export async function removeTagNameFromAllContacts(userId: string, tagName: string): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to remove tag from contacts')
+  }
+
+  if (!tagName) {
+    return
+  }
+
+  // Fetch all contacts for this user that have this tag
+  const { data: contacts, error: fetchError } = await supabase
+    .from('contacts')
+    .select('id, tags')
+    .eq('user_id', userId)
+    .contains('tags', [tagName])
+
+  if (fetchError) {
+    console.error('Error fetching contacts for tag cleanup:', fetchError)
+    throw fetchError
+  }
+
+  if (!contacts || contacts.length === 0) {
+    return
+  }
+
+  // Update each contact by filtering out the tag
+  try {
+    await Promise.all(contacts.map(contact => {
+      const currentTags = contact.tags || []
+      const updatedTags = currentTags.filter((tag: string) => tag !== tagName)
+
+      return supabase
+        .from('contacts')
+        .update({
+          tags: updatedTags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contact.id)
+        .eq('user_id', userId)
+    }))
+  } catch (error) {
+    console.error('Error removing tag from all contacts:', error)
+    throw error
+  }
+
+  // Update segments in background
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after global tag removal:', err)
+  })
+}

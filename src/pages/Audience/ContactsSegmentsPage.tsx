@@ -492,9 +492,9 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
       const tags = row.original.tags
       if (!tags || tags.length === 0) {
         return (
-          <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+          <span className="text-xs italic text-foreground/50">
             No tags
-          </Badge>
+          </span>
         )
       }
       return (

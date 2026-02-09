@@ -281,9 +281,9 @@ const ContactsPageContent = (): React.JSX.Element => {
 
         if (tags.length === 0) {
           return (
-            <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+            <span className="text-xs italic text-foreground/50">
               No tags
-            </Badge>
+            </span>
           );
         }
 
@@ -334,9 +334,9 @@ const ContactsPageContent = (): React.JSX.Element => {
 
         if (segmentsList.length === 0) {
           return (
-            <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+            <span className="text-xs italic text-foreground/50">
               No segments
-            </Badge>
+            </span>
           )
         }
 

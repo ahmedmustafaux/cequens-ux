@@ -1,5 +1,6 @@
 import { supabase } from '../supabase'
 import type { Tag } from './types'
+import { removeTagNameFromAllContacts } from './contacts'
 
 /**
  * Fetch all tags for a user
@@ -51,14 +52,37 @@ export async function createTag(userId: string, name: string, color: string = 'b
 export async function deleteTag(userId: string, id: string): Promise<void> {
     if (!userId) throw new Error('userId is required')
 
-    const { error } = await supabase
+    // 1. Fetch the tag first to get its name before deleting
+    const { data: tag, error: fetchError } = await supabase
+        .from('tags')
+        .select('name')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single()
+
+    if (fetchError) {
+        console.error('Error fetching tag for deletion:', fetchError)
+        throw fetchError
+    }
+
+    const tagName = tag.name
+
+    // 2. Delete the tag from the tags table
+    const { error: deleteError } = await supabase
         .from('tags')
         .delete()
         .eq('id', id)
         .eq('user_id', userId)
 
-    if (error) {
-        console.error('Error deleting tag:', error)
-        throw error
+    if (deleteError) {
+        console.error('Error deleting tag:', deleteError)
+        throw deleteError
     }
+
+    // 3. Clean up contacts by removing this tagName from their tags array
+    // This is done after successful deletion of the tag itself
+    await removeTagNameFromAllContacts(userId, tagName).catch(err => {
+        console.error('Error cleaning up contacts after tag deletion:', err)
+        // We don't throw here as the tag itself is already deleted
+    })
 }
