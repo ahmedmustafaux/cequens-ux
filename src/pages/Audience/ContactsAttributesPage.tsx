@@ -1,6 +1,7 @@
 import * as React from "react"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
+import { usePageTitle } from "@/hooks/use-dynamic-title"
 import {
   Empty,
   EmptyHeader,
@@ -49,6 +50,7 @@ const typeIcons = {
 }
 
 export default function ContactsAttributesPage() {
+  usePageTitle("Custom Attributes")
   const { data: attributes, isLoading } = useAttributes()
   const createAttributeMutation = useCreateAttribute()
   const deleteAttributeMutation = useDeleteAttribute()

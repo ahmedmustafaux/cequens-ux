@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus, archiveContacts, unarchiveContacts } from '@/lib/supabase/contacts'
+import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus, archiveContacts, unarchiveContacts, addTagsToContacts, removeTagsFromContacts, updateContactsAttribute } from '@/lib/supabase/contacts'
 import type { AppContact } from '@/lib/supabase/types'
 import { useAuth } from '@/hooks/use-auth'
 import { segmentKeys } from '@/hooks/use-segments'
@@ -19,7 +19,7 @@ export const contactKeys = {
  */
 export function useContacts(searchQuery?: string, includeArchived: boolean = false) {
   const { user } = useAuth()
-  
+
   return useQuery({
     queryKey: contactKeys.list({ search: searchQuery, userId: user?.id, includeArchived }),
     queryFn: () => {
@@ -38,7 +38,7 @@ export function useContacts(searchQuery?: string, includeArchived: boolean = fal
  */
 export function useContact(id: string | undefined) {
   const { user } = useAuth()
-  
+
   return useQuery({
     queryKey: contactKeys.detail(id || ''),
     queryFn: () => {
@@ -54,7 +54,7 @@ export function useContact(id: string | undefined) {
  */
 export function useContactsByStatus(status: string) {
   const { user } = useAuth()
-  
+
   return useQuery({
     queryKey: [...contactKeys.lists(), 'status', status, 'userId', user?.id],
     queryFn: () => {
@@ -165,4 +165,62 @@ export function useUnarchiveContacts() {
     },
   })
 }
+/**
+ * Add tags to multiple contacts
+ */
+export function useAddTagsToContacts() {
+  const queryClient = useQueryClient()
 
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: ({ contactIds, tags }: { contactIds: string[]; tags: string[] }) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return addTagsToContacts(user.id, contactIds, tags)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts and filters
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
+    },
+  })
+}
+
+/**
+ * Remove tags from multiple contacts
+ */
+export function useRemoveTagsFromContacts() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: ({ contactIds, tags }: { contactIds: string[]; tags: string[] }) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return removeTagsFromContacts(user.id, contactIds, tags)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
+    },
+  })
+}
+
+/**
+ * Update a custom attribute for multiple contacts
+ */
+export function useUpdateContactsAttribute() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: ({ contactIds, key, value }: { contactIds: string[]; key: string; value: any }) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return updateContactsAttribute(user.id, contactIds, key, value)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts and filters
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
+    },
+  })
+}

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
+import { usePageTitle } from "@/hooks/use-dynamic-title"
 import {
   Empty,
   EmptyHeader,
@@ -46,6 +47,7 @@ const TAG_COLORS = [
 ]
 
 export default function ContactsTagsPage() {
+  usePageTitle("Tags")
   const { data: tags, isLoading } = useTags()
   const createTagMutation = useCreateTag()
   const deleteTagMutation = useDeleteTag()
@@ -210,7 +212,7 @@ export default function ContactsTagsPage() {
             <EmptyTitle>No tags yet</EmptyTitle>
             <EmptyDescription>
               Create tags to organize and segment your audience. Tags help you
-              categorize contacts and create targeted campaigns.
+              categorize contacts.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>

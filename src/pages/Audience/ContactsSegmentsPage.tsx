@@ -671,7 +671,6 @@ function ContactsSegmentsPageContent() {
     return categories as any[]
   }, [attributesData])
 
-  usePageTitle("Segments")
 
   // Auto-select first segment when segments are loaded
   React.useEffect(() => {
@@ -1510,7 +1509,7 @@ function ContactsSegmentsPageContent() {
             </EmptyMedia>
             <EmptyTitle>No segments yet</EmptyTitle>
             <EmptyDescription>
-              Create segments to dynamically organize your contacts based on filters. When a contact matches a segment's criteria, they'll be automatically added to that segment.
+              Create segments to dynamically organize your contacts based on filters.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
@@ -1791,6 +1790,7 @@ function ContactsSegmentsPageContent() {
 }
 
 export default function ContactsSegmentsPage() {
+  usePageTitle("Segments")
   return (
     <SearchProvider>
       <ContactsSegmentsPageContent />

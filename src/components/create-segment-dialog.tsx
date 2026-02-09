@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/select"
 import { FILTER_CATEGORIES, OPERATOR_LABELS, type FilterCategory } from "@/data/filter-config"
 import { CircleFlag } from "react-circle-flags"
+import { useTags } from "@/hooks/use-tags"
+import { useAttributes } from "@/hooks/use-attributes"
 
 export interface CreateSegmentDialogProps {
   open: boolean
@@ -115,6 +117,28 @@ const getAllConversationStatuses = (): string[] => {
   return Array.from(statuses).sort()
 }
 
+// Map attribute data_type to valueType and operators
+const mapAttributeTypeToValueType = (type: string): 'string' | 'array' | 'number' | 'date' => {
+  switch (type) {
+    case 'number': return 'number'
+    case 'date': return 'date'
+    default: return 'string'
+  }
+}
+
+const getOperatorsForType = (type: string): SegmentFilter["operator"][] => {
+  switch (type) {
+    case 'number':
+      return ["equals", "notEquals", "greaterThan", "lessThan", "between", "exists", "doesNotExist"]
+    case 'date':
+      return ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween", "isGreaterThanTime", "isLessThanTime", "isBetweenTime"]
+    case 'boolean':
+      return ["equals", "notEquals"]
+    default:
+      return ["equals", "notEquals", "contains", "notContains", "startsWith", "endsWith", "isEmpty", "isNotEmpty"]
+  }
+}
+
 // Helper to flatten filter structure to SegmentFilter[] for saving
 const flattenFilters = (structure: FilterStructure[]): SegmentFilter[] => {
   const result: SegmentFilter[] = []
@@ -155,7 +179,31 @@ export function CreateSegmentDialog({
   const [timeUnits, setTimeUnits] = React.useState<Record<string, string>>({})
 
   // Available options for filters
-  const allTags = React.useMemo(() => getAllTags(), [])
+  const { data: tagsData = [] } = useTags()
+  const { data: attributesData = [] } = useAttributes()
+
+  const allTags = React.useMemo(() => {
+    return tagsData.map(tag => tag.name).sort()
+  }, [tagsData])
+
+  const dynamicFilterCategories = React.useMemo(() => {
+    return FILTER_CATEGORIES.map(category => {
+      if (category.id === 'customAttribute') {
+        const attributeFields = attributesData.map(attr => ({
+          value: attr.key,
+          label: attr.name,
+          operators: getOperatorsForType(attr.data_type),
+          valueType: mapAttributeTypeToValueType(attr.data_type)
+        }))
+        return {
+          ...category,
+          fields: attributeFields
+        }
+      }
+      return category
+    })
+  }, [attributesData])
+
   const allChannels = React.useMemo(() => getAllChannels(), [])
   const allCountries = React.useMemo(() => getAllCountries(), [])
   const allStatuses = React.useMemo(() => getAllConversationStatuses(), [])
@@ -217,7 +265,7 @@ export function CreateSegmentDialog({
   const generateId = () => `filter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
   const handleCategorySelected = React.useCallback((categoryId: string, groupId?: string) => {
-    const category = FILTER_CATEGORIES.find(c => c.id === categoryId)
+    const category = dynamicFilterCategories.find(c => c.id === categoryId)
     if (!category) return
 
     // If it's a 2-level category (Category -> Value), automatically select the field
@@ -276,7 +324,7 @@ export function CreateSegmentDialog({
   const handleFieldSelected = React.useCallback((field: SegmentFilter["field"], groupId?: string) => {
     // Find the field definition to get default operator
     let defaultOperator: SegmentFilter["operator"] = "equals"
-    for (const category of FILTER_CATEGORIES) {
+    for (const category of dynamicFilterCategories) {
       const fieldDef = category.fields.find(f => f.value === field)
       if (fieldDef && fieldDef.operators.length > 0) {
         defaultOperator = fieldDef.operators[0]
@@ -322,7 +370,7 @@ export function CreateSegmentDialog({
 
   // Helper to get category and field info from a filter field
   const getFieldInfo = React.useCallback((field: SegmentFilter["field"]) => {
-    for (const category of FILTER_CATEGORIES) {
+    for (const category of dynamicFilterCategories) {
       const fieldDef = category.fields.find(f => f.value === field)
       if (fieldDef) {
         return { category, field: fieldDef }
@@ -334,7 +382,7 @@ export function CreateSegmentDialog({
   const handleFilterFieldChange = React.useCallback((filterId: string, field: SegmentFilter["field"]) => {
     // Find the field definition to get default operator
     let defaultOperator: SegmentFilter["operator"] = "equals"
-    for (const category of FILTER_CATEGORIES) {
+    for (const category of dynamicFilterCategories) {
       const fieldDef = category.fields.find(f => f.value === field)
       if (fieldDef && fieldDef.operators.length > 0) {
         defaultOperator = fieldDef.operators[0]
@@ -894,7 +942,7 @@ export function CreateSegmentDialog({
         : options
 
       return (
-        <div className="flex flex-col h-full" style={{ height: '400px', maxHeight: '400px' }}>
+        <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
           <div className="flex-shrink-0 p-2 border-b">
             <FilterSearchInput
               placeholder="Search..."
@@ -912,12 +960,6 @@ export function CreateSegmentDialog({
                   <div
                     key={option.value}
                     className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
-                    onClick={() => {
-                      const newValues = isSelected
-                        ? displayValues.filter((v) => v !== option.value)
-                        : [...displayValues, option.value]
-                      handleFilterValueChange(filterId, newValues)
-                    }}
                   >
                     <Checkbox
                       id={`filter-${filterId}-${option.value}`}
@@ -931,7 +973,7 @@ export function CreateSegmentDialog({
                     />
                     <label
                       htmlFor={`filter-${filterId}-${option.value}`}
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2"
+                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2 py-1"
                     >
                       {filter.field === "countryISO" && (
                         <div className="w-5 h-5 flex-shrink-0 overflow-hidden rounded-full">
@@ -1408,7 +1450,7 @@ export function CreateSegmentDialog({
                                       </PopoverTrigger>
                                       <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
                                         {selectedCategory ? (
-                                          <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                                          <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
                                             <div className="p-2 border-b border-border flex-shrink-0">
                                               <Button
                                                 variant="ghost"
@@ -1428,7 +1470,7 @@ export function CreateSegmentDialog({
                                               />
                                             </div>
                                             <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                              {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                                              {dynamicFilterCategories.find(c => c.id === selectedCategory)?.fields
                                                 .filter(field => {
                                                   const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                                   return matchesSearch
@@ -1451,17 +1493,10 @@ export function CreateSegmentDialog({
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
-                                            <div className="flex-shrink-0">
-                                              <FilterSearchInput
-                                                placeholder="Search categories..."
-                                                value={fieldSearchQuery}
-                                                onChange={setFieldSearchQuery}
-                                                autoFocus={false}
-                                              />
-                                            </div>
+                                          <div className="flex flex-col bg-card h-auto" style={{ maxHeight: '400px' }}>
+
                                             <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                              {FILTER_CATEGORIES.filter(category =>
+                                              {dynamicFilterCategories.filter(category =>
                                                 category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                               ).map((category) => (
                                                 <div
@@ -1514,7 +1549,7 @@ export function CreateSegmentDialog({
                                         </Button>
                                       </PopoverTrigger>
                                       <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                                        <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
+                                        <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', WebkitOverflowScrolling: 'touch' }}>
                                           {(() => {
                                             const fieldInfo = getFieldInfo(filterItem.filter.field)
                                             const availableOperators = fieldInfo?.field.operators || []
@@ -1644,7 +1679,7 @@ export function CreateSegmentDialog({
                                             align="start"
                                             onOpenAutoFocus={(e) => e.preventDefault()}
                                           >
-                                            <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                                            <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
                                               {editingFilterId === groupItem.id && renderValueInput(filterItem.filter, groupItem.id)}
                                             </div>
                                           </PopoverContent>
@@ -1758,7 +1793,7 @@ export function CreateSegmentDialog({
                                     return renderValueInput(newFilter.filter, newFilter.id)
                                   })()
                                 ) : (
-                                  <div className="flex flex-col" style={{ maxHeight: '400px' }}>
+                                  <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
                                     <div className="flex-shrink-0">
                                       <FilterSearchInput
                                         placeholder="Search..."
@@ -1769,7 +1804,7 @@ export function CreateSegmentDialog({
                                     </div>
                                     <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                       {selectedCategory ? (
-                                        FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                                        dynamicFilterCategories.find(c => c.id === selectedCategory)?.fields
                                           .filter(field => {
                                             const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                             return matchesSearch
@@ -1789,7 +1824,7 @@ export function CreateSegmentDialog({
                                             </div>
                                           ))
                                       ) : (
-                                        FILTER_CATEGORIES.filter(category =>
+                                        dynamicFilterCategories.filter(category =>
                                           category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                         ).map((category) => (
                                           <div
@@ -1840,7 +1875,7 @@ export function CreateSegmentDialog({
                               </PopoverTrigger>
                               <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
                                 {selectedCategory ? (
-                                  <div className="flex flex-col" style={{ maxHeight: '400px' }}>
+                                  <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
                                     <div className="p-2 border-b border-border flex-shrink-0">
                                       <Button
                                         variant="ghost"
@@ -1860,7 +1895,7 @@ export function CreateSegmentDialog({
                                       />
                                     </div>
                                     <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                      {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                                      {dynamicFilterCategories.find(c => c.id === selectedCategory)?.fields
                                         .filter(field => {
                                           const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                           return matchesSearch
@@ -1883,17 +1918,10 @@ export function CreateSegmentDialog({
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
-                                    <div className="flex-shrink-0">
-                                      <FilterSearchInput
-                                        placeholder="Search categories..."
-                                        value={fieldSearchQuery}
-                                        onChange={setFieldSearchQuery}
-                                        autoFocus={false}
-                                      />
-                                    </div>
+                                  <div className="flex flex-col bg-card h-auto" style={{ maxHeight: '400px' }}>
+
                                     <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
-                                      {FILTER_CATEGORIES.filter(category =>
+                                      {dynamicFilterCategories.filter(category =>
                                         category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                       ).map((category) => (
                                         <div
@@ -1946,7 +1974,7 @@ export function CreateSegmentDialog({
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                                <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
+                                <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', WebkitOverflowScrolling: 'touch' }}>
                                   {(() => {
                                     const fieldInfo = getFieldInfo(badge.filter.field)
                                     const availableOperators = fieldInfo?.field.operators || []
@@ -2192,7 +2220,7 @@ export function CreateSegmentDialog({
                         return renderValueInput(lastItem.filter, lastItem.id)
                       })()
                     ) : (
-                      <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                      <div className="flex flex-col h-auto" style={{ maxHeight: '400px' }}>
                         <div className="flex-shrink-0">
                           <FilterSearchInput
                             placeholder="Search..."
@@ -2203,7 +2231,7 @@ export function CreateSegmentDialog({
                         </div>
                         <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                           {selectedCategory ? (
-                            FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                            dynamicFilterCategories.find(c => c.id === selectedCategory)?.fields
                               .filter(field => {
                                 const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                 const isAlreadyApplied = appliedFilterFields.has(field.value)
@@ -2224,7 +2252,7 @@ export function CreateSegmentDialog({
                                 </div>
                               ))
                           ) : (
-                            FILTER_CATEGORIES.filter(category =>
+                            dynamicFilterCategories.filter(category =>
                               category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                             ).map((category) => (
                               <div

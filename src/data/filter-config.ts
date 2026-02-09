@@ -24,23 +24,7 @@ export const FILTER_CATEGORIES: FilterCategory[] = [
       { value: "phoneNumber", label: "Phone Number", operators: ["equals", "notEquals", "exists", "doesNotExist", "contains", "startsWith", "endsWith"], valueType: "string" },
       { value: "emailAddress", label: "Email Address", operators: ["equals", "notEquals", "exists", "doesNotExist", "contains", "startsWith", "endsWith"], valueType: "string" },
       { value: "countryISO", label: "Country", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
-      { value: "language", label: "Language", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
-      { value: "botStatus", label: "Bot Status", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
-      { value: "assignee", label: "Assignee", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf", "isEmpty", "isNotEmpty"], valueType: "array" },
-      { value: "conversationStatus", label: "Conversation Status", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
-      { value: "lastInteractedChannel", label: "Last Interacted Channel", operators: ["equals", "notEquals", "exists", "doesNotExist"], valueType: "array" },
-      { value: "conversationOpenedTime", label: "Conversation Opened Time", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },
-      { value: "createdAt", label: "Created At", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },
-      { value: "lastInteractionTime", label: "Last Interaction Time", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },
-    ]
-  },
-  {
-    id: "channel",
-    label: "Channel",
-    hasThreeLevels: false, // Category -> Value (direct)
-    fields: [
-      { value: "channel", label: "Channel", operators: ["exists", "doesNotExist", "hasAnyOf", "hasAllOf", "hasNoneOf"], valueType: "array" },
-    ]
+      { value: "language", label: "Language", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },]
   },
   {
     id: "contactTag",
@@ -48,14 +32,6 @@ export const FILTER_CATEGORIES: FilterCategory[] = [
     hasThreeLevels: false, // Category -> Value (direct)
     fields: [
       { value: "tags", label: "Tags", operators: ["hasAnyOf", "hasAllOf", "hasNoneOf", "isEmpty", "isNotEmpty"], valueType: "array" },
-    ]
-  },
-  {
-    id: "timeSinceLastIncomingMessage",
-    label: "Last Incoming Message",
-    hasThreeLevels: false, // Category -> Value (direct)
-    fields: [
-      { value: "timeSinceLastIncomingMessage", label: "Time Since Last Incoming Message", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween", "isGreaterThanTime", "isLessThanTime", "isBetweenTime"], valueType: "date" },
     ]
   },
   {

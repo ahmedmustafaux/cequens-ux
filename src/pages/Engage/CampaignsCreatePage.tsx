@@ -282,8 +282,16 @@ export default function CampaignsCreatePage() {
   const selectedSegment = React.useMemo(() => {
     if (!formData.selectedSegmentId) return null
     if (formData.selectedSegmentId === "all-contacts") return { id: "all-contacts", name: "All Contacts", contact_ids: allContacts.map(c => c.id) }
+    // Handle temporary selection from contacts page
+    if (formData.selectedSegmentId === "temp-selection") {
+      return {
+        id: "temp-selection",
+        name: "Selected Contacts",
+        contact_ids: (location.state as any)?.selectedContactIds || []
+      }
+    }
     return segments.find(s => s.id === formData.selectedSegmentId) || null
-  }, [segments, formData.selectedSegmentId, allContacts])
+  }, [segments, formData.selectedSegmentId, allContacts, location.state])
 
   // Calculate recipients from selected segment
   React.useEffect(() => {
@@ -306,6 +314,7 @@ export default function CampaignsCreatePage() {
     if (state?.selectedContactIds && state.selectedContactIds.length > 0) {
       setFormData(prev => ({
         ...prev,
+        selectedSegmentId: "temp-selection",
         recipients: state.selectedContactIds!.length
       }))
     }
@@ -499,6 +508,19 @@ export default function CampaignsCreatePage() {
       )
     }
 
+    if (formData.selectedSegmentId === "temp-selection") {
+      const state = location.state as { selectedContactIds?: string[] } | null
+      const count = state?.selectedContactIds?.length || 0
+      return (
+        <div className="flex items-center gap-2">
+          <span>Selected Contacts</span>
+          <Badge variant="secondary" className="flex-shrink-0">
+            {count} contacts
+          </Badge>
+        </div>
+      )
+    }
+
     const segment = segments.find(s => s.id === formData.selectedSegmentId)
     if (!segment) return null
 
@@ -566,7 +588,7 @@ export default function CampaignsCreatePage() {
 
     if (!formData.selectedSegmentId) {
       errors.selectedSegmentId = "Please select an audience"
-    } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
+    } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
       errors.selectedSegmentId = "Selected segment has no contacts"
     } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
       errors.selectedSegmentId = "No contacts available"
@@ -633,7 +655,7 @@ export default function CampaignsCreatePage() {
         }
       } else {
         // Broadcast validation
-        if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
+        if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
           errors.selectedSegmentId = "Selected segment has no contacts"
         }
         if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {

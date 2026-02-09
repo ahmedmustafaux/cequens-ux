@@ -354,3 +354,184 @@ export async function unarchiveContacts(userId: string, ids: string[]): Promise<
   })
 }
 
+/**
+ * Add tags to multiple contacts
+ * @param userId - The ID of the user who owns the contacts
+ * @param contactIds - Array of contact IDs to update
+ * @param tagsToAdd - Array of tags to add
+ */
+export async function addTagsToContacts(userId: string, contactIds: string[], tagsToAdd: string[]): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to add tags')
+  }
+
+  if (!contactIds || contactIds.length === 0) {
+    throw new Error('No contacts selected')
+  }
+
+  if (!tagsToAdd || tagsToAdd.length === 0) {
+    return
+  }
+
+  // Fetch current tags for these contacts
+  const { data: contacts, error: fetchError } = await supabase
+    .from('contacts')
+    .select('id, tags')
+    .eq('user_id', userId)
+    .in('id', contactIds)
+
+  if (fetchError) {
+    console.error('Error fetching contacts for tag update:', fetchError)
+    throw fetchError
+  }
+
+  // Update each contact with merged tags using parallel updates
+  try {
+    await Promise.all(contacts.map(contact => {
+      const currentTags = contact.tags || []
+      // Merge new tags, avoiding duplicates
+      const updatedTags = [...new Set([...currentTags, ...tagsToAdd])]
+
+      return supabase
+        .from('contacts')
+        .update({
+          tags: updatedTags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contact.id)
+        .eq('user_id', userId)
+    }))
+  } catch (error) {
+    console.error('Error adding tags to contacts:', error)
+    throw error
+  }
+
+  // Update segments in background
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after tag update:', err)
+  })
+}
+
+/**
+ * Remove tags from multiple contacts
+ * @param userId - The ID of the user who owns the contacts
+ * @param contactIds - Array of contact IDs to update
+ * @param tagsToRemove - Array of tags to remove
+ */
+export async function removeTagsFromContacts(userId: string, contactIds: string[], tagsToRemove: string[]): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to remove tags')
+  }
+
+  if (!contactIds || contactIds.length === 0) {
+    throw new Error('No contacts selected')
+  }
+
+  if (!tagsToRemove || tagsToRemove.length === 0) {
+    return
+  }
+
+  // Fetch current tags for these contacts
+  const { data: contacts, error: fetchError } = await supabase
+    .from('contacts')
+    .select('id, tags')
+    .eq('user_id', userId)
+    .in('id', contactIds)
+
+  if (fetchError) {
+    console.error('Error fetching contacts for tag removal:', fetchError)
+    throw fetchError
+  }
+
+  // Update each contact by filtering out tags
+  try {
+    await Promise.all(contacts.map(contact => {
+      const currentTags = contact.tags || []
+      const updatedTags = currentTags.filter((tag: string) => !tagsToRemove.includes(tag))
+
+      // Only update if changes were made
+      if (currentTags.length === updatedTags.length) {
+        return Promise.resolve()
+      }
+
+      return supabase
+        .from('contacts')
+        .update({
+          tags: updatedTags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contact.id)
+        .eq('user_id', userId)
+    }))
+  } catch (error) {
+    console.error('Error removing tags from contacts:', error)
+    throw error
+  }
+
+  // Update segments in background
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after tag removal:', err)
+  })
+}
+
+/**
+ * Update a custom attribute for multiple contacts
+ * @param userId - The ID of the user who owns the contacts
+ * @param contactIds - Array of contact IDs to update
+ * @param key - The attribute key to update
+ * @param value - The value to set for the attribute
+ */
+export async function updateContactsAttribute(userId: string, contactIds: string[], key: string, value: any): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to update attribute')
+  }
+
+  if (!contactIds || contactIds.length === 0) {
+    throw new Error('No contacts selected')
+  }
+
+  if (!key) {
+    throw new Error('Attribute key is required')
+  }
+
+  // Fetch current attributes for these contacts
+  const { data: contacts, error: fetchError } = await supabase
+    .from('contacts')
+    .select('id, custom_attributes')
+    .eq('user_id', userId)
+    .in('id', contactIds)
+
+  if (fetchError) {
+    console.error('Error fetching contacts for attribute update:', fetchError)
+    throw fetchError
+  }
+
+  // Update each contact with new attribute value using parallel updates
+  try {
+    await Promise.all(contacts.map(contact => {
+      const currentAttributes = contact.custom_attributes || {}
+      const updatedAttributes = {
+        ...currentAttributes,
+        [key]: value
+      }
+
+      return supabase
+        .from('contacts')
+        .update({
+          custom_attributes: updatedAttributes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contact.id)
+        .eq('user_id', userId)
+    }))
+  } catch (error) {
+    console.error('Error updating attribute for contacts:', error)
+    throw error
+  }
+
+  // Update segments in background
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after attribute update:', err)
+  })
+}
+

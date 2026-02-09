@@ -76,12 +76,23 @@ import {
   DataTableRow,
 } from "@/components/ui/data-table"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
-import { useContacts, useArchiveContacts, useUnarchiveContacts } from "@/hooks/use-contacts"
+import { useContacts, useArchiveContacts, useUnarchiveContacts, useAddTagsToContacts, useRemoveTagsFromContacts, useUpdateContactsAttribute } from "@/hooks/use-contacts"
 import { useSegments } from "@/hooks/use-segments"
+import { useTags } from "@/hooks/use-tags"
+import { useAttributes } from "@/hooks/use-attributes"
 import type { AppContact } from "@/lib/supabase/types"
 import { toast } from "sonner"
 import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
 import { useCreateContactContext } from "@/contexts/create-contact-context"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 
 // Type alias for backward compatibility
 type Contact = AppContact
@@ -114,6 +125,17 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [selectedView, setSelectedView] = React.useState<string>(TAB_ALL)
   const [showArchiveDialog, setShowArchiveDialog] = React.useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = React.useState("")
+
+  // Bulk actions state
+  const [isAddTagsDialogOpen, setIsAddTagsDialogOpen] = React.useState(false)
+  const [tagsToAdd, setTagsToAdd] = React.useState<string[]>([])
+  const [initialCommonTags, setInitialCommonTags] = React.useState<string[]>([])
+  const [addTagSearchQuery, setAddTagSearchQuery] = React.useState("")
+
+  const [isAddAttributeDialogOpen, setIsAddAttributeDialogOpen] = React.useState(false)
+  const [attributeKeyToUpdate, setAttributeKeyToUpdate] = React.useState<string>("")
+  const [attributeValueToUpdate, setAttributeValueToUpdate] = React.useState<any>("")
+
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Dynamic page title
@@ -141,6 +163,13 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Archive and unarchive mutations
   const archiveContactsMutation = useArchiveContacts()
   const unarchiveContactsMutation = useUnarchiveContacts()
+  const addTagsToContactsMutation = useAddTagsToContacts()
+  const removeTagsFromContactsMutation = useRemoveTagsFromContacts()
+  const updateContactsAttributeMutation = useUpdateContactsAttribute()
+
+  // Fetch tags and attributes
+  const { data: availableTags = [] } = useTags()
+  const { data: availableAttributes = [] } = useAttributes()
 
   // Fetch segments
   const { data: segments = [] } = useSegments()
@@ -244,8 +273,62 @@ const ContactsPageContent = (): React.JSX.Element => {
       },
     },
     {
+      accessorKey: "tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const contact = row.original;
+        const tags = contact.tags || [];
+
+        if (tags.length === 0) {
+          return (
+            <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+              No tags
+            </Badge>
+          );
+        }
+
+        // Show max 2 tags and +X more
+        const displayedTags = tags.slice(0, 2);
+        const remainingTags = tags.slice(2);
+        const remainingCount = remainingTags.length;
+
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[200px] items-center">
+            {displayedTags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs whitespace-nowrap font-normal">
+                {tag}
+              </Badge>
+            ))}
+            {remainingCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs text-muted-foreground font-normal cursor-pointer hover:bg-muted">
+                    +{remainingCount}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="flex flex-col gap-1">
+                    {remainingTags.map(tag => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        );
+      },
+      enableSorting: false,
+      filterFn: (row, id, filterValue: string[]) => {
+        if (!filterValue?.length) return true
+        const rowValue = row.getValue(id) as string[] || []
+        return filterValue.some(val => rowValue.includes(val))
+      },
+    },
+    {
       id: "segments",
       header: "Segments",
+      accessorFn: (row) => contactSegments[row.id] || [],
       cell: ({ row }) => {
         const segmentsList = contactSegments[row.original.id] || []
 
@@ -257,15 +340,41 @@ const ContactsPageContent = (): React.JSX.Element => {
           )
         }
 
+        // Show max 2 segments and +X more
+        const displayedSegments = segmentsList.slice(0, 2);
+        const remainingSegments = segmentsList.slice(2);
+        const remainingCount = remainingSegments.length;
+
         return (
           <div className="flex flex-wrap gap-1">
-            {segmentsList.map(name => (
-              <Badge key={name} variant="secondary" className="text-xs whitespace-nowrap">
+            {displayedSegments.map(name => (
+              <Badge key={name} variant="outline" className="text-xs whitespace-nowrap font-normal">
                 {name}
               </Badge>
             ))}
+            {remainingCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs text-muted-foreground font-normal cursor-pointer hover:bg-muted">
+                    +{remainingCount}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="flex flex-col gap-1">
+                    {remainingSegments.map(segment => (
+                      <span key={segment}>{segment}</span>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         )
+      },
+      filterFn: (row, id, filterValue: string[]) => {
+        if (!filterValue?.length) return true
+        const rowValue = contactSegments[row.original.id] || []
+        return filterValue.some(val => rowValue.includes(val))
       },
     },
     {
@@ -402,12 +511,13 @@ const ContactsPageContent = (): React.JSX.Element => {
   })
 
   // Search filters
-  const tagOptions = [
-    { value: "VIP", label: "VIP" },
-    { value: "Enterprise", label: "Enterprise" },
-    { value: "Active User", label: "Active User" },
-    { value: "New Customer", label: "New Customer" }
-  ]
+  const tagOptions = React.useMemo(() =>
+    availableTags.map(tag => ({
+      value: tag.name,
+      label: tag.name
+    })),
+    [availableTags]
+  )
 
   // Filtered options based on search
   const filteredTagOptions = tagOptions.filter(option =>
@@ -590,7 +700,20 @@ const ContactsPageContent = (): React.JSX.Element => {
                     size="sm"
                     className="h-6 px-2 text-xs"
                     onClick={() => {
-                      // TODO: Implement send campaign functionality
+                      const selectedRows = table.getSelectedRowModel().rows
+                      const selectedIds = selectedRows.map(row => row.original.id)
+
+                      if (selectedIds.length === 0) {
+                        toast.error("No contacts selected")
+                        return
+                      }
+
+                      navigate('/engage/campaigns/create', {
+                        state: {
+                          type: 'broadcast',
+                          selectedContactIds: selectedIds
+                        }
+                      })
                     }}
                   >
                     Send campaign
@@ -604,6 +727,48 @@ const ContactsPageContent = (): React.JSX.Element => {
                     }}
                   >
                     Export
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      const selectedRows = table.getSelectedRowModel().rows
+                      if (selectedRows.length === 0) {
+                        toast.error("No contacts selected")
+                        return
+                      }
+
+                      // Pre-select tags that are present on ALL selected contacts
+                      const tagsOnFirst = selectedRows[0].original.tags || []
+                      const commonTags = tagsOnFirst.filter(tag =>
+                        selectedRows.every(row => (row.original.tags || []).includes(tag))
+                      )
+
+                      setTagsToAdd(commonTags)
+                      setInitialCommonTags(commonTags)
+                      setAddTagSearchQuery("")
+                      setIsAddTagsDialogOpen(true)
+                    }}
+                  >
+                    Add tags
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      const selectedRows = table.getSelectedRowModel().rows
+                      if (selectedRows.length === 0) {
+                        toast.error("No contacts selected")
+                        return
+                      }
+                      setAttributeKeyToUpdate("")
+                      setAttributeValueToUpdate("")
+                      setIsAddAttributeDialogOpen(true)
+                    }}
+                  >
+                    Add custom attributes
                   </Button>
                   {selectedView === TAB_ARCHIVED ? (
                     <Button
@@ -791,6 +956,230 @@ const ContactsPageContent = (): React.JSX.Element => {
               disabled={archiveConfirmation.toLowerCase() !== "archive" || archiveContactsMutation.isPending}
             >
               {archiveContactsMutation.isPending ? "Archiving..." : "Archive"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Tags Dialog */}
+      <Dialog open={isAddTagsDialogOpen} onOpenChange={setIsAddTagsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Tags to Contacts</DialogTitle>
+            <DialogDescription>
+              Select tags to add to the {table.getSelectedRowModel().rows.length} selected contacts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tags..."
+                value={addTagSearchQuery}
+                onChange={(e) => setAddTagSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <ScrollArea className="h-[200px]">
+              <div className="space-y-2">
+                {availableTags
+                  .filter(tag => tag.name.toLowerCase().includes(addTagSearchQuery.toLowerCase()))
+                  .map(tag => (
+                    <div key={tag.id} className="flex items-center space-x-2 p-1 hover:bg-accent rounded-sm">
+                      <Checkbox
+                        id={`tag-${tag.id}`}
+                        checked={tagsToAdd.includes(tag.name)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setTagsToAdd([...tagsToAdd, tag.name])
+                          } else {
+                            setTagsToAdd(tagsToAdd.filter(t => t !== tag.name))
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={`tag-${tag.id}`}
+                        className="flex-1 cursor-pointer flex items-center gap-2"
+                      >
+                        <div className={`w-2 h-2 rounded-full bg-${tag.color}-500`} />
+                        {tag.name}
+                      </Label>
+                    </div>
+                  ))}
+                {availableTags.length === 0 && (
+                  <div className="text-center text-sm text-muted-foreground py-4">
+                    No tags found. Go to Tags page to create one.
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddTagsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const selectedRows = table.getSelectedRowModel().rows
+                const selectedIds = selectedRows.map(row => row.original.id)
+
+                // Tags to add (all currently selected tags)
+                // Tags to remove (tags that were initially common but are now unchecked)
+                const tagsToRemove = initialCommonTags.filter(tag => !tagsToAdd.includes(tag))
+
+                try {
+                  const promises = []
+
+                  if (tagsToAdd.length > 0) {
+                    promises.push(addTagsToContactsMutation.mutateAsync({
+                      contactIds: selectedIds,
+                      tags: tagsToAdd
+                    }))
+                  }
+
+                  if (tagsToRemove.length > 0) {
+                    promises.push(removeTagsFromContactsMutation.mutateAsync({
+                      contactIds: selectedIds,
+                      tags: tagsToRemove
+                    }))
+                  }
+
+                  await Promise.all(promises)
+
+                  toast.success(`Tags updated for ${selectedIds.length} contacts`)
+                  setIsAddTagsDialogOpen(false)
+                  table.resetRowSelection()
+                } catch (error) {
+                  toast.error("Failed to update tags")
+                }
+              }}
+              disabled={addTagsToContactsMutation.isPending || removeTagsFromContactsMutation.isPending}
+            >
+              {(addTagsToContactsMutation.isPending || removeTagsFromContactsMutation.isPending) ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Custom Attribute Dialog */}
+      <Dialog open={isAddAttributeDialogOpen} onOpenChange={setIsAddAttributeDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Attribute to Contacts</DialogTitle>
+            <DialogDescription>
+              Set a custom attribute value for the {table.getSelectedRowModel().rows.length} selected contacts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Attribute</Label>
+              <Select
+                value={attributeKeyToUpdate}
+                onValueChange={(value) => {
+                  setAttributeKeyToUpdate(value)
+                  // Reset value when attribute changes to avoid type mismatch
+                  setAttributeValueToUpdate("")
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an attribute" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableAttributes.map((attr) => (
+                    <SelectItem key={attr.id} value={attr.key}>
+                      {attr.name} ({attr.data_type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {attributeKeyToUpdate && (
+              <div className="space-y-2">
+                <Label>Value</Label>
+                {(() => {
+                  const items = availableAttributes.find(a => a.key === attributeKeyToUpdate)
+                  const type = items?.data_type || 'string'
+
+                  if (type === 'boolean') {
+                    return (
+                      <Select
+                        value={String(attributeValueToUpdate)}
+                        onValueChange={(v) => setAttributeValueToUpdate(v === 'true')}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select value" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Yes</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )
+                  }
+
+                  if (type === 'date') {
+                    return (
+                      <Input
+                        type="date"
+                        value={attributeValueToUpdate}
+                        onChange={(e) => setAttributeValueToUpdate(e.target.value)}
+                      />
+                    )
+                  }
+
+                  if (type === 'number') {
+                    return (
+                      <Input
+                        type="number"
+                        value={attributeValueToUpdate}
+                        onChange={(e) => setAttributeValueToUpdate(Number(e.target.value))}
+                      />
+                    )
+                  }
+
+                  return (
+                    <Input
+                      value={attributeValueToUpdate}
+                      onChange={(e) => setAttributeValueToUpdate(e.target.value)}
+                      placeholder="Enter value"
+                    />
+                  )
+                })()}
+              </div>
+            )}
+
+            {availableAttributes.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground">
+                No attributes found. Go to Attributes page to create one.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddAttributeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const selectedRows = table.getSelectedRowModel().rows
+                const selectedIds = selectedRows.map(row => row.original.id)
+
+                try {
+                  await updateContactsAttributeMutation.mutateAsync({
+                    contactIds: selectedIds,
+                    key: attributeKeyToUpdate,
+                    value: attributeValueToUpdate
+                  })
+                  toast.success(`Attribute updated for ${selectedIds.length} contacts`)
+                  setIsAddAttributeDialogOpen(false)
+                  table.resetRowSelection()
+                } catch (error) {
+                  toast.error("Failed to update attribute")
+                }
+              }}
+              disabled={!attributeKeyToUpdate || updateContactsAttributeMutation.isPending}
+            >
+              {updateContactsAttributeMutation.isPending ? "Updating..." : "Update Attribute"}
             </Button>
           </DialogFooter>
         </DialogContent>
