@@ -29,14 +29,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-interface SyncHistory {
+export interface SyncHistory {
   id: string
   date: string
   contactsImported: number
   status: "success" | "failed" | "partial"
 }
 
-interface ThirdPartyIntegration {
+export interface ThirdPartyIntegration {
   id: string
   name: string
   description: string
@@ -45,15 +45,19 @@ interface ThirdPartyIntegration {
   lastSync?: string
   totalContacts?: number
   syncHistory?: SyncHistory[]
+  brandColor?: string
+  textColor?: string
 }
 
-const integrations: ThirdPartyIntegration[] = [
+export const integrations: ThirdPartyIntegration[] = [
   {
     id: "hubspot",
     name: "HubSpot",
     description: "Sync contacts from your HubSpot CRM",
     logo: "https://www.hubspot.com/hubfs/HubSpot_Logos/HubSpot-Inversed-Favicon.png",
     connected: false,
+    brandColor: "#FF7A59",
+    textColor: "#FFFFFF"
   },
   {
     id: "zapier",
@@ -61,6 +65,8 @@ const integrations: ThirdPartyIntegration[] = [
     description: "Connect with 5,000+ apps via Zapier",
     logo: "https://cdn.zapier.com/zapier/images/logos/zapier-logomark.png",
     connected: false,
+    brandColor: "#FF4F00",
+    textColor: "#FFFFFF"
   },
   {
     id: "salesforce",
@@ -68,6 +74,8 @@ const integrations: ThirdPartyIntegration[] = [
     description: "Import contacts from Salesforce CRM",
     logo: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg",
     connected: false,
+    brandColor: "#00A1E0",
+    textColor: "#FFFFFF"
   },
   {
     id: "shopify",
@@ -75,6 +83,17 @@ const integrations: ThirdPartyIntegration[] = [
     description: "Sync customers from your Shopify store",
     logo: "/assets/shopify.png",
     connected: false,
+    brandColor: "#95BF47",
+    textColor: "#FFFFFF"
+  },
+  {
+    id: "magento",
+    name: "Magento",
+    description: "Sync customers from your Magento store",
+    logo: "/assets/Magento.png",
+    connected: false,
+    brandColor: "#EE672F",
+    textColor: "#FFFFFF"
   },
 ]
 

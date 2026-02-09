@@ -49,6 +49,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -60,7 +63,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ContactsImportDialog } from "@/components/contacts-import-dialog"
+import { ContactsImportDialog, integrations } from "@/components/contacts-import-dialog"
+import { ContactsImportDrawer } from "@/components/contacts-import-drawer"
+import { ContactsCsvImportDrawer } from "@/components/contacts-csv-import-drawer"
 import {
   DataTable,
   DataTableHeader,
@@ -72,6 +77,7 @@ import {
 } from "@/components/ui/data-table"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { useContacts, useArchiveContacts, useUnarchiveContacts } from "@/hooks/use-contacts"
+import { useSegments } from "@/hooks/use-segments"
 import type { AppContact } from "@/lib/supabase/types"
 import { toast } from "sonner"
 import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
@@ -99,11 +105,12 @@ const ContactsPageContent = (): React.JSX.Element => {
   })
 
   // Filter states
-  const [selectedChannels, setSelectedChannels] = React.useState<string[]>([])
   const [selectedTags, setSelectedTags] = React.useState<string[]>([])
-  const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
+  const [isImportDrawerOpen, setIsImportDrawerOpen] = React.useState(false)
+  const [isCsvImportDrawerOpen, setIsCsvImportDrawerOpen] = React.useState(false)
+  const [selectedImportId, setSelectedImportId] = React.useState<string | null>(null)
   const [selectedView, setSelectedView] = React.useState<string>(TAB_ALL)
   const [showArchiveDialog, setShowArchiveDialog] = React.useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = React.useState("")
@@ -134,6 +141,23 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Archive and unarchive mutations
   const archiveContactsMutation = useArchiveContacts()
   const unarchiveContactsMutation = useUnarchiveContacts()
+
+  // Fetch segments
+  const { data: segments = [] } = useSegments()
+
+  // Map contact ID to segment names
+  const contactSegments = React.useMemo(() => {
+    const map: Record<string, string[]> = {}
+    segments.forEach(segment => {
+      segment.contact_ids?.forEach(contactId => {
+        if (!map[contactId]) {
+          map[contactId] = []
+        }
+        map[contactId].push(segment.name)
+      })
+    })
+    return map
+  }, [segments])
 
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
@@ -220,57 +244,28 @@ const ContactsPageContent = (): React.JSX.Element => {
       },
     },
     {
-      accessorKey: "channel",
-      header: "Channels",
-      filterFn: (row, columnId, filterValue: string[]) => {
-        // OR logic: show row if its channel is in the selected channels array
-        if (!filterValue || filterValue.length === 0) {
-          return true; // No filter applied, show all rows
-        }
-        const rowChannel = row.getValue(columnId) as string | null;
-        // If channel is null/empty, don't show it in filtered results unless explicitly filtering for "null"
-        if (!rowChannel || (typeof rowChannel === 'string' && rowChannel.trim() === '')) {
-          return false; // Hide rows with undefined channels when filtering
-        }
-        return filterValue.includes(rowChannel);
-      },
+      id: "segments",
+      header: "Segments",
       cell: ({ row }) => {
-        const channel = row.getValue("channel") as string | null;
+        const segmentsList = contactSegments[row.original.id] || []
 
-        // If channel is null or empty, show badge
-        if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
+        if (segmentsList.length === 0) {
           return (
-            <Badge variant="outline" className="text-xs">
-              Not defined yet
+            <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+              No segments
             </Badge>
-          );
-        }
-
-        const getChannelIconPath = (channel: string) => {
-          switch (channel.toLowerCase()) {
-            case 'whatsapp':
-              return '/icons/WhatsApp.svg'
-            case 'instagram':
-              return '/icons/Instagram.svg'
-            case 'messenger':
-              return '/icons/Messenger.png'
-            default:
-              return '/icons/Messenger.png'
-          }
+          )
         }
 
         return (
-          <div className="flex items-center justify-start whitespace-nowrap">
-            <img
-              src={getChannelIconPath(channel)}
-              alt={`${channel} icon`}
-              className="w-4 h-4 flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+          <div className="flex flex-wrap gap-1">
+            {segmentsList.map(name => (
+              <Badge key={name} variant="secondary" className="text-xs whitespace-nowrap">
+                {name}
+              </Badge>
+            ))}
           </div>
-        );
+        )
       },
     },
     {
@@ -372,16 +367,12 @@ const ContactsPageContent = (): React.JSX.Element => {
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
 
-    if (selectedChannels.length > 0) {
-      newFilters.push({ id: 'channel', value: selectedChannels })
-    }
-
     if (selectedTags.length > 0) {
       newFilters.push({ id: 'tags', value: selectedTags })
     }
 
     setColumnFilters(newFilters)
-  }, [selectedChannels, selectedTags])
+  }, [selectedTags])
 
   const table = useReactTable({
     data: filteredDataByView,
@@ -410,13 +401,7 @@ const ContactsPageContent = (): React.JSX.Element => {
     },
   })
 
-  // Filter options
-  const channelOptions = [
-    { value: "whatsapp", label: "WhatsApp" },
-    { value: "instagram", label: "Instagram" },
-    { value: "messenger", label: "Messenger" }
-  ]
-
+  // Search filters
   const tagOptions = [
     { value: "VIP", label: "VIP" },
     { value: "Enterprise", label: "Enterprise" },
@@ -425,28 +410,21 @@ const ContactsPageContent = (): React.JSX.Element => {
   ]
 
   // Filtered options based on search
-  const filteredChannelOptions = channelOptions.filter(option =>
-    option.label.toLowerCase().includes(channelSearchQuery.toLowerCase())
-  )
-
   const filteredTagOptions = tagOptions.filter(option =>
     option.label.toLowerCase().includes(tagSearchQuery.toLowerCase())
   )
 
   const handleCSVImport = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // TODO: Implement CSV file processing
-      console.log("Selected file:", file.name)
-    }
+    setIsCsvImportDrawerOpen(true)
   }
 
   const handleThirdPartyImport = () => {
     setIsImportDialogOpen(true)
+  }
+
+  const handleThirdPartyImportClick = (id: string) => {
+    setSelectedImportId(id)
+    setIsImportDrawerOpen(true)
   }
 
   const handleExport = () => {
@@ -459,17 +437,22 @@ const ContactsPageContent = (): React.JSX.Element => {
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".csv"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+
 
       <ContactsImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
+      />
+
+      <ContactsImportDrawer
+        open={isImportDrawerOpen}
+        onOpenChange={setIsImportDrawerOpen}
+        initialIntegrationId={selectedImportId}
+      />
+
+      <ContactsCsvImportDrawer
+        open={isCsvImportDrawerOpen}
+        onOpenChange={setIsCsvImportDrawerOpen}
       />
 
       {error && (
@@ -497,13 +480,33 @@ const ContactsPageContent = (): React.JSX.Element => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleCSVImport}>
-                  <FileUp className="w-4 h-4 mr-2" />
-                  Import from CSV
+                  <FileUp className="w-4 h-4" />
+                  <span>Import from CSV</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleThirdPartyImport}>
-                  <Cloud className="w-4 h-4 mr-2" />
-                  Import from 3rd Party
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Cloud className="w-4 h-4" />
+                    <span className="flex-1">Import from 3rd Party</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {integrations.map((integration) => (
+                      <DropdownMenuItem
+                        key={integration.id}
+                        onClick={() => handleThirdPartyImportClick(integration.id)}
+                      >
+                        <img
+                          src={integration.logo}
+                          alt={integration.name}
+                          className="w-4 h-4 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <span className="flex-1">{integration.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
@@ -539,19 +542,6 @@ const ContactsPageContent = (): React.JSX.Element => {
             table: table
           }}
           filters={[
-            {
-              key: "channels",
-              label: "Channel",
-              options: channelOptions,
-              selectedValues: selectedChannels,
-              onSelectionChange: setSelectedChannels,
-              onClear: () => setSelectedChannels([]),
-              searchable: true,
-              searchPlaceholder: "Search channels...",
-              searchQuery: channelSearchQuery,
-              onSearchChange: setChannelSearchQuery,
-              filteredOptions: filteredChannelOptions
-            },
             {
               key: "tags",
               label: "Tags",

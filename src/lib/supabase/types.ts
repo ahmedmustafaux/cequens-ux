@@ -25,6 +25,24 @@ export type Contact = {
   created_at: string;
   last_interaction_time: string | null;
   updated_at: string;
+  custom_attributes: Record<string, any>;
+}
+
+export type Tag = {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export type CustomAttributeDefinition = {
+  id: string;
+  user_id: string;
+  name: string;
+  key: string;
+  data_type: 'string' | 'number' | 'date' | 'boolean';
+  created_at: string;
 }
 
 export type Segment = {
@@ -97,5 +115,6 @@ export type AppContact = {
   lastInteractedChannel?: string;
   conversationOpenedTime?: Date;
   archived?: boolean;
+  customAttributes?: Record<string, any>;
 }
 

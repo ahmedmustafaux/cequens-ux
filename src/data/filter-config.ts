@@ -58,6 +58,12 @@ export const FILTER_CATEGORIES: FilterCategory[] = [
       { value: "timeSinceLastIncomingMessage", label: "Time Since Last Incoming Message", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween", "isGreaterThanTime", "isLessThanTime", "isBetweenTime"], valueType: "date" },
     ]
   },
+  {
+    id: "customAttribute",
+    label: "Custom Attribute",
+    hasThreeLevels: true, // Category -> Field -> Value
+    fields: [] // Will be populated dynamically in UI
+  },
 ]
 
 // Operator labels for display

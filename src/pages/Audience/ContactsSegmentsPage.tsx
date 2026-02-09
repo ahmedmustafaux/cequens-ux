@@ -50,12 +50,24 @@ import { Separator } from "@/components/ui/separator"
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react"
 import { useSegments, useCreateSegment, useUpdateSegment, useDeleteSegment, useUpdateSegmentContacts } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
+import { useTags } from "@/hooks/use-tags"
+import { useAttributes } from "@/hooks/use-attributes"
 import type { Segment, SegmentFilter } from "@/lib/supabase/types"
 import type { AppContact } from "@/lib/supabase/types"
 import { contactMatchesFilter as dbContactMatchesFilter } from "@/lib/supabase/segments"
 import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
 import type { Segment as MockSegment, SegmentFilter as MockSegmentFilter } from "@/data/mock-data"
 import { CreateSegmentDialog, type CreateSegmentDialogProps } from "@/components/create-segment-dialog"
+import { cn } from "@/lib/utils"
+
+const TAG_COLORS = [
+  { name: 'blue', class: 'bg-blue-500' },
+  { name: 'green', class: 'bg-green-500' },
+  { name: 'red', class: 'bg-red-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'purple', class: 'bg-purple-500' },
+  { name: 'slate', class: 'bg-slate-500' },
+]
 
 // Conversion functions between database and mock-data types
 const convertSegmentFilterToMock = (filter: SegmentFilter): MockSegmentFilter => {
@@ -153,9 +165,9 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
-// Helper function to get all tags from contacts
-const getAllTags = (contacts: AppContact[]): string[] => {
-  const tags = new Set<string>()
+// Helper function to get all tags from contacts and master list
+const getAllTagsCombined = (contacts: AppContact[], masterTags: string[]): string[] => {
+  const tags = new Set<string>(masterTags)
   contacts.forEach((contact) => {
     contact.tags.forEach((tag) => tags.add(tag))
   })
@@ -298,9 +310,9 @@ const getContactsForSegment = (contacts: AppContact[], segment: Segment): AppCon
   })
 }
 
-// Helper to get field info from FILTER_CATEGORIES
-const getFieldInfo = (field: string): { category: FilterCategory; field: FilterCategory["fields"][0] } | null => {
-  for (const category of FILTER_CATEGORIES) {
+// Helper to get field info from dynamic filter categories
+const getFieldInfoFromCategories = (field: string, categories: FilterCategory[]): { category: FilterCategory; field: FilterCategory["fields"][0] } | null => {
+  for (const category of categories) {
     const fieldDef = category.fields.find(f => f.value === field)
     if (fieldDef) {
       return { category, field: fieldDef }
@@ -310,8 +322,8 @@ const getFieldInfo = (field: string): { category: FilterCategory; field: FilterC
 }
 
 // Helper function to format filter for display as badge
-const formatFilterBadge = (filter: SegmentFilter): { label: string; value: string } => {
-  const fieldInfo = getFieldInfo(filter.field)
+const formatFilterBadge = (filter: SegmentFilter, categories: FilterCategory[]): { label: string; value: string } => {
+  const fieldInfo = getFieldInfoFromCategories(filter.field, categories)
   const fieldLabel = fieldInfo?.field.label || filter.field
   const operatorLabel = OPERATOR_LABELS[filter.operator as keyof typeof OPERATOR_LABELS] || filter.operator
 
@@ -474,64 +486,26 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
     },
   },
   {
-    accessorKey: "channel",
-    header: "Channels",
-    cell: ({ row }) => {
-      const channel = row.getValue("channel") as string | null;
-
-      // If channel is null or empty, show badge
-      if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
-        return (
-          <Badge variant="outline" className="text-xs">
-            Not defined yet
-          </Badge>
-        );
-      }
-
-      const getChannelIconPath = (channel: string) => {
-        switch (channel.toLowerCase()) {
-          case "whatsapp":
-            return "/icons/WhatsApp.svg"
-          case "instagram":
-            return "/icons/Instagram.svg"
-          case "messenger":
-            return "/icons/Messenger.png"
-          default:
-            return "/icons/Messenger.png"
-        }
-      }
-
-      return (
-        <div className="flex items-center justify-start whitespace-nowrap">
-          <img
-            src={getChannelIconPath(channel)}
-            alt={`${channel} icon`}
-            className="w-4 h-4 flex-shrink-0"
-            onError={(e) => {
-              e.currentTarget.style.display = "none"
-            }}
-          />
-        </div>
-      )
-    },
-  },
-  {
     accessorKey: "tags",
     header: "Tags",
     cell: ({ row }) => {
       const tags = row.original.tags
       if (!tags || tags.length === 0) {
-        return <span className="text-sm text-muted-foreground">—</span>
+        return (
+          <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+            No tags
+          </Badge>
+        )
       }
       return (
         <div className="flex flex-wrap gap-1">
           {tags.slice(0, 2).map((tag, idx) => (
-            <Badge key={idx} variant="outline" className="text-xs">
+            <Badge key={idx} variant="secondary" className="text-xs whitespace-nowrap">
               {tag}
             </Badge>
           ))}
           {tags.length > 2 && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs whitespace-nowrap">
               +{tags.length - 2}
             </Badge>
           )}
@@ -661,6 +635,41 @@ function ContactsSegmentsPageContent() {
   const [isSegmentMenuOpen, setIsSegmentMenuOpen] = React.useState(false)
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
   const [timeUnits, setTimeUnits] = React.useState<Record<string, string>>({})
+
+  const { data: tagsData = [] } = useTags()
+  const { data: attributesData = [] } = useAttributes()
+
+  // Dynamic filter categories including custom attributes and master tags
+  const dynamicFilterCategories = React.useMemo(() => {
+    const categories = FILTER_CATEGORIES.map(category => {
+      if (category.id === "contactTag") {
+        return {
+          ...category,
+          fields: category.fields.map(f => ({
+            ...f,
+            // Tags are already handled in getFilterValueOptions
+          }))
+        }
+      }
+      if (category.id === "customAttribute") {
+        return {
+          ...category,
+          fields: attributesData.map(attr => ({
+            value: `custom_${attr.key}`,
+            label: attr.name,
+            operators: (attr.data_type === 'number'
+              ? ["equals", "notEquals", "greaterThan", "lessThan", "between", "exists", "doesNotExist"]
+              : attr.data_type === 'date'
+                ? ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"]
+                : ["equals", "notEquals", "contains", "exists", "doesNotExist", "isEmpty", "isNotEmpty"]),
+            valueType: attr.data_type as 'string' | 'number' | 'date'
+          }))
+        }
+      }
+      return category
+    })
+    return categories as any[]
+  }, [attributesData])
 
   usePageTitle("Segments")
 
@@ -825,7 +834,7 @@ function ContactsSegmentsPageContent() {
       case "countryISO":
         return getAllCountries(contacts).map((c) => ({ value: c.code, label: c.name }))
       case "tags":
-        return getAllTags(contacts).map((tag) => ({ value: tag, label: tag }))
+        return getAllTagsCombined(contacts, tagsData.map(t => t.name)).map((tag) => ({ value: tag, label: tag }))
       case "channel":
         return getAllChannels(contacts).map((channel) => {
           // Format channel names for display
@@ -875,11 +884,11 @@ function ContactsSegmentsPageContent() {
       default:
         return []
     }
-  }, [contacts])
+  }, [contacts, tagsData])
 
 
   const handleCategorySelected = React.useCallback((categoryId: string) => {
-    const category = FILTER_CATEGORIES.find(c => c.id === categoryId)
+    const category = dynamicFilterCategories.find(c => c.id === categoryId)
     if (!category) return
 
     // If it's a 2-level category (Category -> Value), automatically select the field
@@ -896,7 +905,7 @@ function ContactsSegmentsPageContent() {
     if (!selectedSegment) return
 
     try {
-      const fieldInfo = getFieldInfo(field)
+      const fieldInfo = getFieldInfoFromCategories(field, dynamicFilterCategories)
       if (!fieldInfo) return
 
       const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
@@ -998,7 +1007,7 @@ function ContactsSegmentsPageContent() {
     const currentFilter = updatedFilters[filterIndex]
 
     // Get field info to determine default value type
-    const fieldInfo = getFieldInfo(currentFilter.field)
+    const fieldInfo = getFieldInfoFromCategories(currentFilter.field, dynamicFilterCategories)
 
     // Reset value based on field type and operator
     let resetValue: SegmentFilter["value"]
@@ -1034,7 +1043,7 @@ function ContactsSegmentsPageContent() {
       return <div className="text-sm text-muted-foreground p-2">Loading...</div>
     }
 
-    const fieldInfo = getFieldInfo(filter.field)
+    const fieldInfo = getFieldInfoFromCategories(filter.field, dynamicFilterCategories)
     if (!fieldInfo) {
       return <div className="px-2 py-2 text-sm text-muted-foreground text-center">Field not found</div>
     }
@@ -1360,6 +1369,12 @@ function ContactsSegmentsPageContent() {
                           />
                         </div>
                       )}
+                      {filter.field === "tags" && (
+                        <div className={cn(
+                          "h-2 w-2 rounded-full flex-shrink-0",
+                          TAG_COLORS.find(c => c.name === tagsData.find(t => t.name === option.value)?.color)?.class || "bg-blue-500"
+                        )} />
+                      )}
                       <span className="flex-1">{option.label}</span>
                       {filter.field === "channel" && (
                         <span className="ml-2">
@@ -1637,7 +1652,7 @@ function ContactsSegmentsPageContent() {
                     key={row.id}
                     selected={row.getIsSelected()}
                     onClick={() => {
-                      navigate(`/contacts/${row.original.id}`)
+                      navigate(`/audience/contacts/${row.original.id}`)
                     }}
                     className="group cursor-pointer hover:bg-muted/50 transition-colors"
                   >

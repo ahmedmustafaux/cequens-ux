@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageHeaderWithActions } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { User, Mail, Phone, Tag, Plus, X, Search, ChevronDown, Save, Globe, Bot, Users } from "lucide-react"
+import { User, Mail, Phone, Tag, Plus, X, Search, ChevronDown, Save, Globe, Bot, Users, ChevronsUpDown, Check, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
@@ -36,6 +36,8 @@ import { cn } from "@/lib/utils"
 import { validatePhoneNumber as validatePhoneBasic } from "@/lib/validation"
 import { detectCountryFromPhoneNumber, validatePhoneNumber, formatPhoneForDisplay, getCountryISOFromCallingCode } from "@/lib/phone-utils"
 import { useContact, useUpdateContact } from "@/hooks/use-contacts"
+import { useTags } from "@/hooks/use-tags"
+import { useAttributes } from "@/hooks/use-attributes"
 import type { AppContact } from "@/lib/supabase/types"
 
 interface ContactFormData {
@@ -47,11 +49,18 @@ interface ContactFormData {
   language: string
   botStatus: string
   countryISO: string
-  assignee: string
-  conversationStatus: string
   tags: string[]
-  notes: string
+  customAttributes: Record<string, any>
 }
+
+const TAG_COLORS = [
+  { name: 'blue', class: 'bg-blue-500' },
+  { name: 'green', class: 'bg-green-500' },
+  { name: 'red', class: 'bg-red-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'purple', class: 'bg-purple-500' },
+  { name: 'slate', class: 'bg-slate-500' },
+]
 
 export default function ContactsEditPage() {
   const navigate = useNavigate()
@@ -60,6 +69,8 @@ export default function ContactsEditPage() {
 
   // Fetch contact from database
   const { data: contact, isLoading: isContactLoading, error } = useContact(contactId)
+  const { data: attributes = [] } = useAttributes()
+  const { data: tags = [] } = useTags()
   const updateContactMutation = useUpdateContact()
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -70,6 +81,8 @@ export default function ContactsEditPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
   const [phoneError, setPhoneError] = React.useState<string>("")
+  const [isTagPopoverOpen, setIsTagPopoverOpen] = React.useState(false)
+  const [tagSearchQuery, setTagSearchQuery] = React.useState("")
 
   const displayName = contact
     ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'
@@ -171,10 +184,8 @@ export default function ContactsEditPage() {
     language: "",
     botStatus: "",
     countryISO: "",
-    assignee: "",
-    conversationStatus: "unassigned",
     tags: [],
-    notes: ""
+    customAttributes: {}
   })
 
   // Populate form when contact is loaded
@@ -240,10 +251,8 @@ export default function ContactsEditPage() {
         language: contact.language || "",
         botStatus: contact.botStatus || "",
         countryISO: contact.countryISO || "",
-        assignee: contact.assignee || "",
-        conversationStatus: contact.conversationStatus || "unassigned",
         tags: contact.tags || [],
-        notes: "" // Notes not stored in contact model
+        customAttributes: contact.customAttributes || {}
       })
     }
   }, [contact])
@@ -266,6 +275,17 @@ export default function ContactsEditPage() {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }))
+    setIsDirty(true)
+  }
+
+  const handleAttributeChange = (key: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      customAttributes: {
+        ...prev.customAttributes,
+        [key]: value
+      }
     }))
     setIsDirty(true)
   }
@@ -401,9 +421,8 @@ export default function ContactsEditPage() {
         language: formData.language || undefined,
         botStatus: formData.botStatus || undefined,
         countryISO: finalCountryISO,
-        assignee: formData.assignee || undefined,
-        conversationStatus: formData.conversationStatus,
         tags: formData.tags,
+        customAttributes: formData.customAttributes
       }
 
       await updateContactMutation.mutateAsync({
@@ -699,32 +718,13 @@ export default function ContactsEditPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Conversation</label>
-                        <p className="text-sm capitalize">{formData.conversationStatus || '—'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Message</label>
-                        <p className="text-sm">{contact?.lastMessage || '—'}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">Created At</label>
                         <p className="text-sm">{contact?.createdAt ? new Date(contact.createdAt).toLocaleString() : '—'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Interaction Time</label>
-                        <p className="text-sm">{contact?.lastInteractionTime ? new Date(contact.lastInteractionTime).toLocaleString() : '—'}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Conversation Opened Time</label>
-                        <p className="text-sm">{contact?.conversationOpenedTime ? new Date(contact.conversationOpenedTime).toLocaleString() : '—'}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
               </div>
 
               {/* Sidebar */}
@@ -736,97 +736,152 @@ export default function ContactsEditPage() {
                     <CardDescription>Add tags to categorize this contact</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Add a tag"
-                        onKeyPress={(e: React.KeyboardEvent) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault()
-                            addTag()
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addTag}
-                        disabled={!newTag.trim()}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {formData.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                          {tag}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeTag(tag)}
-                            className="ml-1 hover:bg-gray-200 rounded-full p-0.5 h-auto w-auto"
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {formData.tags.map((tagName) => {
+                        const tagDef = tags.find(t => t.name === tagName)
+                        return (
+                          <Badge
+                            key={tagName}
+                            variant="outline"
+                            className="gap-1 pr-1 py-1 text-xs font-normal"
                           >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ))}
+                            {tagName}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tagName)}
+                              className="mx-1 ring-offset-background rounded-full outline-none hover:bg-muted p-0.5"
+                            >
+                              <XCircle className="h-3 w-3" />
+                              <span className="sr-only">Remove</span>
+                            </button>
+                          </Badge>
+                        )
+                      })}
+                      {formData.tags.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">No tags assigned</p>
+                      )}
                     </div>
+
+                    <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full justify-between">
+                          Add Tag
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="start">
+                        <div className="p-2 border-b border-border">
+                          <Input
+                            placeholder="Search tags..."
+                            value={tagSearchQuery}
+                            onChange={(e) => setTagSearchQuery(e.target.value)}
+                            className="h-8"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="max-h-[200px] overflow-y-auto p-1">
+                          {tags
+                            .filter(tag =>
+                              tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                            )
+                            .map(tag => {
+                              const isSelected = formData.tags.includes(tag.name)
+                              return (
+                                <div
+                                  key={tag.id}
+                                  className="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer text-sm"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      removeTag(tag.name)
+                                    } else {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        tags: [...prev.tags, tag.name]
+                                      }))
+                                      setIsDirty(true)
+                                    }
+                                  }}
+                                >
+                                  <div
+                                    className={cn(
+                                      "w-3 h-3 rounded-full",
+                                      TAG_COLORS.find(c => c.name === tag.color)?.class || "bg-gray-200"
+                                    )}
+                                  />
+                                  <span className="flex-1">{tag.name}</span>
+                                  {isSelected && <Check className="h-4 w-4 text-primary" />}
+                                </div>
+                              )
+                            })}
+                          {tags.filter(tag =>
+                            tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                          ).length === 0 && (
+                              <div className="p-2 text-sm text-muted-foreground text-center">
+                                No matching tags found
+                              </div>
+                            )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </CardContent>
                 </Card>
 
-                {/* Notes */}
+                {/* Custom Attributes */}
                 <Card className="py-5 gap-5">
                   <CardHeader>
-                    <CardTitle>Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      value={formData.notes}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("notes", e.target.value)}
-                      placeholder="Add any additional notes about this contact..."
-                      className="min-h-[100px]"
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Bot Status & Assignee */}
-                <Card className="py-5 gap-5">
-                  <CardHeader>
-                    <CardTitle>Bot Status & Assignee</CardTitle>
+                    <CardTitle>Custom Attributes</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Bot Status</label>
-                      <Select
-                        value={formData.botStatus}
-                        onValueChange={(value) => handleInputChange("botStatus", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select bot status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Assignee</label>
-                      <Input
-                        id="assignee"
-                        value={formData.assignee}
-                        onChange={(e) => handleInputChange("assignee", e.target.value)}
-                        placeholder="Enter assignee name"
-                        className="w-full"
-                      />
-                    </div>
+                    {attributes.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        {attributes.map(attr => (
+                          <div key={attr.id}>
+                            <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                              {attr.name}
+                            </label>
+                            {attr.data_type === 'boolean' ? (
+                              <Select
+                                value={formData.customAttributes[attr.key] !== undefined ? String(formData.customAttributes[attr.key]) : ""}
+                                onValueChange={(value) => handleAttributeChange(attr.key, value === 'true')}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="true">Yes</SelectItem>
+                                  <SelectItem value="false">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : attr.data_type === 'date' ? (
+                              <Input
+                                type="date"
+                                value={formData.customAttributes[attr.key] || ""}
+                                onChange={(e) => handleAttributeChange(attr.key, e.target.value)}
+                              />
+                            ) : attr.data_type === 'number' ? (
+                              <Input
+                                type="number"
+                                value={formData.customAttributes[attr.key] || ""}
+                                onChange={(e) => handleAttributeChange(attr.key, Number(e.target.value))}
+                              />
+                            ) : (
+                              <Input
+                                type="text"
+                                value={formData.customAttributes[attr.key] || ""}
+                                onChange={(e) => handleAttributeChange(attr.key, e.target.value)}
+                                placeholder={`Enter ${attr.name.toLowerCase()}`}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No custom attributes defined. Go to Audience &gt; Attributes to create some.</p>
+                    )}
                   </CardContent>
                 </Card>
+
+
               </div>
             </div>
           </motion.div>

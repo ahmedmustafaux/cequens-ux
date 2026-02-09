@@ -11,7 +11,7 @@ function ensureCountryISO(phone: string, existingCountryISO: string | null): str
   if (existingCountryISO && existingCountryISO.trim() !== '') {
     return existingCountryISO.toUpperCase()
   }
-  
+
   // Try to detect country from phone number
   if (phone && phone.trim() !== '') {
     try {
@@ -23,7 +23,7 @@ function ensureCountryISO(phone: string, existingCountryISO: string | null): str
       console.warn('Failed to detect country from phone number:', error)
     }
   }
-  
+
   // Default fallback
   return existingCountryISO?.toUpperCase() || 'SA'
 }
@@ -34,7 +34,7 @@ function ensureCountryISO(phone: string, existingCountryISO: string | null): str
 function dbContactToAppContact(dbContact: Contact): AppContact {
   // Ensure countryISO is set from phone number if missing
   const countryISO = ensureCountryISO(dbContact.phone, dbContact.country_iso)
-  
+
   return {
     id: dbContact.id,
     name: dbContact.name,
@@ -59,6 +59,7 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
     lastInteractedChannel: dbContact.last_interacted_channel || undefined,
     conversationOpenedTime: dbContact.conversation_opened_time ? new Date(dbContact.conversation_opened_time) : undefined,
     archived: dbContact.archived || false,
+    customAttributes: dbContact.custom_attributes || {},
   }
 }
 
@@ -86,6 +87,7 @@ function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact
     conversation_opened_time: appContact.conversationOpenedTime?.toISOString() || null,
     last_interaction_time: appContact.lastInteractionTime?.toISOString() || null,
     archived: appContact.archived !== undefined ? appContact.archived : undefined,
+    custom_attributes: appContact.customAttributes || {},
   }
 }
 

@@ -74,7 +74,7 @@ export type Notification = {
 };
 
 export type SegmentFilter = {
-  field: 'countryISO' | 'tags' | 'channel' | 'conversationStatus' | 'firstName' | 'lastName' | 'phoneNumber' | 'emailAddress' | 'language' | 'botStatus' | 'lastInteractedChannel' | 'timeSinceLastIncomingMessage' | 'lastMessageDate' | 'createdDate' | 'assignee' | 'conversationOpenedTime' | 'createdAt' | 'lastInteractionTime';
+  field: string;
   operator: 'equals' | 'notEquals' | 'contains' | 'notContains' | 'startsWith' | 'endsWith' | 'isEmpty' | 'isNotEmpty' | 'exists' | 'doesNotExist' | 'in' | 'notIn' | 'hasAnyOf' | 'hasAllOf' | 'hasNoneOf' | 'greaterThan' | 'lessThan' | 'between' | 'from' | 'to' | 'fromOnly' | 'isTimestampAfter' | 'isTimestampBefore' | 'isTimestampBetween' | 'isGreaterThanTime' | 'isLessThanTime' | 'isBetweenTime';
   value: string | string[] | number | number[] | Date | { from: Date; to: Date };
 };

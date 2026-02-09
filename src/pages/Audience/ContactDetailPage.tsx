@@ -21,13 +21,32 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Plus
+  Plus,
+  ChevronsUpDown,
+  Check
 } from "lucide-react"
 import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useContact, useUpdateContact } from "@/hooks/use-contacts"
-import { getActiveChannels } from "@/lib/channel-utils"
+import { useTags } from "@/hooks/use-tags"
+import { useAttributes } from "@/hooks/use-attributes"
 import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
+
+
+const TAG_COLORS = [
+  { name: 'blue', class: 'bg-blue-500' },
+  { name: 'green', class: 'bg-green-500' },
+  { name: 'red', class: 'bg-red-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'purple', class: 'bg-purple-500' },
+  { name: 'slate', class: 'bg-slate-500' },
+]
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -39,26 +58,45 @@ export default function ContactDetailPage() {
   const updateContactMutation = useUpdateContact()
 
   // All state declarations must be at the top before any early returns
-  const [newTag, setNewTag] = React.useState("")
-  const [activeChannels, setActiveChannels] = React.useState<string[]>([])
+  // Fetch tags and attributes
+  const { data: tags = [] } = useTags()
+  const { data: attributes = [] } = useAttributes()
 
-  // Function to add a new tag
-  const addTag = async () => {
-    if (newTag.trim() && contact && !contact.tags.includes(newTag.trim())) {
+  const [isTagPopoverOpen, setIsTagPopoverOpen] = React.useState(false)
+  const [tagSearchQuery, setTagSearchQuery] = React.useState("")
+
+  // Function to add a tag
+  const handleAddTag = async (tagName: string) => {
+    if (contact && !contact.tags.includes(tagName)) {
       try {
         await updateContactMutation.mutateAsync({
           id: contact.id,
           contact: {
-            tags: [...contact.tags, newTag.trim()]
+            tags: [...contact.tags, tagName]
           }
         })
-        toast.success(`Tag "${newTag.trim()}" added successfully`)
-        setNewTag("")
+        toast.success(`Tag "${tagName}" added`)
+        toast.success(`Tag "${tagName}" added`)
+        // setIsTagPopoverOpen(false) // Keep open for multi-select
       } catch (error) {
-        toast.error("Failed to add tag. Please try again.")
+        toast.error("Failed to add tag")
       }
-    } else if (contact && contact.tags.includes(newTag.trim())) {
-      toast.error("Tag already exists")
+    }
+  }
+
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (contact) {
+      try {
+        await updateContactMutation.mutateAsync({
+          id: contact.id,
+          contact: {
+            tags: contact.tags.filter(t => t !== tagToRemove)
+          }
+        })
+        toast.success(`Tag removed`)
+      } catch (error) {
+        toast.error("Failed to remove tag")
+      }
     }
   }
 
@@ -68,10 +106,6 @@ export default function ContactDetailPage() {
     : 'Contact'
   usePageTitle(displayName)
 
-  // Load active channels
-  React.useEffect(() => {
-    setActiveChannels(getActiveChannels())
-  }, [])
 
   const { setBreadcrumbOverride } = useNavigationContext()
 
@@ -249,21 +283,6 @@ export default function ContactDetailPage() {
                       <p className="text-sm">{contact.language || '—'}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Bot Status</label>
-                      <p className="text-sm">{contact.botStatus || '—'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Last Conversation</label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={getStatusVariant(contact.conversationStatus)} className="text-xs whitespace-nowrap flex-shrink-0">
-                          {getStatusIcon(contact.conversationStatus)}
-                          {getStatusLabel(contact.conversationStatus)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -286,10 +305,6 @@ export default function ContactDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Assignee</label>
-                      <p className="text-sm">{contact.assignee || 'Unassigned'}</p>
-                    </div>
-                    <div>
                       <label className="text-sm font-medium text-muted-foreground">Last Message</label>
                       <p className="text-sm">{contact.lastMessage}</p>
                     </div>
@@ -298,16 +313,6 @@ export default function ContactDetailPage() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Created At</label>
                       <p className="text-sm">{contact.createdAt ? new Date(contact.createdAt).toLocaleString() : '—'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Last Interaction Time</label>
-                      <p className="text-sm">{contact.lastInteractionTime ? new Date(contact.lastInteractionTime).toLocaleString() : '—'}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Conversation Opened Time</label>
-                      <p className="text-sm">{contact.conversationOpenedTime ? new Date(contact.conversationOpenedTime).toLocaleString() : '—'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -334,25 +339,6 @@ export default function ContactDetailPage() {
               </Card>
 
 
-              {/* All Events */}
-              <Card className="py-5 gap-5">
-                <CardHeader>
-                  <CardTitle>All Events</CardTitle>
-                  <CardDescription>Complete activity history</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">Contact Created</p>
-                        <p className="text-sm text-muted-foreground">Contact profile was created</p>
-                        <p className="text-xs text-muted-foreground mt-1">Recently</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Sidebar */}
@@ -364,91 +350,120 @@ export default function ContactDetailPage() {
                   <CardDescription>Add tags to categorize this contact</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Add a tag"
-                      onKeyPress={(e: React.KeyboardEvent) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          addTag()
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addTag}
-                      disabled={!newTag.trim()}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {contact.tags.map((tagName) => {
+                      const tagDef = tags.find(t => t.name === tagName)
+                      return (
+                        <Badge
+                          key={tagName}
+                          variant="outline"
+                          className="gap-1 pr-1 py-1 text-xs font-normal"
+                        >
+                          {tagName}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tagName)}
+                            className="mx-1 ring-offset-background rounded-full outline-none hover:bg-muted p-0.5"
+                          >
+                            <XCircle className="h-3 w-3" />
+                            <span className="sr-only">Remove</span>
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    {contact.tags.length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">No tags assigned</p>
+                    )}
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {contact.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-between">
+                        Add Tag
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0" align="start">
+                      <div className="p-2 border-b border-border">
+                        <Input
+                          placeholder="Search tags..."
+                          value={tagSearchQuery}
+                          onChange={(e) => setTagSearchQuery(e.target.value)}
+                          className="h-8"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-[200px] overflow-y-auto p-1">
+                        {tags
+                          .filter(tag =>
+                            tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                          )
+                          .map(tag => {
+                            const isSelected = contact.tags.includes(tag.name)
+                            return (
+                              <div
+                                key={tag.id}
+                                className="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer text-sm"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    handleRemoveTag(tag.name)
+                                  } else {
+                                    handleAddTag(tag.name)
+                                  }
+                                }}
+                              >
+                                <div
+                                  className={cn(
+                                    "w-3 h-3 rounded-full",
+                                    TAG_COLORS.find(c => c.name === tag.color)?.class || "bg-gray-200"
+                                  )}
+                                />
+                                <span className="flex-1">{tag.name}</span>
+                                {isSelected && <Check className="h-4 w-4 text-primary" />}
+                              </div>
+                            )
+                          })}
+                        {tags.filter(tag =>
+                          tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                        ).length === 0 && (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              No matching tags found
+                            </div>
+                          )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </CardContent>
               </Card>
 
-              {/* Channels */}
+              {/* Custom Attributes */}
               <Card className="py-5 gap-5">
                 <CardHeader>
-                  <CardTitle>Channels</CardTitle>
-                  <CardDescription>Communication channels for this contact</CardDescription>
+                  <CardTitle>Custom Attributes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {(() => {
-                      const getChannelIcon = (channelId: string) => {
-                        switch (channelId.toLowerCase()) {
-                          case "whatsapp":
-                            return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
-                          case "instagram":
-                            return <img src="/icons/Instagram.svg" alt="Instagram" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
-                          case "messenger":
-                            return <img src="/icons/Messenger.png" alt="Messenger" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
-                          case "sms":
-                            return <ChatText weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                          case "email":
-                            return <EnvelopeSimple weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                          case "phone":
-                            return <PhoneIcon weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                          case "push":
-                            return <Bell weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                          default:
-                            return <MessageSquare className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                        }
-                      }
-                      const getChannelName = (channelId: string) => {
-                        return channelId.charAt(0).toUpperCase() + channelId.slice(1)
-                      }
-
-                      // Collect unique channels
-                      const channels = new Set<string>()
-                      if (contact.channel) channels.add(contact.channel)
-                      if (contact.lastInteractedChannel) channels.add(contact.lastInteractedChannel)
-
-                      if (channels.size === 0) {
-                        return <p className="text-sm text-muted-foreground">No channels assigned</p>
-                      }
-
-                      return Array.from(channels).map((channelId) => (
-                        <div key={channelId} className="flex items-center gap-2">
-                          {getChannelIcon(channelId)}
-                          <span className="text-sm">{getChannelName(channelId)}</span>
-                        </div>
-                      ))
-                    })()}
+                  <div className="space-y-4">
+                    {attributes.length > 0 ? (
+                      attributes.map(attr => {
+                        const value = contact.customAttributes?.[attr.key]
+                        return (
+                          <div key={attr.id}>
+                            <label className="text-sm font-medium text-muted-foreground block mb-1">
+                              {attr.name}
+                            </label>
+                            <p className="text-sm">
+                              {value !== undefined && value !== null && value !== '' ? String(value) : '—'}
+                            </p>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No custom attributes defined.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
+
 
               {/* Segments */}
               <Card className="py-5 gap-5">
@@ -461,17 +476,6 @@ export default function ContactDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* Notes */}
-              <Card className="py-5 gap-5">
-                <CardHeader>
-                  <CardTitle>Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Contact information and communication preferences.
-                  </p>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </motion.div>
