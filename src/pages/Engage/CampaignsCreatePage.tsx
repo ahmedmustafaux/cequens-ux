@@ -67,6 +67,7 @@ interface CampaignFormData {
   triggerCategory: string
   trigger: string
   triggerConfig: Record<string, any>
+  entryPoint?: string
 }
 
 export default function CampaignsCreatePage() {
@@ -260,6 +261,7 @@ export default function CampaignsCreatePage() {
   const [formData, setFormData] = React.useState<CampaignFormData>({
     name: (location.state as any)?.name || "",
     campaignType: (location.state as any)?.type === "Condition-based" ? "condition" : "broadcast",
+    entryPoint: (location.state as any)?.entryPoint || "direct",
     type: "",
     status: "Draft",
     senderId: "",
@@ -1164,8 +1166,20 @@ export default function CampaignsCreatePage() {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-6 py-2">
-                          <div className="space-y-1.5">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Campaign Name</Label>
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Campaign Name</Label>
+                              {formData.entryPoint === 'contacts_bulk' && (
+                                <Badge variant="secondary" className="text-[10px] h-4 bg-blue-100 text-blue-700 hover:bg-blue-100 border-none">
+                                  From Bulk Contacts
+                                </Badge>
+                              )}
+                              {formData.entryPoint === 'segments_bulk' && (
+                                <Badge variant="secondary" className="text-[10px] h-4 bg-purple-100 text-purple-700 hover:bg-purple-100 border-none">
+                                  From Bulk Segments
+                                </Badge>
+                              )}
+                            </div>
                             <div className="font-medium text-base">
                               {formData.name || "Untitled Campaign"}
                             </div>

@@ -136,6 +136,10 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [attributeKeyToUpdate, setAttributeKeyToUpdate] = React.useState<string>("")
   const [attributeValueToUpdate, setAttributeValueToUpdate] = React.useState<any>("")
 
+  // Campaign name dialog state
+  const [isSendCampaignDialogOpen, setIsSendCampaignDialogOpen] = React.useState(false)
+  const [campaignName, setCampaignName] = React.useState("")
+
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Dynamic page title
@@ -708,12 +712,8 @@ const ContactsPageContent = (): React.JSX.Element => {
                         return
                       }
 
-                      navigate('/engage/campaigns/create', {
-                        state: {
-                          type: 'broadcast',
-                          selectedContactIds: selectedIds
-                        }
-                      })
+                      setCampaignName("")
+                      setIsSendCampaignDialogOpen(true)
                     }}
                   >
                     Send campaign
@@ -1180,6 +1180,52 @@ const ContactsPageContent = (): React.JSX.Element => {
               disabled={!attributeKeyToUpdate || updateContactsAttributeMutation.isPending}
             >
               {updateContactsAttributeMutation.isPending ? "Updating..." : "Update Attribute"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isSendCampaignDialogOpen} onOpenChange={setIsSendCampaignDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Send Campaign</DialogTitle>
+            <DialogDescription>
+              Enter a name for your campaign to continue.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="campaign-name">Campaign Name</Label>
+              <Input
+                id="campaign-name"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder="e.g. February Newsletter"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSendCampaignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!campaignName.trim()}
+              onClick={() => {
+                const selectedRows = table.getSelectedRowModel().rows
+                const selectedIds = selectedRows.map(row => row.original.id)
+
+                setIsSendCampaignDialogOpen(false)
+                navigate('/engage/campaigns/create', {
+                  state: {
+                    type: 'broadcast',
+                    selectedContactIds: selectedIds,
+                    name: campaignName.trim(),
+                    entryPoint: 'contacts_bulk'
+                  }
+                })
+              }}
+            >
+              Continue
             </Button>
           </DialogFooter>
         </DialogContent>

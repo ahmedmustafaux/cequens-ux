@@ -636,6 +636,10 @@ function ContactsSegmentsPageContent() {
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
   const [timeUnits, setTimeUnits] = React.useState<Record<string, string>>({})
 
+  // Campaign name dialog state
+  const [isSendCampaignDialogOpen, setIsSendCampaignDialogOpen] = React.useState(false)
+  const [campaignName, setCampaignName] = React.useState("")
+
   const { data: tagsData = [] } = useTags()
   const { data: attributesData = [] } = useAttributes()
 
@@ -781,12 +785,9 @@ function ContactsSegmentsPageContent() {
     const selectedContactIds = Object.keys(rowSelection)
     if (selectedContactIds.length === 0) return
 
-    // Navigate to create campaign page with selected contacts
-    // In a real app, you might pass the contact IDs as query params or state
-    navigate("/engage/campaigns/create", {
-      state: { selectedContactIds },
-    })
-  }, [rowSelection, navigate])
+    setCampaignName("")
+    setIsSendCampaignDialogOpen(true)
+  }, [rowSelection])
 
 
   const handleDialogClose = React.useCallback(() => {
@@ -1780,6 +1781,52 @@ function ContactsSegmentsPageContent() {
               disabled={deleteConfirmation.toLowerCase() !== "delete" || deleteSegmentMutation.isPending}
             >
               {deleteSegmentMutation.isPending ? "Deleting..." : "Delete Segment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSendCampaignDialogOpen} onOpenChange={setIsSendCampaignDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Send Campaign</DialogTitle>
+            <DialogDescription>
+              Enter a name for your campaign to continue.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="campaign-name">Campaign Name</Label>
+              <Input
+                id="campaign-name"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder="e.g. February Segment Promo"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSendCampaignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!campaignName.trim()}
+              onClick={() => {
+                const selectedContactIds = Object.keys(rowSelection)
+
+                setIsSendCampaignDialogOpen(false)
+                navigate('/engage/campaigns/create', {
+                  state: {
+                    type: 'broadcast',
+                    selectedContactIds: selectedContactIds,
+                    name: campaignName.trim(),
+                    entryPoint: 'segments_bulk'
+                  }
+                })
+              }}
+            >
+              Continue
             </Button>
           </DialogFooter>
         </DialogContent>
