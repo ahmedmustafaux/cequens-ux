@@ -108,7 +108,7 @@ export default function ContactsTagsPage() {
               <DialogHeader>
                 <DialogTitle>Create Tag</DialogTitle>
                 <DialogDescription>
-                  Enter a name for your new tag. Tags help you filter and segment contacts.
+                  Enter a name for your new tag.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 p-4">

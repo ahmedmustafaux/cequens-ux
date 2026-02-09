@@ -60,6 +60,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -970,7 +971,7 @@ const ContactsPageContent = (): React.JSX.Element => {
               Select tags to add to the {table.getSelectedRowModel().rows.length} selected contacts.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-4 space-y-4">
+          <DialogBody className="space-y-4">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -1013,7 +1014,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                 )}
               </div>
             </ScrollArea>
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddTagsDialogOpen(false)}>
               Cancel
@@ -1070,7 +1071,7 @@ const ContactsPageContent = (): React.JSX.Element => {
               Set a custom attribute value for the {table.getSelectedRowModel().rows.length} selected contacts.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-4 space-y-4">
+          <DialogBody className="space-y-4">
             <div className="space-y-2">
               <Label>Attribute</Label>
               <Select
@@ -1154,7 +1155,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                 No attributes found. Go to Attributes page to create one.
               </div>
             )}
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddAttributeDialogOpen(false)}>
               Cancel
@@ -1192,7 +1193,7 @@ const ContactsPageContent = (): React.JSX.Element => {
               Enter a name for your campaign to continue.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <DialogBody className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="campaign-name">Campaign Name</Label>
               <Input
@@ -1203,7 +1204,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                 autoFocus
               />
             </div>
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSendCampaignDialogOpen(false)}>
               Cancel

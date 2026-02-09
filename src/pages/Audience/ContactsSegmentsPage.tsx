@@ -162,6 +162,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
@@ -1730,39 +1731,39 @@ function ContactsSegmentsPageContent() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <p className="text-sm text-destructive font-semibold">Warning</p>
-                  <p className="text-sm text-destructive/90 leading-relaxed">
-                    Deleting this segment will permanently remove it and cannot be undone.
-                    All contacts associated with this segment will remain, but the segment itself will be deleted.
-                  </p>
+          <DialogBody className="grid gap-6">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-semibold">Delete Segment</div>
+                <div className="text-sm text-destructive/90 leading-relaxed">
+                  Deleting this segment will permanently remove it and cannot be undone.
+                  All contacts associated with this segment will remain, but the segment itself will be deleted.
                 </div>
               </div>
             </div>
 
             {segmentToDelete && (
-              <div className="text-sm text-muted-foreground">
-                <span className="font-medium">Segment:</span> {segmentToDelete.name}
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md border">
+                <span className="font-medium text-foreground">Segment:</span> {segmentToDelete.name}
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="deleteConfirm" className="text-sm font-medium">
-                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">delete</code> to confirm:
+                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs text-foreground">delete</code> to confirm:
               </Label>
               <Input
                 id="deleteConfirm"
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
                 placeholder="Type 'delete' to confirm"
-                className="font-mono"
+                className="font-mono h-11"
               />
             </div>
-          </div>
+          </DialogBody>
 
           <DialogFooter className="gap-3">
             <Button
@@ -1794,7 +1795,7 @@ function ContactsSegmentsPageContent() {
               Enter a name for your campaign to continue.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <DialogBody className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="campaign-name">Campaign Name</Label>
               <Input
@@ -1805,7 +1806,7 @@ function ContactsSegmentsPageContent() {
                 autoFocus
               />
             </div>
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSendCampaignDialogOpen(false)}>
               Cancel

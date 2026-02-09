@@ -93,6 +93,15 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn("px-4 py-4", className)}
+      {...props}
+    />
+  )
+}
 function DialogTitle({
   className,
   ...props
@@ -158,4 +167,5 @@ export {
   DialogTitle,
   DialogTrigger,
   DialogSkeleton,
+  DialogBody,
 }

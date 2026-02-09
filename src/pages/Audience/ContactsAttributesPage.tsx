@@ -125,7 +125,7 @@ export default function ContactsAttributesPage() {
               <DialogHeader>
                 <DialogTitle>Create Attribute</DialogTitle>
                 <DialogDescription>
-                  Attributes allow you to store extra information about your contacts.
+                  Attributes allow you to store extra information.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 p-4">
