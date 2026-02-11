@@ -12,7 +12,7 @@ import {
   EmptyAction,
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
-import { FileQuestion, Plus, Trash2, Loader2, Search, Settings2, Calendar, Hash, Type, CheckSquare, AlertTriangle } from "lucide-react"
+import { FileQuestion, Plus, Trash2, Loader2, Search, Settings2, Calendar, Hash, Type, CheckSquare, AlertTriangle, ToggleRight } from "lucide-react"
 import { useAttributes, useCreateAttribute, useDeleteAttribute } from "@/hooks/use-attributes"
 import type { CustomAttributeDefinition } from "@/lib/supabase/types"
 import { Input } from "@/components/ui/input"
@@ -41,12 +41,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
 
 const typeIcons = {
   string: <Type className="h-4 w-4 text-blue-500" />,
   number: <Hash className="h-4 w-4 text-orange-500" />,
   date: <Calendar className="h-4 w-4 text-green-500" />,
-  boolean: <CheckSquare className="h-4 w-4 text-purple-500" />,
+  boolean: <ToggleRight className="h-4 w-4 text-purple-500" />,
 }
 
 export default function ContactsAttributesPage() {
@@ -161,17 +162,37 @@ export default function ContactsAttributesPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="string">Text</SelectItem>
-                      <SelectItem value="number">Number</SelectItem>
-                      <SelectItem value="date">Date</SelectItem>
-                      <SelectItem value="boolean">Boolean (Yes/No)</SelectItem>
+                      <SelectItem value="string">
+                        <div className="flex items-center gap-2">
+                          {typeIcons.string}
+                          <span>Text</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="number">
+                        <div className="flex items-center gap-2">
+                          {typeIcons.number}
+                          <span>Number</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="date">
+                        <div className="flex items-center gap-2">
+                          {typeIcons.date}
+                          <span>Date</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="boolean">
+                        <div className="flex items-center gap-2">
+                          {typeIcons.boolean}
+                          <span>Toggle</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateAttribute} disabled={createAttributeMutation.isPending}>
+                <Button onClick={handleCreateAttribute} disabled={createAttributeMutation.isPending || !newAttribute.name.trim()}>
                   {createAttributeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Create Attribute
                 </Button>
@@ -198,16 +219,18 @@ export default function ContactsAttributesPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredAttributes.map((attr) => (
               <Card key={attr.id} className="group overflow-hidden border border-border/60 transition-all hover:border-border/80">
-                <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    {typeIcons[attr.data_type as keyof typeof typeIcons] || <Settings2 className="h-4 w-4 text-muted-foreground" />}
+                <CardHeader className="flex flex-row items-start justify-between space-y-0">
+                  <div className="flex items-start gap-2 overflow-hidden">
+                    <div className="pt-0.5">
+                      {typeIcons[attr.data_type as keyof typeof typeIcons] || <Settings2 className="h-4 w-4 text-muted-foreground" />}
+                    </div>
                     <div className="overflow-hidden">
                       <CardTitle className="text-sm font-medium truncate">
                         {attr.name}
                       </CardTitle>
-                      <CardDescription className="text-[10px] truncate">
-                        key: {attr.key} • {attr.data_type}
-                      </CardDescription>
+                      <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 mt-0.5 border-border/40 text-muted-foreground bg-transparent font-normal">
+                        {attr.key} • {attr.data_type}
+                      </Badge>
                     </div>
                   </div>
                   <Button
@@ -249,6 +272,7 @@ export default function ContactsAttributesPage() {
           </EmptyContent>
         </Empty>
       )}
+
       <Dialog
         open={showDeleteDialog}
         onOpenChange={(open) => {
@@ -283,7 +307,11 @@ export default function ContactsAttributesPage() {
               <div className="text-sm text-muted-foreground">
                 <div className="flex flex-col gap-1">
                   <div><span className="font-medium">Attribute:</span> {attributeToDelete.name}</div>
-                  <div className="text-[10px]">Key: {attributeToDelete.key} • {attributeToDelete.data_type}</div>
+                  <div className="mt-1">
+                    <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 border-border/40 text-muted-foreground bg-transparent font-normal">
+                      {attributeToDelete.key} • {attributeToDelete.data_type}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             )}

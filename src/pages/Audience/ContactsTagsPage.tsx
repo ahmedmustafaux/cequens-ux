@@ -146,7 +146,7 @@ export default function ContactsTagsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateTag} disabled={createTagMutation.isPending}>
+                <Button onClick={handleCreateTag} disabled={createTagMutation.isPending || !newTagName.trim()}>
                   {createTagMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Create Tag
                 </Button>
@@ -173,10 +173,10 @@ export default function ContactsTagsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredTags.map((tag) => (
               <Card key={tag.id} className="group overflow-hidden border border-border/60 transition-all hover:border-border/80">
-                <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className={cn(
-                      "h-2 w-2 rounded-full",
+                      "h-3 w-3 rounded-full",
                       TAG_COLORS.find(c => c.name === tag.color)?.class || "bg-blue-500"
                     )} />
                     <CardTitle className="text-sm font-medium truncate">
