@@ -1,4 +1,5 @@
 import * as React from "react"
+import { format } from "date-fns"
 import { useNavigate, useLocation } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { PageWrapper } from "@/components/page-wrapper"
@@ -35,6 +36,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
@@ -58,9 +61,13 @@ interface CampaignFormData {
   description: string
   subject: string
   message: string
-  scheduleType: "now" | "scheduled"
+  scheduleType: "now" | "scheduled" | "recurring"
   scheduledDate: string
   scheduledTime: string
+  // Recurring schedule
+  recurringStartDate?: string
+  recurringEndDate?: string
+  recurringSchedule?: Record<string, number[]> // day -> [hours]
   selectedTemplateId: string
   templateVariables: Record<string, string>
   // Condition specific
@@ -189,12 +196,15 @@ export default function CampaignsCreatePage() {
 
   const steps = [
     { id: 0, label: "Details", description: "Campaign information" },
-    { id: 1, label: (location.state as any)?.type === "Condition-based" ? "Targeting" : "Recipients", description: (location.state as any)?.type === "Condition-based" ? "Choose trigger" : "Select audience" },
+    { id: 1, label: (location.state as any)?.type === "Condition based" ? "Targeting" : "Recipients", description: (location.state as any)?.type === "Condition based" ? "Choose trigger" : "Select audience" },
     { id: 2, label: "Content", description: "Message content" },
-    { id: 3, label: "Schedule", description: "Send timing" }
+    { id: 3, label: "Review and Send", description: "Send timing & review" }
   ]
 
-  usePageTitle("Create Campaign")
+  const isEditMode = location.state && (location.state as any).campaign
+  const editCampaignName = isEditMode ? (location.state as any).campaign.name : ""
+
+  usePageTitle(isEditMode ? `Edit ${editCampaignName}` : "Create Campaign")
 
   // Handle page refresh/close
   React.useEffect(() => {
@@ -257,27 +267,102 @@ export default function CampaignsCreatePage() {
   const defaultDate = now.toISOString().split('T')[0]
   const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
+  // Ensure mock segment and templates exist for prefilling
+  const firstSegmentId = segments.length > 0 ? segments[0].id : "all-contacts"
+  const firstTemplateId = mockWhatsAppTemplates.find(t => t.status === "APPROVED")?.id || ""
+
   // Initialize form data
-  const [formData, setFormData] = React.useState<CampaignFormData>({
-    name: (location.state as any)?.name || "",
-    campaignType: (location.state as any)?.type === "Condition-based" ? "condition" : "broadcast",
-    entryPoint: (location.state as any)?.entryPoint || "direct",
-    type: "",
-    status: "Draft",
-    senderId: "",
-    selectedSegmentId: "",
-    recipients: 0,
-    description: "",
-    subject: "",
-    message: "",
-    scheduleType: "now",
-    scheduledDate: defaultDate,
-    scheduledTime: defaultTime,
-    selectedTemplateId: "",
-    templateVariables: {},
-    triggerCategory: "",
-    trigger: "",
-    triggerConfig: {}
+  const [formData, setFormData] = React.useState<CampaignFormData>(() => {
+    const state = location.state as any;
+    const campaign = state?.campaign;
+
+    // If editing an existing campaign, map its fields
+    if (campaign) {
+      const isScheduled = campaign.schedule_type === "scheduled";
+      const isRecurring = campaign.schedule_type === "recurring";
+
+      let scheduledDate = defaultDate;
+      let scheduledTime = defaultTime;
+
+      if (isScheduled && campaign.sent_date) {
+        const dateObj = new Date(campaign.sent_date);
+        scheduledDate = dateObj.toISOString().split('T')[0];
+        scheduledTime = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+      }
+
+      // Hack for visual Edit Mode: 
+      // Because deep template/segment info isn't on the DB object yet, 
+      // we attach fallbacks so the 'Review & Send' step and wizard are fully populated.
+      const mappedChannel = campaign.channel || "";
+      const isWhatsApp = mappedChannel === "Whatsapp";
+
+      return {
+        name: campaign.name || "",
+        campaignType: campaign.type === "Condition based" ? "condition" : "broadcast",
+        entryPoint: "direct",
+        type: mappedChannel,
+        status: campaign.status || "Draft",
+        senderId: "", // Will be auto-selected below
+        selectedSegmentId: firstSegmentId, // Mock selected segment
+        recipients: campaign.recipients || 0,
+        description: "",
+        subject: mappedChannel === "Email" ? `Edit: ${campaign.name}` : "",
+        message: isWhatsApp ? "" : `Resuming draft for ${campaign.name}...`, // Mock message
+        scheduleType: campaign.schedule_type || "now",
+        scheduledDate,
+        scheduledTime,
+        recurringStartDate: defaultDate,
+        recurringEndDate: format(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"), // +1 week
+        recurringSchedule: campaign.recurring_schedule || {
+          "Monday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+          "Tuesday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+          "Wednesday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+          "Thursday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+          "Friday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+          "Saturday": [],
+          "Sunday": []
+        },
+        selectedTemplateId: isWhatsApp ? firstTemplateId : "", // Mock template
+        templateVariables: {},
+        triggerCategory: "",
+        trigger: "",
+        triggerConfig: {}
+      }
+    }
+
+    // Default initialization when creating new
+    return {
+      name: state?.name || "",
+      campaignType: state?.type === "Condition based" ? "condition" : "broadcast",
+      entryPoint: state?.entryPoint || "direct",
+      type: "",
+      status: "Draft",
+      senderId: "",
+      selectedSegmentId: "",
+      recipients: 0,
+      description: "",
+      subject: "",
+      message: "",
+      scheduleType: "now",
+      scheduledDate: defaultDate,
+      scheduledTime: defaultTime,
+      recurringStartDate: defaultDate,
+      recurringEndDate: format(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"), // +1 week
+      recurringSchedule: {
+        "Monday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "Tuesday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "Wednesday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "Thursday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "Friday": [9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "Saturday": [],
+        "Sunday": []
+      },
+      selectedTemplateId: "",
+      templateVariables: {},
+      triggerCategory: "",
+      trigger: "",
+      triggerConfig: {}
+    }
   })
 
   // Get selected segment to calculate recipients
@@ -310,14 +395,21 @@ export default function CampaignsCreatePage() {
     }
   }, [selectedSegment])
 
-  // Check if we have selected contacts from navigation state
+  // Check if we have selected contacts from navigation state OR a saved campaign with recipients
   React.useEffect(() => {
-    const state = location.state as { selectedContactIds?: string[] } | null
+    const state = location.state as { selectedContactIds?: string[], campaign?: any } | null
     if (state?.selectedContactIds && state.selectedContactIds.length > 0) {
       setFormData(prev => ({
         ...prev,
         selectedSegmentId: "temp-selection",
         recipients: state.selectedContactIds!.length
+      }))
+    } else if (state?.campaign && state.campaign.recipients > 0 && !formData.selectedSegmentId) {
+      // Just prefill the visually-friendly "temp-selection" badge if we loaded from DB and have recipient counts
+      setFormData(prev => ({
+        ...prev,
+        selectedSegmentId: "temp-selection",
+        recipients: state.campaign.recipients
       }))
     }
   }, [location.state])
@@ -748,8 +840,16 @@ export default function CampaignsCreatePage() {
     setPendingNavigation(null)
   }
 
-  const handleSave = async () => {
-    if (!validateForm()) {
+  const handleSave = async (isDraft = false) => {
+    // Only require name for drafts
+    if (isDraft) {
+      if (!formData.name.trim()) {
+        setFormErrors({ name: "Campaign name is required to save a draft" })
+        toast.error("Please enter a campaign name")
+        setCurrentStep(0)
+        return
+      }
+    } else if (!validateForm()) {
       toast.error("Please fix the errors in the form")
       // Go to first step with errors
       if (!formData.name.trim() || !formData.type || !formData.senderId.trim()) {
@@ -769,24 +869,37 @@ export default function CampaignsCreatePage() {
         ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString()
         : null
 
+      const sentDate = formData.scheduleType === "now"
+        ? new Date().toISOString()
+        : formData.scheduleType === "recurring"
+          ? (formData.recurringStartDate ? new Date(`${formData.recurringStartDate}T00:00:00`).toISOString() : new Date().toISOString())
+          : scheduledDateTime
+
       const campaignData: Omit<Campaign, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
         name: formData.name.trim(),
-        type: formData.type as "Email" | "SMS" | "Whatsapp",
-        status: formData.scheduleType === "now" ? "Active" : "Draft",
+        type: formData.campaignType === "condition" ? "Condition based" : "Broadcast",
+        channel: formData.type as "Email" | "SMS" | "Whatsapp",
+        status: isDraft ? "Draft" : "Active",
         recipients: formData.recipients,
-        sent_date: formData.scheduleType === "now"
-          ? new Date().toISOString()
-          : scheduledDateTime,
+        sent_date: isDraft ? null : sentDate,
+        schedule_type: formData.scheduleType,
+        recurring_schedule: formData.recurringSchedule,
         open_rate: 0,
         click_rate: 0,
+        delivery_rate: 0,
+        read_rate: 0,
       }
 
       await createCampaignMutation.mutateAsync(campaignData)
       setIsDirty(false) // Reset dirty state after successful save
       toast.success(
-        formData.scheduleType === "scheduled"
-          ? "Campaign scheduled successfully!"
-          : "Campaign created successfully!"
+        isDraft
+          ? "Draft saved successfully!"
+          : formData.scheduleType === "now"
+            ? "Campaign created successfully!"
+            : formData.scheduleType === "recurring"
+              ? "Recurring campaign scheduled successfully!"
+              : "Campaign scheduled successfully!"
       )
       navigate("/engage/campaigns")
     } catch (error) {
@@ -1048,8 +1161,8 @@ export default function CampaignsCreatePage() {
   return (
     <PageWrapper isLoading={isInitialLoading}>
       <PageHeaderWithActions
-        title="Create Campaign"
-        description="Set up and schedule your marketing campaign"
+        title={location.state && (location.state as any).campaign ? `Edit ${(location.state as any).campaign.name}` : "Create Campaign"}
+        description={location.state && (location.state as any).campaign ? "Update your campaign configuration and recipients" : "Set up your campaign details, recipients, and message configuration"}
         isLoading={isInitialLoading}
         actions={
           <Button
@@ -1058,8 +1171,8 @@ export default function CampaignsCreatePage() {
             onClick={handleDiscardClick}
             disabled={createCampaignMutation.isPending || isInitialLoading}
           >
-            <X className="h-4 w-4" />
-            Cancel
+            <X className="h-4 w-4 mr-2" />
+            Discard
           </Button>
         }
       />
@@ -2158,8 +2271,8 @@ export default function CampaignsCreatePage() {
                   {currentStep === 3 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
-                        <CardTitle>Schedule Campaign</CardTitle>
-                        <CardDescription>Choose when to send your campaign</CardDescription>
+                        <CardTitle>Review & Send</CardTitle>
+                        <CardDescription>Review campaign details and choose when to send</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <Field>
@@ -2167,31 +2280,85 @@ export default function CampaignsCreatePage() {
                           <FieldContent>
                             <RadioGroup
                               value={formData.scheduleType}
-                              onValueChange={(value) => handleInputChange("scheduleType", value as "now" | "scheduled")}
+                              onValueChange={(value) => handleInputChange("scheduleType", value as "now" | "scheduled" | "recurring")}
+                              className="grid grid-cols-1 md:grid-cols-3 gap-3"
                             >
-                              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
-                                <RadioGroupItem value="now" id="now" />
-                                <Label htmlFor="now" className="flex-1 cursor-pointer">
-                                  <div className="flex items-center gap-2">
-                                    <Send className="h-4 w-4" />
-                                    <div>
-                                      <p className="font-medium">Send Now</p>
-                                      <p className="text-xs text-muted-foreground">Send immediately when campaign is activated</p>
-                                    </div>
-                                  </div>
-                                </Label>
+                              <div
+                                onClick={() => handleInputChange("scheduleType", "now")}
+                                className={cn(
+                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
+                                  formData.scheduleType === "now" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                  formData.scheduleType === "now" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                  <Send className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm leading-tight">Send Now</p>
+                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Immediate activation</p>
+                                </div>
+                                <div className={cn(
+                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
+                                  formData.scheduleType === "now" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
+                                )}>
+                                  {formData.scheduleType === "now" && <Check className="h-3 w-3" />}
+                                </div>
+                                <RadioGroupItem value="now" id="now" className="sr-only" />
                               </div>
-                              <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
-                                <RadioGroupItem value="scheduled" id="scheduled" />
-                                <Label htmlFor="scheduled" className="flex-1 cursor-pointer">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    <div>
-                                      <p className="font-medium">Schedule for Later</p>
-                                      <p className="text-xs text-muted-foreground">Choose a specific date and time</p>
-                                    </div>
-                                  </div>
-                                </Label>
+
+                              <div
+                                onClick={() => handleInputChange("scheduleType", "scheduled")}
+                                className={cn(
+                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
+                                  formData.scheduleType === "scheduled" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                  formData.scheduleType === "scheduled" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                  <Calendar className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm leading-tight">Schedule</p>
+                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Specific date & time</p>
+                                </div>
+                                <div className={cn(
+                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
+                                  formData.scheduleType === "scheduled" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
+                                )}>
+                                  {formData.scheduleType === "scheduled" && <Check className="h-3 w-3" />}
+                                </div>
+                                <RadioGroupItem value="scheduled" id="scheduled" className="sr-only" />
+                              </div>
+
+                              <div
+                                onClick={() => handleInputChange("scheduleType", "recurring")}
+                                className={cn(
+                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
+                                  formData.scheduleType === "recurring" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                  formData.scheduleType === "recurring" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                  <Clock className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm leading-tight">Recurring</p>
+                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Custom weekly grid</p>
+                                </div>
+                                <div className={cn(
+                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
+                                  formData.scheduleType === "recurring" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
+                                )}>
+                                  {formData.scheduleType === "recurring" && <Check className="h-3 w-3" />}
+                                </div>
+                                <RadioGroupItem value="recurring" id="recurring" className="sr-only" />
                               </div>
                             </RadioGroup>
                           </FieldContent>
@@ -2202,13 +2369,38 @@ export default function CampaignsCreatePage() {
                             <Field>
                               <FieldLabel>Date *</FieldLabel>
                               <FieldContent>
-                                <Input
-                                  type="date"
-                                  value={formData.scheduledDate}
-                                  onChange={(e) => handleInputChange("scheduledDate", e.target.value)}
-                                  min={defaultDate}
-                                  className={formErrors.scheduledDate ? "border-destructive" : ""}
-                                />
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !formData.scheduledDate && "text-muted-foreground",
+                                        formErrors.scheduledDate && "border-destructive"
+                                      )}
+                                    >
+                                      <Calendar className="mr-2 h-4 w-4" />
+                                      {formData.scheduledDate ? format(new Date(formData.scheduledDate), "MMM d, yyyy") : <span>Pick a date</span>}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <CalendarUI
+                                      mode="single"
+                                      selected={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
+                                      onSelect={(date) => {
+                                        if (date) {
+                                          handleInputChange("scheduledDate", format(date, "yyyy-MM-dd"))
+                                        }
+                                      }}
+                                      disabled={(date) => {
+                                        const now = new Date();
+                                        now.setHours(0, 0, 0, 0);
+                                        return date < now;
+                                      }}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                               </FieldContent>
                               {formErrors.scheduledDate && <FieldError>{formErrors.scheduledDate}</FieldError>}
                             </Field>
@@ -2221,6 +2413,217 @@ export default function CampaignsCreatePage() {
                                   onChange={(e) => handleInputChange("scheduledTime", e.target.value)}
                                   className={formErrors.scheduledTime ? "border-destructive" : ""}
                                 />
+                              </FieldContent>
+                            </Field>
+                          </div>
+                        )}
+
+                        {formData.scheduleType === "recurring" && (
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Field>
+                                <FieldLabel>Start Date *</FieldLabel>
+                                <FieldContent>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal",
+                                          !formData.recurringStartDate && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <Calendar className="mr-2 h-4 w-4" />
+                                        {formData.recurringStartDate ? format(new Date(formData.recurringStartDate), "MMM d, yyyy") : <span>Pick a start date</span>}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <CalendarUI
+                                        mode="single"
+                                        selected={formData.recurringStartDate ? new Date(formData.recurringStartDate) : undefined}
+                                        onSelect={(date) => {
+                                          if (date) {
+                                            handleInputChange("recurringStartDate", format(date, "yyyy-MM-dd"))
+                                          }
+                                        }}
+                                        disabled={(date) => {
+                                          const now = new Date();
+                                          now.setHours(0, 0, 0, 0);
+                                          return date < now;
+                                        }}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </FieldContent>
+                              </Field>
+                              <Field>
+                                <FieldLabel>End Date *</FieldLabel>
+                                <FieldContent>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal",
+                                          !formData.recurringEndDate && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <Calendar className="mr-2 h-4 w-4" />
+                                        {formData.recurringEndDate ? format(new Date(formData.recurringEndDate), "MMM d, yyyy") : <span>Pick an end date</span>}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <CalendarUI
+                                        mode="single"
+                                        selected={formData.recurringEndDate ? new Date(formData.recurringEndDate) : undefined}
+                                        onSelect={(date) => {
+                                          if (date) {
+                                            handleInputChange("recurringEndDate", format(date, "yyyy-MM-dd"))
+                                          }
+                                        }}
+                                        disabled={(date) => {
+                                          if (!formData.recurringStartDate) return false;
+                                          return date < new Date(formData.recurringStartDate);
+                                        }}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </FieldContent>
+                              </Field>
+                            </div>
+
+                            <Field>
+                              <FieldLabel>Weekly Schedule *</FieldLabel>
+                              <CardDescription className="mb-4">
+                                Select the hours of the day for each day of the week when you want your campaign to be delivered.
+                              </CardDescription>
+                              <FieldContent>
+                                <div className="border rounded-lg overflow-hidden bg-background">
+                                  <div className="p-4 overflow-x-auto">
+                                    <div className="min-w-[800px]">
+                                      {/* Header with hours */}
+                                      <div className="flex border-b pb-2 mb-2">
+                                        <div className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">Day / Hour</div>
+                                        <div className="flex-1 grid gap-px" style={{ gridTemplateColumns: 'repeat(24, minmax(0, 1fr))' }}>
+                                          {Array.from({ length: 24 }).map((_, i) => (
+                                            <div
+                                              key={i}
+                                              onClick={() => {
+                                                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                                                const allSelected = days.every(day => formData.recurringSchedule?.[day]?.includes(i));
+                                                const newSchedule = { ...(formData.recurringSchedule || {}) };
+
+                                                days.forEach(day => {
+                                                  const currentHours = newSchedule[day] || [];
+                                                  if (allSelected) {
+                                                    newSchedule[day] = currentHours.filter(h => h !== i);
+                                                  } else if (!currentHours.includes(i)) {
+                                                    newSchedule[day] = [...currentHours, i].sort((a, b) => a - b);
+                                                  }
+                                                });
+
+                                                setFormData(prev => ({ ...prev, recurringSchedule: newSchedule }));
+                                                setIsDirty(true);
+                                              }}
+                                              className="text-[10px] text-center text-muted-foreground font-medium hover:text-primary transition-colors cursor-pointer select-none"
+                                              title={`Select all/none for ${i === 0 ? "12am" : i === 12 ? "12pm" : i > 12 ? `${i - 12}` : `${i}`}`}
+                                            >
+                                              {i === 0 ? "12am" : i === 12 ? "12pm" : i > 12 ? `${i - 12}` : `${i}`}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Days */}
+                                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                                        <div key={day} className="flex items-center group h-8 border-b last:border-b-0">
+                                          <div className="w-24 flex-shrink-0 text-xs font-medium group-hover:text-primary transition-colors cursor-default">
+                                            {day}
+                                          </div>
+                                          <div className="flex-1 grid gap-px h-full py-1" style={{ gridTemplateColumns: 'repeat(24, minmax(0, 1fr))' }}>
+                                            {Array.from({ length: 24 }).map((_, hour) => {
+                                              const isSelected = formData.recurringSchedule?.[day]?.includes(hour)
+                                              return (
+                                                <div
+                                                  key={hour}
+                                                  onClick={() => {
+                                                    const currentHours = formData.recurringSchedule?.[day] || []
+                                                    const newHours = isSelected
+                                                      ? currentHours.filter(h => h !== hour)
+                                                      : [...currentHours, hour].sort((a, b) => a - b)
+
+                                                    setFormData(prev => ({
+                                                      ...prev,
+                                                      recurringSchedule: {
+                                                        ...(prev.recurringSchedule || {}),
+                                                        [day]: newHours
+                                                      }
+                                                    }))
+                                                    setIsDirty(true)
+                                                  }}
+                                                  className={cn(
+                                                    "h-full border transition-all cursor-pointer rounded-[2px]",
+                                                    isSelected
+                                                      ? "bg-primary border-primary hover:bg-primary/90"
+                                                      : "bg-muted/70 border-muted-foreground/10 hover:bg-muted/90"
+                                                  )}
+                                                  title={`${day} at ${hour}:00`}
+                                                />
+                                              )
+                                            })}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  {/* Legend & Quick Select */}
+                                  <div className="bg-muted/50 p-3 border-t flex items-center justify-between text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-4">
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 bg-primary rounded-[2px]" />
+                                        <span>Scheduled hours</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 bg-muted border rounded-[2px]" style={{ backgroundColor: 'hsl(var(--muted) / 0.7)' }} />
+                                        <span>Off</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() => {
+                                          const allSelected: Record<string, number[]> = {};
+                                          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach((day: string) => {
+                                            allSelected[day] = Array.from({ length: 24 }, (_, i) => i)
+                                          });
+                                          setFormData(prev => ({ ...prev, recurringSchedule: allSelected }))
+                                          setIsDirty(true)
+                                        }}
+                                      >
+                                        Select All
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-destructive hover:text-destructive"
+                                        onClick={() => {
+                                          const noneSelected: Record<string, number[]> = {};
+                                          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach((day: string) => {
+                                            noneSelected[day] = []
+                                          });
+                                          setFormData(prev => ({ ...prev, recurringSchedule: noneSelected }))
+                                          setIsDirty(true)
+                                        }}
+                                      >
+                                        Clear
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
                               </FieldContent>
                             </Field>
                           </div>
@@ -2241,6 +2644,22 @@ export default function CampaignsCreatePage() {
                             </div>
                           </div>
                         )}
+
+                        {formData.scheduleType === "recurring" && (
+                          <div className="rounded-lg border bg-green-50 dark:bg-green-950/20 p-3">
+                            <div className="flex items-start gap-2">
+                              <Clock className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5" />
+                              <div className="text-sm">
+                                <p className="font-medium text-green-900 dark:text-green-100">
+                                  Recurring Schedule Active
+                                </p>
+                                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                  Campaign will run from {formData.recurringStartDate ? format(new Date(formData.recurringStartDate), "PPP") : "..."} to {formData.recurringEndDate ? format(new Date(formData.recurringEndDate), "PPP") : "..."} during the selected hours.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                       {/* Footer */}
                       <div className="border-t pt-4 px-4 sm:px-4">
@@ -2253,23 +2672,39 @@ export default function CampaignsCreatePage() {
                             <ChevronLeft className="h-4 w-4 mr-2" />
                             <span className="hidden sm:inline">Back</span>
                           </Button>
-                          <Button
-                            onClick={handleSave}
-                            disabled={!canSave || isInitialLoading}
-                            className="flex-shrink-0"
-                          >
-                            <Save className="h-4 w-4 mr-2" />
-                            <span className="hidden sm:inline">
-                              {createCampaignMutation.isPending
-                                ? "Creating..."
-                                : formData.scheduleType === "scheduled"
-                                  ? "Schedule Campaign"
-                                  : "Send Now"}
-                            </span>
-                            <span className="sm:hidden">
-                              {createCampaignMutation.isPending ? "Creating..." : "Save"}
-                            </span>
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleSave(true)}
+                              disabled={isInitialLoading || createCampaignMutation.isPending}
+                              className="flex-shrink-0"
+                            >
+                              <Save className="h-4 w-4 mr-2" />
+                              <span className="hidden sm:inline">Save as Draft</span>
+                              <span className="sm:hidden">Draft</span>
+                            </Button>
+                            <Button
+                              onClick={() => handleSave(false)}
+                              disabled={!canSave || isInitialLoading}
+                              className="flex-shrink-0"
+                            >
+                              {formData.scheduleType === "now" ? (
+                                <Send className="h-4 w-4 mr-2" />
+                              ) : (
+                                <Clock className="h-4 w-4 mr-2" />
+                              )}
+                              <span className="hidden sm:inline">
+                                {createCampaignMutation.isPending
+                                  ? "Creating..."
+                                  : formData.scheduleType === "scheduled" || formData.scheduleType === "recurring"
+                                    ? "Schedule Campaign"
+                                    : "Send Now"}
+                              </span>
+                              <span className="sm:hidden">
+                                {createCampaignMutation.isPending ? "Creating..." : "Save"}
+                              </span>
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </Card>

@@ -37,6 +37,7 @@ import AnalyticsApisPage from '@/pages/Analytics/AnalyticsApisPage'
 // Engage
 import CampaignsPage from '@/pages/Engage/CampaignsPage'
 import CampaignsCreatePage from '@/pages/Engage/CampaignsCreatePage'
+import CampaignDetailPage from '@/pages/Engage/CampaignDetailPage'
 import CampaignsSettingsPage from '@/pages/Engage/CampaignsSettingsPage'
 import CampaignsAiBotsPage from '@/pages/Engage/CampaignsAiBotsPage'
 import CampaignsAutomationPage from '@/pages/Engage/CampaignsAutomationPage'
@@ -242,6 +243,15 @@ function App() {
               <RootLayout>
                 <DashboardLayout>
                   <CampaignsCreatePage />
+                </DashboardLayout>
+              </RootLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/engage/campaigns/:id" element={
+            <ProtectedRoute>
+              <RootLayout>
+                <DashboardLayout>
+                  <CampaignDetailPage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>

@@ -187,8 +187,10 @@ export function PageHeader({
           isCurrent: isLast
         })
       } else if (segment === "create") {
+        const state = location.state as any;
+        const isEditing = state?.campaign?.name;
         breadcrumbs.push({
-          label: "Create New",
+          label: isEditing ? `Edit ${state.campaign.name}` : "Create New",
           href: currentPath,
           isCurrent: isLast
         })
@@ -205,7 +207,7 @@ export function PageHeader({
     })
 
     return breadcrumbs
-  }, [pathname, customBreadcrumbs, breadcrumbOverrides])
+  }, [pathname, customBreadcrumbs, breadcrumbOverrides, location.state])
 
   // Render action button
   const renderActionButton = (action: ActionButton, key: string) => {

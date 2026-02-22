@@ -96,8 +96,11 @@ CREATE TABLE IF NOT EXISTS campaigns (
   type TEXT NOT NULL,
   recipients INTEGER DEFAULT 0,
   sent_date TIMESTAMPTZ,
+  channel TEXT,
   open_rate DECIMAL(5, 2) DEFAULT 0,
   click_rate DECIMAL(5, 2) DEFAULT 0,
+  delivery_rate DECIMAL(5, 2) DEFAULT 0,
+  read_rate DECIMAL(5, 2) DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

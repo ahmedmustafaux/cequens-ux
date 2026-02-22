@@ -67,11 +67,16 @@ export type Campaign = {
   user_id: string;
   name: string;
   status: "Active" | "Draft" | "Completed";
-  type: "Email" | "SMS" | "Whatsapp";
+  type: "Broadcast" | "Condition based";
+  channel: "Email" | "SMS" | "Whatsapp";
   recipients: number;
   sent_date: string | null;
   open_rate: number;
   click_rate: number;
+  delivery_rate: number;
+  read_rate: number;
+  schedule_type?: "now" | "scheduled" | "recurring";
+  recurring_schedule?: Record<string, number[]>;
   created_at: string;
   updated_at: string;
 }
