@@ -71,6 +71,7 @@ interface CampaignFormData {
   selectedTemplateId: string
   templateVariables: Record<string, string>
   // Condition specific
+  selectedFlowId?: string
   triggerCategory: string
   trigger: string
   triggerConfig: Record<string, any>
@@ -324,6 +325,7 @@ export default function CampaignsCreatePage() {
         },
         selectedTemplateId: isWhatsApp ? firstTemplateId : "", // Mock template
         templateVariables: {},
+        selectedFlowId: "",
         triggerCategory: "",
         trigger: "",
         triggerConfig: {}
@@ -359,6 +361,7 @@ export default function CampaignsCreatePage() {
       },
       selectedTemplateId: "",
       templateVariables: {},
+      selectedFlowId: "",
       triggerCategory: "",
       trigger: "",
       triggerConfig: {}
@@ -680,12 +683,18 @@ export default function CampaignsCreatePage() {
       errors.senderId = "Sender ID is required"
     }
 
-    if (!formData.selectedSegmentId) {
-      errors.selectedSegmentId = "Please select an audience"
-    } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
-      errors.selectedSegmentId = "Selected segment has no contacts"
-    } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
-      errors.selectedSegmentId = "No contacts available"
+    if (formData.campaignType === "condition") {
+      if (!formData.selectedFlowId) {
+        errors.selectedFlowId = "Please select a flow"
+      }
+    } else {
+      if (!formData.selectedSegmentId) {
+        errors.selectedSegmentId = "Please select an audience"
+      } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
+        errors.selectedSegmentId = "Selected segment has no contacts"
+      } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+        errors.selectedSegmentId = "No contacts available"
+      }
     }
 
     if (formData.type === "Email" && !formData.subject.trim()) {
@@ -741,11 +750,8 @@ export default function CampaignsCreatePage() {
     } else if (step === 1) {
       // Validate Recipients/Targeting step
       if (formData.campaignType === "condition") {
-        if (!formData.triggerCategory) {
-          errors.triggerCategory = "Trigger source is required"
-        }
-        if (formData.triggerCategory && !formData.trigger) {
-          errors.trigger = "Trigger event is required"
+        if (!formData.selectedFlowId) {
+          errors.selectedFlowId = "Please select a flow"
         }
       } else {
         // Broadcast validation
@@ -949,20 +955,7 @@ export default function CampaignsCreatePage() {
     } else if (currentStep === 1) {
       // Validate Recipients step
       if (formData.campaignType === "condition") {
-        if (!formData.triggerCategory) return false
-        if (!formData.trigger) return false
-
-        // Validate trigger config if enabled
-        const category = triggerCategories.find(c => c.id === formData.triggerCategory)
-        const trigger = category?.triggers.find(t => t.value === formData.trigger)
-
-        if (trigger?.inputs) {
-          for (const input of trigger.inputs) {
-            if (input.required && !formData.triggerConfig[input.name]) {
-              return false
-            }
-          }
-        }
+        if (!formData.selectedFlowId) return false
         return true
       }
       if (!formData.selectedSegmentId) return false
@@ -1661,131 +1654,37 @@ export default function CampaignsCreatePage() {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         {formData.campaignType === "condition" ? (
-                          <div className="grid grid-cols-2 gap-4 h-[450px]">
-                            {/* Left Column: Categories */}
-                            <div className="border rounded-md flex flex-col overflow-hidden bg-muted/10">
-                              <div className="p-3 border-b bg-muted/20 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                                Trigger Source
-                              </div>
-                              <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                                {triggerCategories.map(cat => (
-                                  <button
-                                    key={cat.id}
-                                    onClick={() => setFormData(prev => ({ ...prev, triggerCategory: cat.id, trigger: "" }))}
-                                    className={cn(
-                                      "w-full flex items-start gap-3 p-3 rounded-md text-left transition-all border",
-                                      formData.triggerCategory === cat.id
-                                        ? "bg-primary/5 border-primary/50"
-                                        : "border-transparent hover:bg-primary/5 hover:border-primary/20"
-                                    )}
-                                  >
-                                    <div className={cn(
-                                      "p-2 rounded-md shrink-0 transition-colors",
-                                      formData.triggerCategory === cat.id
-                                        ? "bg-primary/10 text-primary"
-                                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                    )}>
-                                      {cat.icon}
-                                    </div>
-                                    <div>
-                                      <div className="font-medium text-sm">{cat.label}</div>
-                                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cat.description}</div>
-                                    </div>
-                                    {formData.triggerCategory === cat.id && (
-                                      <ChevronRight className="w-4 h-4 ml-auto text-primary mt-1" />
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Right Column: Events */}
-                            <div className="border rounded-md flex flex-col overflow-hidden bg-background">
-                              <div className="p-3 border-b bg-muted/20 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                                Trigger Event
-                              </div>
-                              <div className="flex-1 overflow-y-auto p-2">
-                                {!formData.triggerCategory ? (
-                                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
-                                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                                      <Search className="w-6 h-6 opacity-50" />
-                                    </div>
-                                    <p className="text-sm">Select a trigger source from the left to view available events.</p>
+                          <Field>
+                            <FieldLabel>Select Flow *</FieldLabel>
+                            <FieldContent>
+                              <Select
+                                value={formData.selectedFlowId || ""}
+                                onValueChange={(value) => handleInputChange("selectedFlowId", value)}
+                              >
+                                <SelectTrigger className={formErrors.selectedFlowId ? "border-destructive" : ""}>
+                                  <SelectValue placeholder="Select a flow" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className="text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                                    <p className="px-2 py-4">No flows available.</p>
+                                    <Button
+                                      variant="ghost"
+                                      className="mt-2 text-primary hover:text-primary/90 hover:bg-primary/10"
+                                      onClick={() => window.open("/engage/journey", "_blank", "noopener,noreferrer")}
+                                    >
+                                      Create in Journey Builder
+                                    </Button>
                                   </div>
-                                ) : (
-                                  <div className="space-y-1">
-                                    {(triggerCategories.find(c => c.id === formData.triggerCategory)?.triggers || []).map(t => (
-                                      <button
-                                        key={t.value}
-                                        onClick={() => setFormData(prev => ({ ...prev, trigger: t.value, triggerConfig: {} }))}
-                                        className={cn(
-                                          "w-full flex flex-col gap-3 p-3 rounded-md text-left transition-all border",
-                                          formData.trigger === t.value
-                                            ? "bg-primary/5 border-primary/50"
-                                            : "border-transparent hover:bg-primary/5 hover:border-primary/20"
-                                        )}
-                                      >
-                                        <div className="w-full flex items-center gap-3">
-                                          <div className="flex-1">
-                                            <div className="font-medium text-sm flex items-center gap-2">
-                                              {t.label}
-                                              {formData.trigger === t.value && (
-                                                <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
-                                              )}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground mt-0.5">{t.description}</div>
-                                          </div>
-                                        </div>
-
-                                        {/* Trigger Inputs */}
-                                        {formData.trigger === t.value && t.inputs && (
-                                          <div className="w-full pt-2 border-t border-primary/10 space-y-3 animate-in fade-in slide-in-from-top-1 cursor-default" onClick={e => e.stopPropagation()}>
-                                            {t.inputs.map(input => (
-                                              <div key={input.name} className="space-y-1.5">
-                                                <Label htmlFor={input.name} className="text-xs font-medium text-muted-foreground">
-                                                  {input.label} {input.required && <span className="text-destructive">*</span>}
-                                                </Label>
-                                                {input.type === "select" ? (
-                                                  <Select
-                                                    value={formData.triggerConfig[input.name] || ""}
-                                                    onValueChange={(val) => setFormData(prev => ({
-                                                      ...prev,
-                                                      triggerConfig: { ...prev.triggerConfig, [input.name]: val }
-                                                    }))}
-                                                  >
-                                                    <SelectTrigger className="h-8 text-xs">
-                                                      <SelectValue placeholder={input.placeholder || "Select..."} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                      {input.options?.map(opt => (
-                                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                      ))}
-                                                    </SelectContent>
-                                                  </Select>
-                                                ) : (
-                                                  <Input
-                                                    id={input.name}
-                                                    type={input.type}
-                                                    placeholder={input.placeholder}
-                                                    value={formData.triggerConfig[input.name] || ""}
-                                                    onChange={(e) => setFormData(prev => ({
-                                                      ...prev,
-                                                      triggerConfig: { ...prev.triggerConfig, [input.name]: e.target.value }
-                                                    }))}
-                                                    className="h-8 text-xs bg-background"
-                                                  />
-                                                )}
-                                              </div>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                                </SelectContent>
+                              </Select>
+                            </FieldContent>
+                            {formErrors.selectedFlowId && (
+                              <FieldError>{formErrors.selectedFlowId}</FieldError>
+                            )}
+                            <FieldDescription>
+                              Choose a Journey Builder flow to condition this campaign upon.
+                            </FieldDescription>
+                          </Field>
                         ) : (
                           <Field>
                             <FieldLabel>Select Audience *</FieldLabel>

@@ -15,6 +15,7 @@ import {
   VisibilityState,
 } from "@tanstack/react-table"
 import { MoreHorizontal, Plus, Eye, Edit, Trash2 } from "lucide-react"
+import { EnvelopeSimple, ChatText, WhatsappLogo } from "phosphor-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -313,10 +314,23 @@ function CampaignsPageContent() {
         // If channel is missing but type has a channel name, use that (legacy data)
         const isLegacyChannel = ["Whatsapp", "SMS", "Email"].includes(type);
         const displayChannel = channel || (isLegacyChannel ? type : "—");
+        const renderChannelIcon = (channelName: string) => {
+          switch (channelName) {
+            case "Whatsapp":
+              return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4" />
+            case "Email":
+              return <EnvelopeSimple className="h-4 w-4 text-primary" weight="fill" />
+            case "SMS":
+              return <ChatText className="h-4 w-4 text-primary" weight="fill" />
+            default:
+              return <span className="text-muted-foreground text-xs">{channelName}</span>
+          }
+        }
+
         return (
-          <Badge variant="outline" className="font-normal whitespace-nowrap">
-            {displayChannel}
-          </Badge>
+          <div className="flex items-center">
+            {renderChannelIcon(displayChannel)}
+          </div>
         );
       },
     },
