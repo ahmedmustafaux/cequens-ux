@@ -177,21 +177,12 @@ export default function CampaignDetailPage() {
             >
                 {/* Status Banner */}
                 <div className={cn(
-                    "relative overflow-hidden p-5 rounded-2xl border flex items-center justify-between transition-all duration-300 hover:shadow-md",
-                    isDraft ? "bg-gradient-to-br from-gray-50/80 to-gray-100/50 border-gray-200/60 dark:from-zinc-900/80 dark:to-zinc-800/50 dark:border-zinc-800/60" :
-                        isRecurring ? "bg-gradient-to-br from-emerald-50/80 to-emerald-100/50 border-emerald-200/60 dark:from-emerald-950/40 dark:to-emerald-900/20 dark:border-emerald-900/40" :
-                            isFuture ? "bg-gradient-to-br from-blue-50/80 to-blue-100/50 border-blue-200/60 dark:from-blue-950/40 dark:to-blue-900/20 dark:border-blue-900/40" :
-                                "bg-gradient-to-br from-indigo-50/80 to-indigo-100/50 border-indigo-200/60 dark:from-indigo-950/40 dark:to-indigo-900/20 dark:border-indigo-900/40"
+                    "relative overflow-hidden p-5 rounded-2xl border flex items-center justify-between",
+                    isDraft ? "bg-gray-50/80 border-gray-200/60 dark:bg-zinc-900/80 dark:border-zinc-800/60" :
+                        isRecurring ? "bg-blue-50/80 border-blue-200/60 dark:bg-blue-950/40 dark:border-blue-900/40" :
+                            isFuture ? "bg-gray-50/80 border-gray-200/60 dark:bg-zinc-900/80 dark:border-zinc-800/60" :
+                                "bg-green-50/80 border-green-200/60 dark:bg-green-950/40 dark:border-green-900/40"
                 )}>
-                    {/* Modern background blur/glow effect */}
-                    <div className={cn(
-                        "absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-500",
-                        isDraft ? "bg-gray-400 dark:bg-gray-600" :
-                            isRecurring ? "bg-emerald-500 dark:bg-emerald-600" :
-                                isFuture ? "bg-blue-500 dark:bg-blue-600" :
-                                    "bg-indigo-500 dark:bg-indigo-600"
-                    )} />
-
                     <div className="flex items-center gap-4 relative z-10">
                         <div className={cn(
                             "p-2.5 rounded-xl border shadow-sm backdrop-blur-sm",

@@ -163,11 +163,16 @@ export function PageHeader({
       currentPath += `/${segment}`
       const isLast = index === segments.length - 1
 
+      let href = currentPath;
+      if (href === "/engage") href = "/engage/campaigns";
+      if (href === "/audience") href = "/audience/contacts";
+      if (href === "/support") href = "/support/help";
+
       // Check for override
       if (breadcrumbOverrides[segment]) {
         breadcrumbs.push({
           label: breadcrumbOverrides[segment],
-          href: currentPath,
+          href: href,
           isCurrent: isLast
         })
         return
@@ -177,13 +182,13 @@ export function PageHeader({
       if (segment === "audience") {
         breadcrumbs.push({
           label: "Audience",
-          href: currentPath,
+          href: href,
           isCurrent: isLast
         })
       } else if (segment === "contacts") {
         breadcrumbs.push({
           label: "Contacts",
-          href: currentPath,
+          href: href,
           isCurrent: isLast
         })
       } else if (segment === "create") {
@@ -191,7 +196,7 @@ export function PageHeader({
         const isEditing = state?.campaign?.name;
         breadcrumbs.push({
           label: isEditing ? `Edit ${state.campaign.name}` : "Create New",
-          href: currentPath,
+          href: href,
           isCurrent: isLast
         })
       } else {
@@ -200,7 +205,7 @@ export function PageHeader({
 
         breadcrumbs.push({
           label,
-          href: currentPath,
+          href: href,
           isCurrent: isLast
         })
       }
@@ -270,7 +275,7 @@ export function PageHeader({
                 <Breadcrumb>
                   <BreadcrumbList>
                     {breadcrumbs.map((breadcrumb, index) => (
-                      <div key={breadcrumb.href} className="flex items-center">
+                      <div key={`${breadcrumb.href}-${index}`} className="flex items-center">
                         <BreadcrumbItem>
                           {breadcrumb.isCurrent ? (
                             <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>

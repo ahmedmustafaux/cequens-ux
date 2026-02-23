@@ -14,7 +14,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { MoreHorizontal, Plus, Eye, Edit, Trash2 } from "lucide-react"
+import { MoreHorizontal, Plus, Eye, Edit, Trash2, Megaphone, Zap } from "lucide-react"
 import { EnvelopeSimple, ChatText, WhatsappLogo } from "phosphor-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -689,51 +689,43 @@ function CampaignsPageContent() {
             </div>
             <div className="grid gap-2">
               <Label>Campaign Goal</Label>
-              <RadioGroup
-                value={newCampaignType}
-                onValueChange={(val) => setNewCampaignType(val as "broadcast" | "condition")}
-                className="grid grid-cols-1 gap-4"
-              >
+              <div className="grid grid-cols-2 gap-4">
                 <div
                   className={cn(
-                    "flex flex-row items-start gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all",
-                    newCampaignType === "broadcast" ? "border-primary bg-primary/5" : "border-border"
+                    "flex flex-col items-start gap-3 rounded-lg border-2 p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
+                    newCampaignType === "broadcast" ? "border-primary bg-card" : "border-border border-muted"
                   )}
-                  onClick={() => handleProceedToCreate("broadcast")}
+                  onClick={() => setNewCampaignType("broadcast")}
                 >
-                  <RadioGroupItem value="broadcast" id="broadcast" className="mt-1" />
-                  <Label
-                    htmlFor="broadcast"
-                    className="grid gap-1 leading-none cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="font-semibold">Broadcast Campaign</div>
-                    <div className="text-sm text-muted-foreground font-normal">
-                      Send a one-time message to a list of recipients (SMS, WhatsApp, Email).
+                  <div className="p-3 bg-primary/10 rounded-md">
+                    <Megaphone className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="grid gap-1 leading-none">
+                    <div className="font-semibold">Broadcast</div>
+                    <div className="text-sm text-muted-foreground font-normal mt-1 leading-snug">
+                      Send or schedule a campaign.
                     </div>
-                  </Label>
+                  </div>
                 </div>
 
                 <div
                   className={cn(
-                    "flex flex-row items-start gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all",
-                    newCampaignType === "condition" ? "border-primary bg-primary/5" : "border-border"
+                    "flex flex-col items-start gap-3 rounded-lg border-2 p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
+                    newCampaignType === "condition" ? "border-primary bg-card" : "border-border border-muted"
                   )}
-                  onClick={() => handleProceedToCreate("condition")}
+                  onClick={() => setNewCampaignType("condition")}
                 >
-                  <RadioGroupItem value="condition" id="condition" className="mt-1" />
-                  <Label
-                    htmlFor="condition"
-                    className="grid gap-1 leading-none flex-1 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="font-semibold">Condition based Campaign</div>
-                    <div className="text-sm text-muted-foreground font-normal">
-                      Trigger messages when specific events occur defined by your conditions.
+                  <div className="p-3 bg-primary/10 rounded-md">
+                    <Zap className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="grid gap-1 leading-none">
+                    <div className="font-semibold">Condition based</div>
+                    <div className="text-sm text-muted-foreground font-normal mt-1 leading-snug">
+                      Automate messages using triggers.
                     </div>
-                  </Label>
+                  </div>
                 </div>
-              </RadioGroup>
+              </div>
             </div>
           </div>
           <DialogFooter>
