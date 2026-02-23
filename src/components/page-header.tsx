@@ -32,7 +32,6 @@ import {
   InputGroupAddon
 } from "@/components/ui/input-group"
 import { ActionCenter } from "@/components/action-center"
-import { DevUpdatesDrawer } from "@/components/dev-updates-drawer"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
 
@@ -342,8 +341,6 @@ export function PageHeader({
                   </TooltipContent>
                 </Tooltip>
               )}
-
-              <DevUpdatesDrawer />
 
               {/* Theme Switcher */}
               <ThemeSwitcher />
