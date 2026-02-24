@@ -1778,20 +1778,20 @@ export default function CampaignsCreatePage() {
                                 <RadioGroup
                                   value={formData.recipientSource}
                                   onValueChange={(value: "segments" | "upload" | "manual") => handleInputChange("recipientSource", value)}
-                                  className="flex flex-col sm:flex-row gap-4"
+                                  className="flex flex-col sm:flex-row gap-6"
                                 >
-                                  <div className="flex items-center space-x-2">
+                                  <Field orientation="horizontal" className="w-auto">
                                     <RadioGroupItem value="segments" id="source-segments" />
-                                    <Label htmlFor="source-segments" className="cursor-pointer">Segments</Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
+                                    <FieldLabel htmlFor="source-segments" className="font-normal cursor-pointer">Segments</FieldLabel>
+                                  </Field>
+                                  <Field orientation="horizontal" className="w-auto">
                                     <RadioGroupItem value="upload" id="source-upload" />
-                                    <Label htmlFor="source-upload" className="cursor-pointer">Upload sheet</Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
+                                    <FieldLabel htmlFor="source-upload" className="font-normal cursor-pointer">Upload sheet</FieldLabel>
+                                  </Field>
+                                  <Field orientation="horizontal" className="w-auto">
                                     <RadioGroupItem value="manual" id="source-manual" />
-                                    <Label htmlFor="source-manual" className="cursor-pointer">Manually enter numbers</Label>
-                                  </div>
+                                    <FieldLabel htmlFor="source-manual" className="font-normal cursor-pointer">Manually enter numbers</FieldLabel>
+                                  </Field>
                                 </RadioGroup>
                               </FieldContent>
                             </Field>
@@ -2333,85 +2333,52 @@ export default function CampaignsCreatePage() {
                             <RadioGroup
                               value={formData.scheduleType}
                               onValueChange={(value) => handleInputChange("scheduleType", value as "now" | "scheduled" | "recurring")}
-                              className="grid grid-cols-1 md:grid-cols-3 gap-3"
+                              className="grid grid-cols-1 md:grid-cols-3 gap-4"
                             >
-                              <div
-                                onClick={() => handleInputChange("scheduleType", "now")}
-                                className={cn(
-                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
-                                  formData.scheduleType === "now" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                                  formData.scheduleType === "now" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                )}>
-                                  <Send className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-sm leading-tight">Send Now</p>
-                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Immediate activation</p>
-                                </div>
-                                <div className={cn(
-                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
-                                  formData.scheduleType === "now" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
-                                )}>
-                                  {formData.scheduleType === "now" && <Check className="h-3 w-3" />}
-                                </div>
-                                <RadioGroupItem value="now" id="now" className="sr-only" />
-                              </div>
+                              <Field>
+                                <FieldLabel htmlFor="now" className="cursor-pointer">
+                                  <div data-slot="field" className="flex items-center gap-3">
+                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                      <Send className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm leading-tight">Send Now</p>
+                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Immediate activation</p>
+                                    </div>
+                                    <RadioGroupItem value="now" id="now" />
+                                  </div>
+                                </FieldLabel>
+                              </Field>
 
-                              <div
-                                onClick={() => handleInputChange("scheduleType", "scheduled")}
-                                className={cn(
-                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
-                                  formData.scheduleType === "scheduled" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                                  formData.scheduleType === "scheduled" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                )}>
-                                  <Calendar className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-sm leading-tight">Schedule</p>
-                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Specific date & time</p>
-                                </div>
-                                <div className={cn(
-                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
-                                  formData.scheduleType === "scheduled" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
-                                )}>
-                                  {formData.scheduleType === "scheduled" && <Check className="h-3 w-3" />}
-                                </div>
-                                <RadioGroupItem value="scheduled" id="scheduled" className="sr-only" />
-                              </div>
+                              <Field>
+                                <FieldLabel htmlFor="scheduled" className="cursor-pointer">
+                                  <div data-slot="field" className="flex items-center gap-3">
+                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                      <Calendar className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm leading-tight">Schedule</p>
+                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Specific date & time</p>
+                                    </div>
+                                    <RadioGroupItem value="scheduled" id="scheduled" />
+                                  </div>
+                                </FieldLabel>
+                              </Field>
 
-                              <div
-                                onClick={() => handleInputChange("scheduleType", "recurring")}
-                                className={cn(
-                                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
-                                  formData.scheduleType === "recurring" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                                  formData.scheduleType === "recurring" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                )}>
-                                  <Clock className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-sm leading-tight">Recurring</p>
-                                  <p className="text-[11px] text-muted-foreground line-clamp-1">Custom weekly grid</p>
-                                </div>
-                                <div className={cn(
-                                  "h-4 w-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
-                                  formData.scheduleType === "recurring" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
-                                )}>
-                                  {formData.scheduleType === "recurring" && <Check className="h-3 w-3" />}
-                                </div>
-                                <RadioGroupItem value="recurring" id="recurring" className="sr-only" />
-                              </div>
+                              <Field>
+                                <FieldLabel htmlFor="recurring" className="cursor-pointer">
+                                  <div data-slot="field" className="flex items-center gap-3">
+                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                      <Clock className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm leading-tight">Recurring</p>
+                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Custom weekly grid</p>
+                                    </div>
+                                    <RadioGroupItem value="recurring" id="recurring" />
+                                  </div>
+                                </FieldLabel>
+                              </Field>
                             </RadioGroup>
                           </FieldContent>
                         </Field>
