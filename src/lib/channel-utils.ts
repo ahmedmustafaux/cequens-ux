@@ -277,6 +277,7 @@ export interface EmailConfig {
     domain: string
     apiKey: string
     webhookUrl: string
+    type?: "domain" | "email"
   }
   domains: Array<{
     id: string

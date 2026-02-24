@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Dialog,
@@ -30,15 +31,8 @@ import {
   ExternalLink,
   AlertCircle,
   Copy,
-  Eye,
-  EyeOff,
   Mail,
-  ArrowRight,
   BookOpen,
-  Code,
-  Plus,
-  Trash2,
-  AlertTriangle,
   Globe,
   ShieldCheck,
   RefreshCw,
@@ -66,10 +60,16 @@ export default function ChannelsEmailPage() {
 
   const isInitialLoad = React.useRef(true)
 
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<{
+    domain: string;
+    apiKey: string;
+    webhookUrl: string;
+    type: "domain" | "email";
+  }>({
     domain: "",
     apiKey: "",
     webhookUrl: "",
+    type: "domain",
   })
 
   const [domains, setDomains] = React.useState<EmailConfig["domains"]>([])
@@ -78,7 +78,7 @@ export default function ChannelsEmailPage() {
     const timer = setTimeout(() => {
       const savedConfig = loadEmailConfig()
       if (savedConfig && savedConfig.formData.domain) {
-        setFormData(savedConfig.formData)
+        setFormData({ ...savedConfig.formData, type: savedConfig.formData.type || "domain" })
         setDomains(savedConfig.domains || [])
       }
       setIsLoading(false)
@@ -97,7 +97,7 @@ export default function ChannelsEmailPage() {
   }, [formData, domains])
 
   React.useEffect(() => {
-    if (formData.domain && domains.some(d => d.status === "verified")) {
+    if (domains && domains.length > 0) {
       if (user?.id) {
         addActiveChannelWithSync("email", user.id)
       } else {
@@ -110,7 +110,7 @@ export default function ChannelsEmailPage() {
         removeActiveChannel("email")
       }
     }
-  }, [formData.domain, domains, user?.id])
+  }, [domains, user?.id])
 
   const handleCopy = (text: string, label: string, buttonId: string) => {
     navigator.clipboard.writeText(text)
@@ -148,34 +148,51 @@ export default function ChannelsEmailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!formData.domain ? (
+                {!domains || domains.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 space-y-4">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                       <Mail className="w-8 h-8 text-primary" />
                     </div>
                     <div className="text-center space-y-2">
-                      <h3 className="font-semibold text-lg">Setup Sending Domain</h3>
+                      <h3 className="font-semibold text-lg">Setup Sending {formData.type === 'email' ? 'Email' : 'Domain'}</h3>
                       <p className="text-sm text-muted-foreground max-w-md">
-                        Enter your domain to generate DNS verification records.
+                        Enter your {formData.type === 'email' ? 'email' : 'domain'} to generate DNS verification records.
                       </p>
                     </div>
+
+                    <RadioGroup
+                      value={formData.type}
+                      onValueChange={(val: "domain" | "email") => setFormData(prev => ({ ...prev, type: val, domain: "" }))}
+                      className="flex items-center gap-6 mb-2 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="domain" id="type-domain" />
+                        <Label htmlFor="type-domain" className="cursor-pointer">Domain</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="email" id="type-email" />
+                        <Label htmlFor="type-email" className="cursor-pointer">Email</Label>
+                      </div>
+                    </RadioGroup>
+
                     <div className="flex w-full max-w-sm items-center space-x-2">
                       <Input
-                        placeholder="e.g. mail.vodafone.com.eg"
+                        placeholder={formData.type === 'email' ? "e.g. notifications@vodafone.com.eg" : "e.g. mail.vodafone.com.eg"}
                         value={formData.domain}
                         onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                       />
                       <Button
                         onClick={() => {
                           if (!formData.domain) {
-                            toast.error("Please enter a domain")
+                            toast.error(`Please enter a ${formData.type === 'email' ? 'valid email' : 'domain'}`)
                             return
                           }
                           setIsVerifying(true)
                           setTimeout(() => {
-                            setDomains([
+                            setDomains(prev => [
+                              ...prev,
                               {
-                                id: "dom-1",
+                                id: `dom-${Date.now()}`,
                                 domain: formData.domain,
                                 status: "pending",
                                 spf: false,
@@ -183,19 +200,73 @@ export default function ChannelsEmailPage() {
                                 dmarc: false,
                               }
                             ])
-                            setFormData(prev => ({ ...prev, apiKey: `em_live_${Math.random().toString(36).substring(7)}` }))
+                            setFormData(prev => ({ ...prev, domain: "", apiKey: prev.apiKey || `em_live_${Math.random().toString(36).substring(7)}` }))
                             setIsVerifying(false)
-                            toast.success("Domain records generated")
+                            toast.success(`${formData.type === 'email' ? 'Email' : 'Domain'} records generated`)
                           }, 1000)
                         }}
                         disabled={isVerifying}
                       >
-                        {isVerifying ? "Processing..." : "Continue"}
+                        {isVerifying ? "Processing..." : "Add"}
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    <div className="flex w-full items-center space-x-2 bg-muted/30 p-4 rounded-lg border border-border">
+                      <div className="flex-1 space-y-3">
+                        <RadioGroup
+                          value={formData.type}
+                          onValueChange={(val: "domain" | "email") => setFormData(prev => ({ ...prev, type: val, domain: "" }))}
+                          className="flex items-center gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="domain" id="type-domain-add" />
+                            <Label htmlFor="type-domain-add" className="cursor-pointer">Domain</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="email" id="type-email-add" />
+                            <Label htmlFor="type-email-add" className="cursor-pointer">Email</Label>
+                          </div>
+                        </RadioGroup>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            placeholder={formData.type === 'email' ? "e.g. notifications@vodafone.com.eg" : "e.g. mail.vodafone.com.eg"}
+                            value={formData.domain}
+                            onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                          />
+                          <Button
+                            onClick={() => {
+                              if (!formData.domain) {
+                                toast.error(`Please enter a ${formData.type === 'email' ? 'valid email' : 'domain'}`)
+                                return
+                              }
+                              setIsVerifying(true)
+                              setTimeout(() => {
+                                setDomains(prev => [
+                                  ...prev,
+                                  {
+                                    id: `dom-${Date.now()}`,
+                                    domain: formData.domain,
+                                    status: "pending",
+                                    spf: false,
+                                    dkim: false,
+                                    dmarc: false,
+                                  }
+                                ])
+                                setFormData(prev => ({ ...prev, domain: "", apiKey: prev.apiKey || `em_live_${Math.random().toString(36).substring(7)}` }))
+                                setIsVerifying(false)
+                                toast.success(`${formData.type === 'email' ? 'Email' : 'Domain'} added successfully`)
+                              }, 1000)
+                            }}
+                            disabled={isVerifying}
+                          >
+                            {isVerifying ? "Processing..." : "Add New"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     {domains.map((dom) => (
                       <div key={dom.id} className="p-4 rounded-lg border border-border bg-card space-y-4">
                         <div className="flex items-start justify-between">
@@ -212,7 +283,7 @@ export default function ChannelsEmailPage() {
                               toast.info("Verifying DNS records...")
                               setTimeout(() => {
                                 setDomains(prev => prev.map(d => d.id === dom.id ? { ...d, status: "verified", spf: true, dkim: true, dmarc: true } : d))
-                                toast.success("Domain verified successfully!")
+                                toast.success(`${formData.type === 'email' ? 'Email' : 'Domain'} verified successfully!`)
                               }, 1500)
                             }}
                           >
@@ -221,96 +292,72 @@ export default function ChannelsEmailPage() {
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
-                          {[
-                            { label: "SPF", status: dom.spf },
-                            { label: "DKIM", status: dom.dkim },
-                            { label: "DMARC", status: dom.dmarc },
-                          ].map((rec) => (
-                            <div key={rec.label} className="flex items-center gap-2 bg-muted/50 p-2 rounded border border-border">
-                              <ShieldCheck className={`w-4 h-4 ${rec.status ? "text-success" : "text-muted-foreground"}`} />
-                              <span className="text-xs font-medium">{rec.label}</span>
+                        {formData.type === 'domain' && (
+                          <div className="space-y-3">
+                            <h5 className="text-sm font-semibold">DNS Records</h5>
+                            <div className="space-y-2">
+                              {dom.status === "pending" && (
+                                <Alert variant="default" className="bg-primary/5 border-primary/20 mb-4">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <AlertTitle className="text-sm">Action Required</AlertTitle>
+                                  <AlertDescription className="text-xs">
+                                    Add the DNS records below to your domain registrar's control panel.
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+
+                              {[
+                                { type: "TXT", host: `@`, value: `v=spf1 include:_spf.cequens.com ~all`, ref: "spf" },
+                                { type: "TXT", host: `_dmarc`, value: `v=DMARC1; p=none; rua=mailto:dmarc@cequens.com`, ref: "dmarc" },
+                                { type: "TXT", host: `cequens._domainkey`, value: `v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCg...`, ref: "dkim" },
+                              ].map((record, i) => {
+                                const isVerified = dom[record.ref as "spf" | "dkim" | "dmarc"];
+                                return (
+                                  <div key={i} className={`p-3 rounded-md border ${isVerified ? 'bg-success/5 border-success/20' : 'bg-muted/50 border-border'} space-y-2`}>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="font-mono text-[10px]">{record.type}</Badge>
+                                        <span className="text-xs font-semibold">{record.host}</span>
+                                      </div>
+                                      {isVerified ? (
+                                        <div className="flex items-center gap-1 text-success text-xs font-medium">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          Verified
+                                        </div>
+                                      ) : (
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Pending Verify</span>
+                                      )}
+                                    </div>
+                                    <div className="flex bg-background rounded border border-border mt-1">
+                                      <code className="flex-1 p-2 text-xs font-mono text-muted-foreground overflow-x-auto whitespace-nowrap">
+                                        {record.value}
+                                      </code>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="rounded-l-none border-l h-auto py-1 px-3"
+                                        onClick={() => handleCopy(record.value, `${record.type} Record`, `copy-rec-${i}`)}
+                                      >
+                                        {copiedButtonId === `copy-rec-${i}` ? <CheckCircle2 className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          ))}
-                        </div>
-
-                        {dom.status === "pending" && (
-                          <Alert variant="default" className="bg-primary/5 border-primary/20">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle className="text-sm">Action Required</AlertTitle>
-                            <AlertDescription className="text-xs">
-                              Add the DNS records below to your domain registrar's control panel.
-                            </AlertDescription>
-                          </Alert>
+                          </div>
                         )}
-
                         <Separator />
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setShowDisconnectDialog(true)}>
-                            Remove Domain
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setDomains(prev => prev.filter(d => d.id !== dom.id))
+                            toast.info(`Config removed`)
+                          }}>
+                            Remove Configuration
                           </Button>
                         </div>
                       </div>
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Section 2: API */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Email API</CardTitle>
-                <CardDescription>Send transactional emails via API or SMTP</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!formData.apiKey || !domains.some(d => d.status === "verified") ? (
-                  <div className="text-center py-6 text-muted-foreground text-sm">
-                    Complete domain verification to access API credentials.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">API Key</Label>
-                      <div className="flex gap-2">
-                        <Input readOnly value={formData.apiKey} className="font-mono text-xs" />
-                        <Button variant="outline" size="sm" onClick={() => handleCopy(formData.apiKey, "API Key", "copy-api")}>
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <Tabs defaultValue="curl">
-                      <TabsList>
-                        <TabsTrigger value="curl">cURL</TabsTrigger>
-                        <TabsTrigger value="smtp">SMTP</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="curl" className="mt-4">
-                        <div className="relative rounded-lg bg-muted p-4 font-mono text-xs overflow-x-auto">
-                          <pre>
-                            {`curl -X POST "https://apis.cequens.com/email/v1/send" \\
-  -H "Authorization: Bearer ${formData.apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "from": "notifications@${domains.find(d => d.status === "verified")?.domain || 'yourdomain.com'}",
-    "to": "customer@example.com",
-    "subject": "Order Confirmation",
-    "html": "<h1>Thank you for your order!</h1>"
-  }'`}
-                          </pre>
-                        </div>
-                      </TabsContent>
-                      <TabsContent value="smtp" className="mt-4">
-                        <div className="rounded-lg bg-muted p-4 space-y-2 text-xs font-mono">
-                          <p><span className="text-muted-foreground">Host:</span> smtp.cequens.com</p>
-                          <p><span className="text-muted-foreground">Port:</span> 587 (TLS)</p>
-                          <p><span className="text-muted-foreground">Username:</span> {formData.apiKey}</p>
-                          <p><span className="text-muted-foreground">Password:</span> (Your API Secret)</p>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
                   </div>
                 )}
               </CardContent>
@@ -356,12 +403,17 @@ export default function ChannelsEmailPage() {
       )}
 
       {/* Disconnect Dialog */}
-      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+      <Dialog open={showDisconnectDialog} onOpenChange={(open) => {
+        setShowDisconnectDialog(open)
+        if (!open) {
+          setTimeout(() => setDisconnectConfirmation(""), 200)
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Domain</DialogTitle>
+            <DialogTitle>Remove {formData.type === 'email' ? 'Email' : 'Domain'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove this domain? You will no longer be able to send emails from it.
+              Are you sure you want to remove this {formData.type === 'email' ? 'email' : 'domain'}? You will no longer be able to send emails from it.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -380,7 +432,7 @@ export default function ChannelsEmailPage() {
               variant="destructive"
               disabled={disconnectConfirmation !== "remove"}
               onClick={() => {
-                setFormData({ domain: "", apiKey: "", webhookUrl: "" })
+                setFormData({ domain: "", apiKey: "", webhookUrl: "", type: "domain" })
                 setDomains([])
                 clearEmailConfig()
                 setShowDisconnectDialog(false)

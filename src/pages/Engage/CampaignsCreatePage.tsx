@@ -23,6 +23,7 @@ import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { MentionsTextarea } from "@/components/ui/mentions-textarea"
 import { useCreateCampaign } from "@/hooks/use-campaigns"
 import { useSegments } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
@@ -50,12 +51,16 @@ import { IPhoneMockup } from "react-device-mockup"
 import { mockWhatsAppTemplates, type WhatsAppTemplate, type WhatsAppTemplateVariable, type WhatsAppTemplateCategory } from "@/data/mock-data"
 import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter, ShoppingCart, User, Zap, Gift, AlertTriangle, CreditCard, Activity } from "lucide-react"
 
+import { ContactsCsvImportDrawer } from "@/components/contacts-csv-import-drawer"
+
 interface CampaignFormData {
   name: string
   type: "Email" | "SMS" | "Whatsapp" | ""
   campaignType: "broadcast" | "condition"
   status: "Draft" | "Active" | "Completed"
   senderId: string
+  recipientSource: "segments" | "upload" | "manual"
+  manualNumbers: string
   selectedSegmentId: string
   recipients: number
   description: string
@@ -78,6 +83,26 @@ interface CampaignFormData {
   entryPoint?: string
 }
 
+// Helper to strip react-mentions markup for length and display
+const getPlainTextMessage = (msg: string) => {
+  if (!msg) return "";
+  return msg.replace(/@\[([^\]]+)\]\(([^)]+)\)/g, '@$2');
+};
+
+const getPreviewMessage = (msg: string) => {
+  if (!msg) return "";
+  const mockData: Record<string, string> = {
+    firstName: "John",
+    lastName: "Doe",
+    phoneNumber: "+1234567890",
+    email: "john@example.com",
+    companyName: "Acme Corp"
+  };
+  return msg.replace(/@\[([^\]]+)\]\(([^)]+)\)/g, (match, display, id) => {
+    return mockData[id] || `[${display}]`;
+  });
+};
+
 export default function CampaignsCreatePage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -98,6 +123,7 @@ export default function CampaignsCreatePage() {
   const [templateSearchQuery, setTemplateSearchQuery] = React.useState("")
   const [selectedTemplateCategory, setSelectedTemplateCategory] = React.useState<WhatsAppTemplateCategory | "ALL">("ALL")
   const [hoveredTemplateId, setHoveredTemplateId] = React.useState<string | null>(null)
+  const [isCsvImportDrawerOpen, setIsCsvImportDrawerOpen] = React.useState(false)
 
   interface TriggerInput {
     name: string
@@ -304,6 +330,8 @@ export default function CampaignsCreatePage() {
         type: mappedChannel,
         status: campaign.status || "Draft",
         senderId: "", // Will be auto-selected below
+        recipientSource: "segments" as const,
+        manualNumbers: "",
         selectedSegmentId: firstSegmentId, // Mock selected segment
         recipients: campaign.recipients || 0,
         description: "",
@@ -340,6 +368,8 @@ export default function CampaignsCreatePage() {
       type: "",
       status: "Draft",
       senderId: "",
+      recipientSource: "segments",
+      manualNumbers: "",
       selectedSegmentId: "",
       recipients: 0,
       description: "",
@@ -383,20 +413,28 @@ export default function CampaignsCreatePage() {
     return segments.find(s => s.id === formData.selectedSegmentId) || null
   }, [segments, formData.selectedSegmentId, allContacts, location.state])
 
-  // Calculate recipients from selected segment
+  // Calculate recipients from selected segment or manual input
   React.useEffect(() => {
-    if (selectedSegment) {
+    if (formData.recipientSource === "segments") {
+      if (selectedSegment) {
+        setFormData(prev => ({
+          ...prev,
+          recipients: selectedSegment.contact_ids?.length || 0
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          recipients: 0
+        }))
+      }
+    } else if (formData.recipientSource === "manual") {
+      const numbers = formData.manualNumbers.split(',').map(n => n.trim()).filter(n => n !== "")
       setFormData(prev => ({
         ...prev,
-        recipients: selectedSegment.contact_ids?.length || 0
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        recipients: 0
+        recipients: numbers.length
       }))
     }
-  }, [selectedSegment])
+  }, [selectedSegment, formData.recipientSource, formData.manualNumbers])
 
   // Check if we have selected contacts from navigation state OR a saved campaign with recipients
   React.useEffect(() => {
@@ -448,17 +486,37 @@ export default function CampaignsCreatePage() {
           }
         }
 
-        // TODO: Load SMS sender IDs when SMS channel is implemented
-        // if (channels.includes("sms")) {
-        //   const smsConfig = loadSmsConfig()
-        //   // Add SMS sender IDs
-        // }
+        // Load SMS sender IDs
+        if (channels.includes("sms")) {
+          allSenderIds.push({
+            id: "CEQUENS",
+            label: "CEQUENS",
+            channel: "sms",
+            status: "verified"
+          })
+          allSenderIds.push({
+            id: "Promo",
+            label: "Promo",
+            channel: "sms",
+            status: "verified"
+          })
+        }
 
-        // TODO: Load Email sender IDs when Email channel is implemented
-        // if (channels.includes("email")) {
-        //   const emailConfig = loadEmailConfig()
-        //   // Add Email sender IDs
-        // }
+        // Load Email sender IDs
+        if (channels.includes("email")) {
+          allSenderIds.push({
+            id: "marketing@company.com",
+            label: "marketing@company.com",
+            channel: "email",
+            status: "verified"
+          })
+          allSenderIds.push({
+            id: "support@company.com",
+            label: "support@company.com",
+            channel: "email",
+            status: "verified"
+          })
+        }
 
         setSenderIds(allSenderIds)
       } catch (error) {
@@ -575,8 +633,16 @@ export default function CampaignsCreatePage() {
   }
 
   const renderRecipientsDescription = () => {
-    if (!selectedSegment) {
+    if (formData.recipientSource === "segments" && !selectedSegment) {
       return "Select a segment to target your campaign"
+    }
+
+    if (formData.recipientSource === "upload") {
+      return "Upload a CSV file containing your contacts"
+    }
+
+    if (formData.recipientSource === "manual" && formData.recipients === 0) {
+      return "Enter mobile numbers to target"
     }
 
     const recipientCount = formData.recipients.toLocaleString()
@@ -664,7 +730,7 @@ export default function CampaignsCreatePage() {
     }
   }
 
-  const getMessageLength = formData.message.length
+  const getMessageLength = getPlainTextMessage(formData.message).length
   const characterLimit = getCharacterLimit()
   const isOverLimit = getMessageLength > characterLimit
 
@@ -688,12 +754,25 @@ export default function CampaignsCreatePage() {
         errors.selectedFlowId = "Please select a flow"
       }
     } else {
-      if (!formData.selectedSegmentId) {
-        errors.selectedSegmentId = "Please select an audience"
-      } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
-        errors.selectedSegmentId = "Selected segment has no contacts"
-      } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
-        errors.selectedSegmentId = "No contacts available"
+      if (formData.recipientSource === "segments") {
+        if (!formData.selectedSegmentId) {
+          errors.selectedSegmentId = "Please select an audience"
+        } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
+          errors.selectedSegmentId = "Selected segment has no contacts"
+        } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+          errors.selectedSegmentId = "No contacts available"
+        }
+      } else if (formData.recipientSource === "manual") {
+        if (!formData.manualNumbers.trim()) {
+          errors.manualNumbers = "Please enter at least one number"
+        } else if (formData.recipients === 0) {
+          errors.manualNumbers = "Format is invalid, please use comma-separated numbers"
+        }
+      } else if (formData.recipientSource === "upload") {
+        // Validation could be added here if file upload state tracked
+        if (formData.recipients === 0 && !isCsvImportDrawerOpen) {
+          errors.upload = "Please select/upload a list"
+        }
       }
     }
 
@@ -715,7 +794,7 @@ export default function CampaignsCreatePage() {
       }
     } else {
       // Message validation for non-WhatsApp campaigns
-      if (!formData.message.trim()) {
+      if (!getPlainTextMessage(formData.message).trim()) {
         errors.message = "Message content is required"
       } else if (isOverLimit) {
         errors.message = `Message exceeds ${characterLimit} character limit`
@@ -755,14 +834,22 @@ export default function CampaignsCreatePage() {
         }
       } else {
         // Broadcast validation
-        if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
-          errors.selectedSegmentId = "Selected segment has no contacts"
-        }
-        if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
-          errors.selectedSegmentId = "No contacts available"
-        }
-        if (!formData.selectedSegmentId) {
-          errors.selectedSegmentId = "Please select an audience"
+        if (formData.recipientSource === "segments") {
+          if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.selectedSegmentId !== "temp-selection" && formData.recipients === 0) {
+            errors.selectedSegmentId = "Selected segment has no contacts"
+          }
+          if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+            errors.selectedSegmentId = "No contacts available"
+          }
+          if (!formData.selectedSegmentId) {
+            errors.selectedSegmentId = "Please select an audience"
+          }
+        } else if (formData.recipientSource === "manual") {
+          if (!formData.manualNumbers.trim()) {
+            errors.manualNumbers = "Please enter at least one number"
+          } else if (formData.recipients === 0) {
+            errors.manualNumbers = "Format is invalid, please use comma-separated numbers"
+          }
         }
       }
     } else if (step === 2) {
@@ -785,7 +872,7 @@ export default function CampaignsCreatePage() {
         }
       } else {
         // Message validation for non-WhatsApp campaigns
-        if (!formData.message.trim()) {
+        if (!getPlainTextMessage(formData.message).trim()) {
           errors.message = "Message content is required"
         } else if (isOverLimit) {
           errors.message = `Message exceeds ${characterLimit} character limit`
@@ -862,7 +949,9 @@ export default function CampaignsCreatePage() {
         setCurrentStep(0)
       } else if (!formData.selectedSegmentId) {
         setCurrentStep(1)
-      } else if (formData.type === "Email" && !formData.subject.trim() || !formData.message.trim()) {
+      } else if (formData.type === "Email" && (!formData.subject.trim() || !getPlainTextMessage(formData.message).trim() || isOverLimit)) {
+        setCurrentStep(2)
+      } else if (formData.type === "SMS" && (!getPlainTextMessage(formData.message).trim() || isOverLimit)) {
         setCurrentStep(2)
       } else {
         setCurrentStep(3)
@@ -1091,8 +1180,7 @@ export default function CampaignsCreatePage() {
     if (formData.type === "Whatsapp" && selectedTemplate) {
       return generateMessageFromTemplate(selectedTemplate, formData.templateVariables)
     }
-    if (!formData.message) return ""
-    return formData.message
+    return getPreviewMessage(formData.message)
   }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate])
 
   const canSave = React.useMemo(() => {
@@ -1106,7 +1194,7 @@ export default function CampaignsCreatePage() {
       return hasBasicFields && hasTemplate && allRequiredVarsFilled && !createCampaignMutation.isPending
     }
 
-    return hasBasicFields && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
+    return hasBasicFields && getPlainTextMessage(formData.message).trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
   }, [formData, templateVariables, isOverLimit, createCampaignMutation.isPending])
 
   // Get template category badge color
@@ -1686,64 +1774,139 @@ export default function CampaignsCreatePage() {
                             </FieldDescription>
                           </Field>
                         ) : (
-                          <Field>
-                            <FieldLabel>Select Audience *</FieldLabel>
-                            <FieldContent>
-                              <Select
-                                value={formData.selectedSegmentId}
-                                onValueChange={(value) => handleInputChange("selectedSegmentId", value)}
-                                disabled={segmentsLoading}
-                              >
-                                <SelectTrigger className={formErrors.selectedSegmentId ? "border-destructive" : ""}>
-                                  <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"}>
-                                    {renderSelectedSegmentValue()}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {/* All Contacts Option */}
-                                  <SelectItem value="all-contacts" className="pr-2 pl-2 [&>span:first-child]:hidden">
-                                    <div className="flex items-center gap-2 w-full">
-                                      <div className="w-[120px] truncate">All Contacts</div>
-                                      <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-                                        <Badge variant="secondary">
-                                          {allContacts.length} contacts
-                                        </Badge>
-                                        <SelectPrimitive.ItemIndicator>
-                                          <Check className="h-4 w-4" />
-                                        </SelectPrimitive.ItemIndicator>
-                                      </div>
-                                    </div>
-                                  </SelectItem>
+                          <div className="space-y-6">
+                            <Field>
+                              <FieldLabel>Select Audience Method *</FieldLabel>
+                              <FieldContent>
+                                <RadioGroup
+                                  value={formData.recipientSource}
+                                  onValueChange={(value: "segments" | "upload" | "manual") => handleInputChange("recipientSource", value)}
+                                  className="flex flex-col sm:flex-row gap-4"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="segments" id="source-segments" />
+                                    <Label htmlFor="source-segments" className="cursor-pointer">Segments</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="upload" id="source-upload" />
+                                    <Label htmlFor="source-upload" className="cursor-pointer">Upload sheet</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="manual" id="source-manual" />
+                                    <Label htmlFor="source-manual" className="cursor-pointer">Manually enter numbers</Label>
+                                  </div>
+                                </RadioGroup>
+                              </FieldContent>
+                            </Field>
 
-                                  {/* Segments List */}
-                                  {segmentsLoading ? (
-                                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                                      Loading segments...
-                                    </div>
-                                  ) : segments.length === 0 ? (
-                                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                                      No segments available. <br />
-                                      <Button
-                                        variant="link"
-                                        className="mt-2 h-auto p-0"
-                                        onClick={() => navigate("/contacts/segments")}
-                                      >
-                                        Create a segment first
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    segments.map(renderSegmentItem)
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </FieldContent>
-                            {formErrors.selectedSegmentId && (
-                              <FieldError>{formErrors.selectedSegmentId}</FieldError>
+                            {formData.recipientSource === "segments" && (
+                              <Field>
+                                <FieldLabel>Select Segment *</FieldLabel>
+                                <FieldContent>
+                                  <Select
+                                    value={formData.selectedSegmentId}
+                                    onValueChange={(value) => handleInputChange("selectedSegmentId", value)}
+                                    disabled={segmentsLoading}
+                                  >
+                                    <SelectTrigger className={formErrors.selectedSegmentId ? "border-destructive" : ""}>
+                                      <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"}>
+                                        {renderSelectedSegmentValue()}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {/* All Contacts Option */}
+                                      <SelectItem value="all-contacts" className="pr-2 pl-2 [&>span:first-child]:hidden">
+                                        <div className="flex items-center gap-2 w-full">
+                                          <div className="w-[120px] truncate">All Contacts</div>
+                                          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+                                            <Badge variant="secondary">
+                                              {allContacts.length} contacts
+                                            </Badge>
+                                            <SelectPrimitive.ItemIndicator>
+                                              <Check className="h-4 w-4" />
+                                            </SelectPrimitive.ItemIndicator>
+                                          </div>
+                                        </div>
+                                      </SelectItem>
+
+                                      {/* Segments List */}
+                                      {segmentsLoading ? (
+                                        <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                                          Loading segments...
+                                        </div>
+                                      ) : segments.length === 0 ? (
+                                        <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                                          No segments available. <br />
+                                          <Button
+                                            variant="link"
+                                            className="mt-2 h-auto p-0"
+                                            onClick={() => navigate("/contacts/segments")}
+                                          >
+                                            Create a segment first
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        segments.map(renderSegmentItem)
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                </FieldContent>
+                                {formErrors.selectedSegmentId && (
+                                  <FieldError>{formErrors.selectedSegmentId}</FieldError>
+                                )}
+                              </Field>
                             )}
-                            <FieldDescription>
+
+                            {formData.recipientSource === "upload" && (
+                              <Field>
+                                <FieldLabel>Upload sheet *</FieldLabel>
+                                <FieldContent>
+                                  <div className="flex flex-col gap-2 items-start">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setIsCsvImportDrawerOpen(true)}
+                                    >
+                                      Upload CSV
+                                    </Button>
+                                    {formErrors.upload && (
+                                      <FieldError>{formErrors.upload}</FieldError>
+                                    )}
+                                    <p className="text-sm text-muted-foreground">
+                                      Upload a CSV file to create a segment. You can then select it using the Segments option.
+                                    </p>
+                                  </div>
+                                </FieldContent>
+                              </Field>
+                            )}
+
+                            {formData.recipientSource === "manual" && (
+                              <Field>
+                                <FieldLabel>Manual numbers *</FieldLabel>
+                                <FieldContent>
+                                  <Textarea
+                                    placeholder="+1234567890, +0987654321..."
+                                    value={formData.manualNumbers}
+                                    onChange={(e) => handleInputChange("manualNumbers", e.target.value)}
+                                    className={cn(
+                                      "min-h-[120px]",
+                                      formErrors.manualNumbers && "border-destructive"
+                                    )}
+                                  />
+                                </FieldContent>
+                                {formErrors.manualNumbers ? (
+                                  <FieldError>{formErrors.manualNumbers}</FieldError>
+                                ) : (
+                                  <FieldDescription>
+                                    Enter phone numbers separated by commas.
+                                  </FieldDescription>
+                                )}
+                              </Field>
+                            )}
+
+                            <FieldDescription className="pt-2 border-t">
                               {renderRecipientsDescription()}
                             </FieldDescription>
-                          </Field>
+                          </div>
                         )}
                       </CardContent>
                       {/* Footer */}
@@ -2076,46 +2239,63 @@ export default function CampaignsCreatePage() {
                           </div>
                         )}
 
-                        {/* Non-WhatsApp Message Input */}
-                        {formData.type !== "Whatsapp" && (
-                          <Field>
-                            <FieldLabel>
-                              Message Content *
-                              {formData.type && (
-                                <span className="ml-2 text-xs text-muted-foreground font-normal">
-                                  (Max {characterLimit.toLocaleString()} characters)
-                                </span>
-                              )}
-                            </FieldLabel>
-                            <FieldContent>
+                        <Field>
+                          <FieldLabel>
+                            Message Content *
+                            {formData.type && (
+                              <span className="ml-2 text-xs text-muted-foreground font-normal">
+                                (Max {characterLimit.toLocaleString()} characters)
+                              </span>
+                            )}
+                          </FieldLabel>
+                          <FieldContent>
+                            {(formData.type === "Email" || formData.type === "SMS") ? (
+                              <div className="space-y-2">
+                                <MentionsTextarea
+                                  value={formData.message}
+                                  onChange={(val) => handleInputChange("message", val)}
+                                  placeholder={
+                                    formData.type === "Email"
+                                      ? "Write your email message here... (Type @ to insert attributes)"
+                                      : "Write your SMS message here... (Type @ to insert attributes)"
+                                  }
+                                  className={cn(
+                                    formErrors.message && "border-destructive",
+                                    isOverLimit && "border-destructive"
+                                  )}
+                                  mentions={[
+                                    { id: 'firstName', display: 'First Name' },
+                                    { id: 'lastName', display: 'Last Name' },
+                                    { id: 'phoneNumber', display: 'Phone Number' },
+                                    { id: 'email', display: 'Email' },
+                                    { id: 'companyName', display: 'Company Name' }
+                                  ]}
+                                />
+                                <p className="text-xs text-muted-foreground">Type <strong>@</strong> to mention contact attributes like First Name or Phone Number.</p>
+                              </div>
+                            ) : (
                               <Textarea
                                 id="message"
                                 value={formData.message}
                                 onChange={(e) => handleInputChange("message", e.target.value)}
-                                placeholder={
-                                  formData.type === "Email"
-                                    ? "Write your email message here..."
-                                    : formData.type === "SMS"
-                                      ? "Write your SMS message here (160 characters recommended)..."
-                                      : "Write your message here..."
-                                }
+                                placeholder="Write your message here..."
                                 className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
                                 maxLength={characterLimit + 100}
                               />
-                            </FieldContent>
-                            {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
-                            <FieldDescription>
-                              <span className={isOverLimit ? "text-destructive" : ""}>
-                                {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
-                                {formData.type === "SMS" && getMessageLength > 160 && (
-                                  <span className="ml-2 text-muted-foreground">
-                                    ({Math.ceil(getMessageLength / 160)} SMS)
-                                  </span>
-                                )}
-                              </span>
-                            </FieldDescription>
-                          </Field>
-                        )}
+                            )}
+                          </FieldContent>
+                          {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
+                          <FieldDescription>
+                            <span className={isOverLimit ? "text-destructive" : ""}>
+                              {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
+                              {formData.type === "SMS" && getMessageLength > 160 && (
+                                <span className="ml-2 text-muted-foreground">
+                                  ({Math.ceil(getMessageLength / 160)} SMS)
+                                </span>
+                              )}
+                            </span>
+                          </FieldDescription>
+                        </Field>
 
                         {/* Email Preview (keep existing for Email type) */}
                         {formData.type === "Email" && formData.message && (
