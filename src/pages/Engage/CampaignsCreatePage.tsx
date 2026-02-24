@@ -1881,7 +1881,7 @@ export default function CampaignsCreatePage() {
                                 <FieldLabel>Manual numbers *</FieldLabel>
                                 <FieldContent>
                                   <Textarea
-                                    placeholder="+1234567890, +0987654321..."
+                                    placeholder="Add a phone number + country code, Comma separated."
                                     value={formData.manualNumbers}
                                     onChange={(e) => handleInputChange("manualNumbers", e.target.value)}
                                     className={cn(
@@ -1894,13 +1894,13 @@ export default function CampaignsCreatePage() {
                                   <FieldError>{formErrors.manualNumbers}</FieldError>
                                 ) : (
                                   <FieldDescription>
-                                    Enter phone numbers separated by commas.
+                                    (e.g. +201012345678, +201012345678)
                                   </FieldDescription>
                                 )}
                               </Field>
                             )}
 
-                            <FieldDescription className="pt-2 border-t">
+                            <FieldDescription className="p-3 border rounded-md bg-muted/50 mt-2">
                               {renderRecipientsDescription()}
                             </FieldDescription>
                           </div>
