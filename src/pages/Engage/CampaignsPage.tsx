@@ -688,21 +688,20 @@ function CampaignsPageContent() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Campaign Goal</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div
                   className={cn(
-                    "flex flex-col items-start gap-3 rounded-lg border-2 p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
+                    "flex flex-col items-start gap-4 rounded-lg border-2 p-3 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
                     newCampaignType === "broadcast" ? "border-primary bg-card" : "border-border border-muted"
                   )}
                   onClick={() => setNewCampaignType("broadcast")}
                 >
-                  <div className="p-3 bg-primary/10 rounded-md">
-                    <Megaphone className="w-6 h-6 text-primary" />
+                  <div className="p-2 bg-primary/10 rounded-md">
+                    <Megaphone className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="grid gap-1 leading-none">
-                    <div className="font-semibold">Broadcast</div>
-                    <div className="text-sm text-muted-foreground font-normal mt-1 leading-snug">
+                  <div className="grid leading-none">
+                    <div className="font-semibold text-sm">Broadcast</div>
+                    <div className="text-xs text-muted-foreground font-normal mt-0.5 leading-snug">
                       Send or schedule a campaign.
                     </div>
                   </div>
@@ -710,17 +709,17 @@ function CampaignsPageContent() {
 
                 <div
                   className={cn(
-                    "flex flex-col items-start gap-3 rounded-lg border-2 p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
+                    "flex flex-col items-start gap-4 rounded-lg border-2 p-3 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-all text-left",
                     newCampaignType === "condition" ? "border-primary bg-card" : "border-border border-muted"
                   )}
                   onClick={() => setNewCampaignType("condition")}
                 >
-                  <div className="p-3 bg-primary/10 rounded-md">
-                    <Zap className="w-6 h-6 text-primary" />
+                  <div className="p-2 bg-primary/10 rounded-md">
+                    <Zap className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="grid gap-1 leading-none">
-                    <div className="font-semibold">Condition based</div>
-                    <div className="text-sm text-muted-foreground font-normal mt-1 leading-snug">
+                  <div className="grid leading-none">
+                    <div className="font-semibold text-sm">Condition-based</div>
+                    <div className="text-xs text-muted-foreground font-normal mt-0.5 leading-snug">
                       Automate messages using triggers.
                     </div>
                   </div>
