@@ -3,11 +3,12 @@ import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
-import { 
-  pageVariants, 
+import {
+  pageVariants,
   smoothTransition
 } from "@/lib/transitions"
-import { getActiveChannels } from "@/lib/channel-utils"
+import { getUserConnectedChannels } from "@/lib/supabase/users"
+import { useAuth } from "@/hooks/use-auth"
 import {
   Card,
   CardContent,
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   Send,
   Settings,
   CheckCircle2,
@@ -140,19 +141,27 @@ const channels: Channel[] = [
 
 export default function ChannelsPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState(true)
   const [activeChannels, setActiveChannels] = React.useState<string[]>([])
 
-  // Load active channels from localStorage
+  // Load active channels live from Supabase
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-      // Load active channels from localStorage (defaults to empty array)
-      setActiveChannels(getActiveChannels())
-    }, 400)
+    async function fetchLiveChannels() {
+      if (!user?.id) return
 
-    return () => clearTimeout(timer)
-  }, [])
+      try {
+        const liveChannels = await getUserConnectedChannels(user.id)
+        setActiveChannels(liveChannels)
+      } catch (error) {
+        console.error("Failed to fetch live channels", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchLiveChannels()
+  }, [user?.id])
 
   // Listen for active channels changes from other components
   React.useEffect(() => {
@@ -187,7 +196,7 @@ export default function ChannelsPage() {
 
   const getStatusBadge = (channel: Channel) => {
     const isActive = activeChannels.includes(channel.id)
-    
+
     if (isActive) {
       return (
         <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20">
@@ -195,7 +204,7 @@ export default function ChannelsPage() {
         </Badge>
       )
     }
-    
+
     return null
   }
 
@@ -203,15 +212,15 @@ export default function ChannelsPage() {
     if (channel.iconUrl) {
       return (
         <div className="p-2.5 rounded-lg bg-muted border border-border">
-          <img 
-            src={channel.iconUrl} 
+          <img
+            src={channel.iconUrl}
             alt={channel.name}
             className="w-6 h-6 object-contain"
           />
         </div>
       )
     }
-    
+
     if (channel.icon) {
       const Icon = channel.icon
       // Check if it's a Phosphor icon (has weight prop) and use filled style
@@ -226,7 +235,7 @@ export default function ChannelsPage() {
         </div>
       )
     }
-    
+
     return null
   }
 
@@ -237,7 +246,7 @@ export default function ChannelsPage() {
     }
     // Handle multi-word strings
     if (str.includes(' ')) {
-      return str.split(' ').map(word => 
+      return str.split(' ').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
       ).join(' ')
     }
@@ -247,7 +256,7 @@ export default function ChannelsPage() {
 
   const renderAllBadges = (channel: Channel) => {
     const products = channel.products || []
-    
+
     if (products.length === 0) {
       return null
     }
@@ -317,8 +326,8 @@ export default function ChannelsPage() {
                   .filter((channel) => activeChannels.includes(channel.id))
                   .map((channel) => {
                     return (
-                      <Card 
-                        key={channel.id} 
+                      <Card
+                        key={channel.id}
                         className="h-full hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => handleChannelAction(channel.id, true)}
                       >
@@ -361,8 +370,8 @@ export default function ChannelsPage() {
                 .filter((channel) => !activeChannels.includes(channel.id))
                 .map((channel) => {
                   return (
-                    <Card 
-                      key={channel.id} 
+                    <Card
+                      key={channel.id}
                       className="h-full hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => handleChannelAction(channel.id, false)}
                     >
