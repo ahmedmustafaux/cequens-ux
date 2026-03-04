@@ -258,54 +258,6 @@ export default function ChannelsMessengerPage() {
               </Card>
             )}
 
-            {/* API Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Messenger API</CardTitle>
-                <CardDescription>Send and receive messages via the Cequens Messenger API</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!formData.pageId ? (
-                  <div className="text-center py-6 text-muted-foreground text-sm">
-                    Connect a page to view API integration details.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Messenger API Token</Label>
-                      <div className="flex gap-2">
-                        <Input readOnly value={formData.apiToken} className="font-mono text-xs" />
-                        <Button variant="outline" size="sm" onClick={() => handleCopy(formData.apiToken, "API Token", "copy-api")}>
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <Separator />
-                    <Tabs defaultValue="curl">
-                      <TabsList>
-                        <TabsTrigger value="curl">cURL</TabsTrigger>
-                        <TabsTrigger value="node">Node.js</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="curl" className="mt-4">
-                        <div className="relative rounded-lg bg-muted p-4 font-mono text-xs overflow-x-auto">
-                          <pre>
-                            {`curl -X POST "https://apis.cequens.com/messenger/v1/messages" \\
-  -H "Authorization: Bearer ${formData.apiToken}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "recipient_id": "PSID_USER_ID",
-    "message": {
-      "text": "Hello, how can we help you today?"
-    }
-  }'`}
-                          </pre>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Panel */}

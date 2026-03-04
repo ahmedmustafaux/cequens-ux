@@ -1,6 +1,16 @@
 import * as React from "react"
 import { MentionsInput, Mention, SuggestionDataItem, MentionsInputProps } from "react-mentions"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
 
 /**
  * MentionsTextarea Component
@@ -40,6 +50,39 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
         React.useImperativeHandle(ref, () => {
             return containerRef.current?.querySelector('textarea') as HTMLTextAreaElement
         })
+
+        const handleInsertMention = (item: SuggestionDataItem, type: 'mention' | 'variable') => {
+            const textarea = containerRef.current?.querySelector('textarea')
+            const start = textarea ? textarea.selectionStart : value.length
+            const end = textarea ? textarea.selectionEnd : value.length
+
+            // Format the tag according to how react-mentions expects it
+            const tag = type === 'mention'
+                ? `@[${item.display}](${item.id})`
+                : `{{${item.display}}}`
+
+            // Insert tag at current cursor position
+            const prefix = value.substring(0, start)
+            const suffix = value.substring(end)
+
+            // Add spacing if we're directly against text to ensure cleanliness
+            const needsLeadingSpace = prefix.length > 0 && !prefix.endsWith(' ') && !prefix.endsWith('\n')
+            const needsTrailingSpace = suffix.length > 0 && !suffix.startsWith(' ') && !suffix.startsWith('\n')
+
+            const insertText = (needsLeadingSpace ? ' ' : '') + tag + (needsTrailingSpace ? ' ' : '')
+
+            const newValue = prefix + insertText + suffix
+            onChange(newValue)
+
+            // Refocus text area after insertion
+            setTimeout(() => {
+                if (textarea) {
+                    textarea.focus()
+                    const newPos = start + insertText.length
+                    textarea.setSelectionRange(newPos, newPos)
+                }
+            }, 0)
+        }
 
         const handleChange = (
             _event: { target: { value: string } },
@@ -98,7 +141,7 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
             },
             input: {
                 margin: 0,
-                padding: '12px',
+                padding: '12px 12px 42px 12px',
                 border: 0,
                 outline: 'none',
                 minHeight,
@@ -115,7 +158,7 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
             },
             highlighter: {
                 margin: 0,
-                padding: '12px',
+                padding: '12px 12px 42px 12px',
                 border: 0,
                 minHeight,
                 fontFamily: 'inherit',
@@ -138,21 +181,20 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
                     border: '1px solid hsl(var(--border))',
                     borderRadius: 'var(--radius)',
                     fontSize: '0.875rem',
-                    maxHeight: '256px',
+                    maxHeight: '300px',
                     minWidth: '200px',
                     overflowY: 'auto' as const,
-                    boxShadow: 'var(--shadow-md)',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
                     color: 'hsl(var(--popover-foreground))',
                     zIndex: 50,
                     padding: '4px',
+                    boxSizing: 'border-box' as const,
                 },
                 item: {
-                    padding: '6px 8px',
-                    borderRadius: 'calc(var(--radius) - 2px)',
-                    '&focused': {
-                        backgroundColor: 'hsl(var(--accent))',
-                        color: 'hsl(var(--accent-foreground))',
-                    },
+                    padding: 0,
+                    margin: 0,
+                    borderBottom: '1px solid hsl(var(--border) / 0.4)',
+                    cursor: 'pointer',
                 },
             },
         }
@@ -191,11 +233,11 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
                             className="mention-badge"
                             renderSuggestion={(suggestion, _search, _highlightedDisplay, _index, focused) => (
                                 <div className={cn(
-                                    "px-2 py-1.5 flex items-center justify-between gap-2 text-sm rounded-sm transition-colors cursor-pointer",
-                                    focused ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
+                                    "flex items-center justify-between gap-2 overflow-hidden w-full px-2 py-2 text-sm rounded-sm transition-colors",
+                                    focused ? "bg-accent text-accent-foreground" : "hover:bg-accent/50 hover:text-accent-foreground"
                                 )}>
-                                    <span className="font-medium text-primary">@{suggestion.display}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Attribute</span>
+                                    <span className="truncate">@{suggestion.display}</span>
+                                    <span className="text-xs text-muted-foreground ml-2 shrink-0">Attribute</span>
                                 </div>
                             )}
                             style={{
@@ -220,13 +262,13 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
                             className="variable-badge"
                             renderSuggestion={(suggestion, _search, _highlightedDisplay, _index, focused) => (
                                 <div className={cn(
-                                    "px-2 py-1.5 flex items-center justify-between gap-2 text-sm rounded-sm transition-colors cursor-pointer",
-                                    focused ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
+                                    "flex items-center justify-between gap-2 overflow-hidden w-full px-2 py-2 text-sm rounded-sm transition-colors",
+                                    focused ? "bg-accent text-accent-foreground" : "hover:bg-accent/50 hover:text-accent-foreground"
                                 )}>
-                                    <span className="font-medium text-primary">
+                                    <span className="truncate">
                                         {"{{"}{suggestion.display}{"}}"}
                                     </span>
-                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Variable</span>
+                                    <span className="text-xs text-muted-foreground ml-2 shrink-0">Variable</span>
                                 </div>
                             )}
                             style={{
@@ -244,6 +286,58 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
                             }}
                         />
                     </MentionsInput>
+                    <div className="absolute bottom-2 right-2 z-10 flex items-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-7 text-xs px-2.5 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                                    tabIndex={-1}
+                                >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add personalization
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[200px]" onCloseAutoFocus={(e) => {
+                                // Prevent the trigger from grabbing focus back so the textarea can stay focused
+                                e.preventDefault()
+                                containerRef.current?.querySelector('textarea')?.focus()
+                            }}>
+                                {mentions && mentions.length > 0 && (
+                                    <>
+                                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Attributes</DropdownMenuLabel>
+                                        {mentions.map((item) => (
+                                            <DropdownMenuItem
+                                                key={`mention-${item.id}`}
+                                                onClick={() => handleInsertMention(item, 'mention')}
+                                                className="flex items-center justify-between"
+                                            >
+                                                <span>@{item.display}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </>
+                                )}
+
+                                {variables && variables.length > 0 && (
+                                    <>
+                                        {mentions && mentions.length > 0 && <DropdownMenuSeparator />}
+                                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Variables</DropdownMenuLabel>
+                                        {variables.map((item) => (
+                                            <DropdownMenuItem
+                                                key={`var-${item.id}`}
+                                                onClick={() => handleInsertMention(item, 'variable')}
+                                                className="flex items-center justify-between"
+                                            >
+                                                <span>{"{{"}{item.display}{"}}"}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
                 {error && (
                     <p className="text-[0.8rem] font-medium text-destructive">
