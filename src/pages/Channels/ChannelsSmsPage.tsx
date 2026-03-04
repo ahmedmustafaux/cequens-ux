@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Dialog,
@@ -42,7 +42,7 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
-  Zap,
+  Globe,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -60,29 +60,41 @@ import { useAuth } from "@/hooks/use-auth"
 export default function ChannelsSmsPage() {
   const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState(true)
-  const [showApiSecret, setShowApiSecret] = React.useState(false)
-  const [isConnecting, setIsConnecting] = React.useState(false)
-  const [showDisconnectDialog, setShowDisconnectDialog] = React.useState(false)
-  const [disconnectConfirmation, setDisconnectConfirmation] = React.useState("")
-  const [copiedButtonId, setCopiedButtonId] = React.useState<string | null>(null)
+  const [showRequestDialog, setShowRequestDialog] = React.useState(false)
+  const [selectedCountry, setSelectedCountry] = React.useState<string>("")
+  const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
 
-  const isInitialLoad = React.useRef(true)
-
+  // Pre-fill mock data to keep the channel active when saved
   const [formData, setFormData] = React.useState({
-    businessName: "",
-    apiKey: "",
-    apiSecret: "",
-    webhookUrl: "",
+    businessName: "Default Business",
+    apiKey: "dummy-api-key",
+    apiSecret: "dummy-api-secret",
+    webhookUrl: "https://example.com/webhook",
   })
 
-  const [senderIds, setSenderIds] = React.useState<SMSConfig["senderIds"]>([])
+  const defaultSenderIds: SMSConfig["senderIds"] = [
+    {
+      id: "pre-reg-1",
+      name: "Vodafone",
+      senderId: "+1234567890",
+      status: "active",
+      throughput: 100,
+      type: "transactional"
+    }
+  ]
+
+  const [senderIds, setSenderIds] = React.useState<SMSConfig["senderIds"]>(defaultSenderIds)
+
+  const isInitialLoad = React.useRef(true)
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
       const savedConfig = loadSMSConfig()
-      if (savedConfig && savedConfig.formData.apiKey) {
+      if (savedConfig && savedConfig.formData && savedConfig.formData.apiKey) {
         setFormData(savedConfig.formData)
-        setSenderIds(savedConfig.senderIds || [])
+      }
+      if (savedConfig && savedConfig.senderIds && savedConfig.senderIds.length > 0) {
+        setSenderIds(savedConfig.senderIds)
       }
       setIsLoading(false)
       setTimeout(() => {
@@ -115,22 +127,35 @@ export default function ChannelsSmsPage() {
     }
   }, [formData.apiKey, senderIds.length, user?.id])
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleRequestSubmit = () => {
+    if (!selectedCountry) {
+      toast.error("Please select a country")
+      return
+    }
+    setIsSubmittingRequest(true)
+    setTimeout(() => {
+      setIsSubmittingRequest(false)
+      setShowRequestDialog(false)
+      setSelectedCountry("")
+      toast.success(`Request for a new number in ${selectedCountry} submitted to the support team`)
+    }, 1000)
   }
 
-  const handleCopy = (text: string, label: string, buttonId: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedButtonId(buttonId)
-    setTimeout(() => setCopiedButtonId(null), 2000)
-    toast.success(`${label} copied to clipboard`)
-  }
+  const countries = [
+    { code: "US", name: "United States (+1)" },
+    { code: "EG", name: "Egypt (+20)" },
+    { code: "AE", name: "United Arab Emirates (+971)" },
+    { code: "SA", name: "Saudi Arabia (+966)" },
+    { code: "GB", name: "United Kingdom (+44)" },
+    { code: "FR", name: "France (+33)" },
+    { code: "DE", name: "Germany (+49)" },
+  ]
 
   return (
     <PageWrapper isLoading={isLoading}>
       <PageHeader
         title="SMS Channel Configuration"
-        description="Connect your SMS gateway and manage your sender IDs"
+        description="Manage your SMS sender IDs"
         isLoading={isLoading}
       />
 
@@ -143,92 +168,7 @@ export default function ChannelsSmsPage() {
           className="flex gap-4"
         >
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Section 1: Connection */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  <CardTitle>SMS Gateway Connection</CardTitle>
-                </div>
-                <CardDescription>
-                  Connect your business to the Cequens SMS Gateway
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!formData.apiKey ? (
-                  <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MessageSquare className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="text-center space-y-2">
-                      <h3 className="font-semibold text-lg">Connect SMS Gateway</h3>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Enable high-throughput SMS messaging for your business.
-                      </p>
-                    </div>
-                    <Button
-                      size="lg"
-                      disabled={isConnecting}
-                      onClick={() => {
-                        setIsConnecting(true)
-                        setTimeout(() => {
-                          const newApiKey = `sms_live_${Math.random().toString(36).substring(7)}`
-                          const newApiSecret = `sec_${Math.random().toString(36).substring(7)}`
-                          setFormData({
-                            businessName: "Vodafone Egypt",
-                            apiKey: newApiKey,
-                            apiSecret: newApiSecret,
-                            webhookUrl: "https://api.vodafone.com.eg/sms/webhook",
-                          })
-                          setSenderIds([
-                            {
-                              id: "sid-1",
-                              senderId: "Vodafone",
-                              status: "active",
-                              throughput: 100,
-                              type: "transactional"
-                            }
-                          ])
-                          setIsConnecting(false)
-                          toast.success("SMS Gateway connected successfully")
-                        }, 1500)
-                      }}
-                    >
-                      {isConnecting ? "Connecting..." : "Connect Gateway"}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4 p-4 rounded-lg border border-border bg-card">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Business Name</p>
-                        <p className="text-sm font-bold">{formData.businessName}</p>
-                      </div>
-                      <Badge className="bg-success">Active</Badge>
-                    </div>
-                    <Separator />
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground mb-1">API Key</p>
-                        <p className="font-mono text-xs">{formData.apiKey}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Status</p>
-                        <p className="font-medium">Production Ready</p>
-                      </div>
-                    </div>
-                    <Separator />
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowDisconnectDialog(true)}>
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Section 2: Sender IDs */}
+            {/* Section 1: Sender IDs */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -236,12 +176,10 @@ export default function ChannelsSmsPage() {
                     <Phone className="w-5 h-5" />
                     <CardTitle>Sender IDs</CardTitle>
                   </div>
-                  {formData.apiKey && (
-                    <Button variant="outline" size="sm" onClick={() => toast.info("Sender ID request submitted")}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Request New ID
-                    </Button>
-                  )}
+                  <Button variant="outline" size="sm" onClick={() => setShowRequestDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Request New ID
+                  </Button>
                 </div>
                 <CardDescription>
                   Registered alphabetic or numeric identities for your messages
@@ -261,8 +199,8 @@ export default function ChannelsSmsPage() {
                             {sid.senderId.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold">{sid.senderId}</p>
-                            <p className="text-xs text-muted-foreground">{sid.type.charAt(0).toUpperCase() + sid.type.slice(1)} • {sid.throughput} MPS</p>
+                            <p className="font-bold">{sid.name}</p>
+                            <p className="text-sm text-muted-foreground font-mono">{sid.senderId}</p>
                           </div>
                         </div>
                         <Badge variant={sid.status === "active" ? "default" : "secondary"}>
@@ -271,72 +209,6 @@ export default function ChannelsSmsPage() {
                       </div>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Section 3: API */}
-            <Card>
-              <CardHeader>
-                <CardTitle>API Configuration</CardTitle>
-                <CardDescription>Integrate SMS into your applications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!formData.apiKey ? (
-                  <div className="text-center py-6 text-muted-foreground text-sm">
-                    Connect gateway to view API credentials and samples.
-                  </div>
-                ) : (
-                  <Tabs defaultValue="curl">
-                    <TabsList>
-                      <TabsTrigger value="curl">cURL</TabsTrigger>
-                      <TabsTrigger value="node">Node.js</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="curl" className="mt-4">
-                      <div className="relative rounded-lg bg-muted p-4 font-mono text-xs overflow-x-auto">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="absolute right-2 top-2 h-7 w-7 p-0"
-                          onClick={() => handleCopy(`curl -X POST "https://apis.cequens.com/sms/v1/messages" \\
-  -H "Authorization: Bearer ${formData.apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "to": "+201XXXXXXXXX",
-    "message": "Hello from Cequens!",
-    "senderName": "${senderIds[0]?.senderId || 'SENDER_ID'}"
-  }'`, "cURL", "copy-curl")}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <pre>
-                          {`curl -X POST "https://apis.cequens.com/sms/v1/messages" \\
-  -H "Authorization: Bearer ${formData.apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "to": "+201XXXXXXXXX",
-    "message": "Hello from Cequens!",
-    "senderName": "${senderIds[0]?.senderId || 'SENDER_ID'}"
-  }'`}
-                        </pre>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="node" className="mt-4">
-                      {/* Similar structure for Node.js */}
-                      <div className="relative rounded-lg bg-muted p-4 font-mono text-xs">
-                        <pre>
-                          {`const axios = require('axios');
-axios.post('https://apis.cequens.com/sms/v1/messages', {
-  to: '+201XXXXXXXXX',
-  message: 'Hello from Cequens!',
-  senderName: '${senderIds[0]?.senderId || 'SENDER_ID'}'
-}, {
-  headers: { 'Authorization': 'Bearer ${formData.apiKey}' }
-});`}
-                        </pre>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
                 )}
               </CardContent>
             </Card>
@@ -368,39 +240,50 @@ axios.post('https://apis.cequens.com/sms/v1/messages', {
         </motion.div>
       )}
 
-      {/* Disconnect Dialog */}
-      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+      {/* Request New ID Dialog */}
+      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Disconnect SMS Gateway</DialogTitle>
+            <DialogTitle>Request New Sender ID</DialogTitle>
             <DialogDescription>
-              Are you sure? This will stop all SMS traffic and revoke API keys.
+              Select the destination country for which you want to request a new alphanumeric sender ID or shortcode.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Type 'disconnect' to confirm</Label>
-              <Input
-                value={disconnectConfirmation}
-                onChange={(e) => setDisconnectConfirmation(e.target.value)}
-                placeholder="disconnect"
-              />
+              <Label>Country</Label>
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.code} value={country.name}>
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <span>{country.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Support Request</AlertTitle>
+              <AlertDescription>
+                Submitting this request will open a ticket with our support team to provision a new sender ID for the selected country. They may contact you for additional documentation.
+              </AlertDescription>
+            </Alert>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDisconnectDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowRequestDialog(false)}>Cancel</Button>
             <Button
-              variant="destructive"
-              disabled={disconnectConfirmation !== "disconnect"}
-              onClick={() => {
-                setFormData({ businessName: "", apiKey: "", apiSecret: "", webhookUrl: "" })
-                setSenderIds([])
-                clearSMSConfig()
-                setShowDisconnectDialog(false)
-                toast.info("SMS Gateway disconnected")
-              }}
+              disabled={isSubmittingRequest || !selectedCountry}
+              onClick={handleRequestSubmit}
             >
-              Disconnect
+              {isSubmittingRequest ? "Submitting..." : "Submit Request"}
             </Button>
           </DialogFooter>
         </DialogContent>

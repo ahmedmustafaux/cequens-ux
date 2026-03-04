@@ -29,7 +29,7 @@ import { useSegments } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
 import { useAuth } from "@/hooks/use-auth"
 import { getUserConnectedChannels } from "@/lib/supabase/users"
-import { loadWhatsAppConfig } from "@/lib/channel-utils"
+import { loadWhatsAppConfig, loadSMSConfig } from "@/lib/channel-utils"
 import { cn } from "@/lib/utils"
 import type { Campaign } from "@/lib/supabase/types"
 import { Badge } from "@/components/ui/badge"
@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Switch } from "@/components/ui/switch"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import {
   Dialog,
@@ -81,6 +82,8 @@ interface CampaignFormData {
   trigger: string
   triggerConfig: Record<string, any>
   entryPoint?: string
+  includeCtaLink?: boolean
+  ctaLinkUrl?: string
 }
 
 // Helper to strip react-mentions markup for length and display
@@ -358,7 +361,9 @@ export default function CampaignsCreatePage() {
         selectedFlowId: "",
         triggerCategory: "",
         trigger: "",
-        triggerConfig: {}
+        triggerConfig: {},
+        includeCtaLink: false,
+        ctaLinkUrl: ""
       }
     }
 
@@ -396,7 +401,9 @@ export default function CampaignsCreatePage() {
       selectedFlowId: "",
       triggerCategory: "",
       trigger: "",
-      triggerConfig: {}
+      triggerConfig: {},
+      includeCtaLink: false,
+      ctaLinkUrl: ""
     }
   })
 
@@ -490,18 +497,25 @@ export default function CampaignsCreatePage() {
 
         // Load SMS sender IDs
         if (channels.includes("sms")) {
-          allSenderIds.push({
-            id: "CEQUENS",
-            label: "CEQUENS",
-            channel: "sms",
-            status: "verified"
-          })
-          allSenderIds.push({
-            id: "Promo",
-            label: "Promo",
-            channel: "sms",
-            status: "verified"
-          })
+          const smsConfig = loadSMSConfig()
+          if (smsConfig && smsConfig.senderIds && smsConfig.senderIds.length > 0) {
+            smsConfig.senderIds.forEach((sender) => {
+              allSenderIds.push({
+                id: sender.id,
+                label: `${sender.name} (${sender.senderId})`,
+                channel: "sms",
+                status: (sender.status === "active" ? "verified" : sender.status) as "verified" | "pending" | "restricted"
+              })
+            })
+          } else {
+            // Fallback to default if not saved in localStorage yet
+            allSenderIds.push({
+              id: "pre-reg-1",
+              label: "Vodafone (+1234567890)",
+              channel: "sms",
+              status: "verified"
+            })
+          }
         }
 
         // Load Email sender IDs
@@ -732,7 +746,13 @@ export default function CampaignsCreatePage() {
     }
   }
 
-  const getMessageLength = getPlainTextMessage(formData.message).length
+  const getMessageLength = (() => {
+    let len = getPlainTextMessage(formData.message).length
+    if (formData.type === "SMS" && formData.includeCtaLink && formData.ctaLinkUrl) {
+      len += 26 // \n\nhttps://cqns.lk/y7Xx9p (26 chars)
+    }
+    return len
+  })()
   const characterLimit = getCharacterLimit()
   const isOverLimit = getMessageLength > characterLimit
 
@@ -1180,16 +1200,24 @@ export default function CampaignsCreatePage() {
     if (formData.type === "Whatsapp" && selectedTemplate) {
       return generateMessageFromTemplate(selectedTemplate, formData.templateVariables)
     }
-    return getPlainTextMessage(formData.message)
-  }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate])
+    let msg = getPlainTextMessage(formData.message)
+    if (formData.type === "SMS" && formData.includeCtaLink && formData.ctaLinkUrl) {
+      msg += "\n\nhttps://cqns.lk/y7Xx9p"
+    }
+    return msg
+  }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate, formData.includeCtaLink, formData.ctaLinkUrl])
 
   // Simulated message with dummy data for mockup
   const simulatedMessage = React.useMemo(() => {
     if (formData.type === "Whatsapp" && selectedTemplate) {
       return generateMessageFromTemplate(selectedTemplate, formData.templateVariables)
     }
-    return getMockupMessage(formData.message)
-  }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate])
+    let msg = getMockupMessage(formData.message)
+    if (formData.type === "SMS" && formData.includeCtaLink && formData.ctaLinkUrl) {
+      msg += "\n\nhttps://cqns.lk/y7Xx9p"
+    }
+    return msg
+  }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate, formData.includeCtaLink, formData.ctaLinkUrl])
 
   const canSave = React.useMemo(() => {
     const hasBasicFields = formData.name.trim() !== "" && formData.type !== "" && formData.senderId.trim() !== ""
@@ -2247,7 +2275,7 @@ export default function CampaignsCreatePage() {
                           </FieldLabel>
                           <FieldContent>
                             {(formData.type === "Email" || formData.type === "SMS") ? (
-                              <div className="space-y-2">
+                              <div className="space-y-4">
                                 <MentionsTextarea
                                   value={formData.message}
                                   onChange={(val) => handleInputChange("message", val)}
@@ -2268,6 +2296,40 @@ export default function CampaignsCreatePage() {
                                     { id: 'companyName', display: 'Company Name' }
                                   ]}
                                 />
+                                {formData.type === "SMS" && (
+                                  <div className="flex flex-col gap-3 p-3 border border-border rounded-md bg-muted/10">
+                                    <div className="flex items-center space-x-2">
+                                      <Switch
+                                        id="include-cta-link"
+                                        checked={formData.includeCtaLink || false}
+                                        onCheckedChange={(checked) => {
+                                          setFormData(prev => ({ ...prev, includeCtaLink: checked }))
+                                          setIsDirty(true)
+                                        }}
+                                      />
+                                      <Label htmlFor="include-cta-link" className="text-sm font-medium cursor-pointer">
+                                        Include Link Tracking/CTA
+                                      </Label>
+                                    </div>
+                                    {(formData.includeCtaLink || false) && (
+                                      <div className="pl-11 pr-2 pb-1">
+                                        <Input
+                                          placeholder="https://example.com/promo"
+                                          value={formData.ctaLinkUrl || ""}
+                                          onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, ctaLinkUrl: e.target.value }))
+                                            setIsDirty(true)
+                                          }}
+                                          className="h-9 w-full sm:w-[320px]"
+                                        />
+                                        <p className="text-xs text-muted-foreground mt-1.5 flex items-center">
+                                          <Link2 className="h-3 w-3 mr-1" />
+                                          This link will be appended as a shortened URL to your message body.
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <Textarea

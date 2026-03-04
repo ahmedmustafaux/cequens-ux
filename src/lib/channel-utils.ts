@@ -227,6 +227,7 @@ export interface SMSConfig {
   }
   senderIds: Array<{
     id: string
+    name: string
     senderId: string
     status: "active" | "pending" | "rejected"
     throughput: number
