@@ -27,6 +27,7 @@ import { TableSkeleton } from "@/components/ui/table"
 interface FilterOption {
   value: string
   label: string
+  icon?: React.ReactNode
 }
 interface FilterConfig {
   key: string

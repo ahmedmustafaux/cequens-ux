@@ -29,6 +29,8 @@ export interface MentionsTextareaProps extends Omit<MentionsInputProps, "onChang
     mentions: SuggestionDataItem[]
     variables?: SuggestionDataItem[]
     minHeight?: string
+    leftActions?: React.ReactNode
+    rightActions?: React.ReactNode
 }
 
 const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaProps>(
@@ -41,6 +43,8 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
         mentions,
         variables = [],
         minHeight = "200px",
+        leftActions,
+        rightActions,
         ...props
     }, ref) => {
         const [isFocused, setIsFocused] = React.useState(false)
@@ -286,57 +290,64 @@ const MentionsTextarea = React.forwardRef<HTMLTextAreaElement, MentionsTextareaP
                             }}
                         />
                     </MentionsInput>
-                    <div className="absolute bottom-2 right-2 z-10 flex items-center">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="sm"
-                                    className="h-7 text-xs px-2.5 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
-                                >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    Add personalization
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[200px]" onCloseAutoFocus={(e) => {
-                                // Prevent the trigger from grabbing focus back so the textarea can stay focused
-                                e.preventDefault()
-                                containerRef.current?.querySelector('textarea')?.focus()
-                            }}>
-                                {mentions && mentions.length > 0 && (
-                                    <>
-                                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Attributes</DropdownMenuLabel>
-                                        {mentions.map((item) => (
-                                            <DropdownMenuItem
-                                                key={`mention-${item.id}`}
-                                                onClick={() => handleInsertMention(item, 'mention')}
-                                                className="flex items-center justify-between"
-                                            >
-                                                <span>@{item.display}</span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </>
-                                )}
+                    <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between pointer-events-none">
+                        <div className="flex items-center gap-2 pointer-events-auto">
+                            {((mentions && mentions.length > 0) || (variables && variables.length > 0)) && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground bg-background"
+                                            tabIndex={-1}
+                                        >
+                                            @ mention
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-[200px]" onCloseAutoFocus={(e) => {
+                                        // Prevent the trigger from grabbing focus back so the textarea can stay focused
+                                        e.preventDefault()
+                                        containerRef.current?.querySelector('textarea')?.focus()
+                                    }}>
+                                        {mentions && mentions.length > 0 && (
+                                            <>
+                                                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Attributes</DropdownMenuLabel>
+                                                {mentions.map((item) => (
+                                                    <DropdownMenuItem
+                                                        key={`mention-${item.id}`}
+                                                        onClick={() => handleInsertMention(item, 'mention')}
+                                                        className="flex items-center justify-between"
+                                                    >
+                                                        <span>@{item.display}</span>
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </>
+                                        )}
 
-                                {variables && variables.length > 0 && (
-                                    <>
-                                        {mentions && mentions.length > 0 && <DropdownMenuSeparator />}
-                                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Variables</DropdownMenuLabel>
-                                        {variables.map((item) => (
-                                            <DropdownMenuItem
-                                                key={`var-${item.id}`}
-                                                onClick={() => handleInsertMention(item, 'variable')}
-                                                className="flex items-center justify-between"
-                                            >
-                                                <span>{"{{"}{item.display}{"}}"}</span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                        {variables && variables.length > 0 && (
+                                            <>
+                                                {mentions && mentions.length > 0 && <DropdownMenuSeparator />}
+                                                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Variables</DropdownMenuLabel>
+                                                {variables.map((item) => (
+                                                    <DropdownMenuItem
+                                                        key={`var-${item.id}`}
+                                                        onClick={() => handleInsertMention(item, 'variable')}
+                                                        className="flex items-center justify-between"
+                                                    >
+                                                        <span>{"{{"}{item.display}{"}}"}</span>
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {leftActions}
+                        </div>
+                        <div className="flex items-center gap-2 pointer-events-auto">
+                            {rightActions}
+                        </div>
                     </div>
                 </div>
                 {error && (

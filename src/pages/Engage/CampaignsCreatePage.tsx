@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { PageHeader } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check, CheckCircle2, AlertCircle } from "lucide-react"
+import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check, CheckCircle2, AlertCircle, Upload, FileUp } from "lucide-react"
 import { EnvelopeSimple, ChatText } from "phosphor-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
@@ -41,6 +41,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -49,8 +55,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { IPhoneMockup } from "react-device-mockup"
-import { mockWhatsAppTemplates, type WhatsAppTemplate, type WhatsAppTemplateVariable, type WhatsAppTemplateCategory } from "@/data/mock-data"
-import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter, ShoppingCart, User, Zap, Gift, AlertTriangle, CreditCard, Activity } from "lucide-react"
+import { mockWhatsAppTemplates, mockSmsTemplates, type WhatsAppTemplate, type WhatsAppTemplateVariable, type WhatsAppTemplateCategory, type SmsTemplate } from "@/data/mock-data"
+import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter, ShoppingCart, User, Zap, Gift, AlertTriangle, CreditCard, Activity, Sparkles } from "lucide-react"
 
 import { ContactsCsvImportDrawer } from "@/components/contacts-csv-import-drawer"
 
@@ -82,8 +88,13 @@ interface CampaignFormData {
   trigger: string
   triggerConfig: Record<string, any>
   entryPoint?: string
+  isPersonalizationEnabled?: boolean
   includeCtaLink?: boolean
   ctaLinkUrl?: string
+  includeGoogleAnalytics?: boolean
+  gaSource?: string
+  gaMedium?: string
+  gaCampaignName?: string
 }
 
 // Helper to strip react-mentions markup for length and display
@@ -109,6 +120,7 @@ const getMockupMessage = (msg: string) => {
 };
 
 export default function CampaignsCreatePage() {
+  console.log("CampaignsCreatePage: Loading state and test button logic applied");
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
@@ -129,6 +141,27 @@ export default function CampaignsCreatePage() {
   const [selectedTemplateCategory, setSelectedTemplateCategory] = React.useState<WhatsAppTemplateCategory | "ALL">("ALL")
   const [hoveredTemplateId, setHoveredTemplateId] = React.useState<string | null>(null)
   const [isCsvImportDrawerOpen, setIsCsvImportDrawerOpen] = React.useState(false)
+  const [isSmsTemplateDialogOpen, setIsSmsTemplateDialogOpen] = React.useState(false)
+  const [smsTemplateSearch, setSmsTemplateSearch] = React.useState("")
+  const [selectedRecentFileId, setSelectedRecentFileId] = React.useState<string | null>(null)
+  const [uploadedFileName, setUploadedFileName] = React.useState<string | null>(null)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const [isSendingTest, setIsSendingTest] = React.useState(false)
+
+  const handleSendTest = () => {
+    setIsSendingTest(true)
+    setTimeout(() => {
+      toast.success(`${formData.type === "Email" ? "Test email" : "Test message"} sent successfully!`)
+      setIsSendingTest(false)
+    }, 1500)
+  }
+
+
+  const recentFiles = [
+    { id: "rf1", name: "Summer_Promotion_Contacts.csv", date: "2024-03-01", count: 1250 },
+    { id: "rf2", name: "February_Newsletter_Active.xlsx", date: "2024-02-15", count: 850 },
+    { id: "rf3", name: "High_Value_Customers.csv", date: "2024-02-10", count: 320 },
+  ]
 
   interface TriggerInput {
     name: string
@@ -363,7 +396,12 @@ export default function CampaignsCreatePage() {
         trigger: "",
         triggerConfig: {},
         includeCtaLink: false,
-        ctaLinkUrl: ""
+        ctaLinkUrl: "",
+        isPersonalizationEnabled: false,
+        includeGoogleAnalytics: false,
+        gaSource: "",
+        gaMedium: "",
+        gaCampaignName: ""
       }
     }
 
@@ -403,7 +441,12 @@ export default function CampaignsCreatePage() {
       trigger: "",
       triggerConfig: {},
       includeCtaLink: false,
-      ctaLinkUrl: ""
+      ctaLinkUrl: "",
+      isPersonalizationEnabled: false,
+      includeGoogleAnalytics: false,
+      gaSource: "",
+      gaMedium: "",
+      gaCampaignName: ""
     }
   })
 
@@ -872,6 +915,10 @@ export default function CampaignsCreatePage() {
           } else if (formData.recipients === 0) {
             errors.manualNumbers = "Format is invalid, please use comma-separated numbers"
           }
+        } else if (formData.recipientSource === "upload") {
+          if (formData.recipients === 0) {
+            errors.upload = "Please upload a sheet or select a recent file"
+          }
         }
       }
     } else if (step === 2) {
@@ -898,6 +945,22 @@ export default function CampaignsCreatePage() {
           errors.message = "Message content is required"
         } else if (isOverLimit) {
           errors.message = `Message exceeds ${characterLimit} character limit`
+        }
+
+        // SMS specifically - CTA and GA validation
+        if (formData.type === "SMS") {
+          if (formData.includeCtaLink && !formData.ctaLinkUrl?.trim()) {
+            errors.message = "Please enter a valid URL for your Call-to-Action link"
+          }
+          if (formData.includeGoogleAnalytics) {
+            if (!formData.gaSource?.trim()) {
+              errors.message = "Google Analytics Source is required"
+            } else if (!formData.gaMedium?.trim()) {
+              errors.message = "Google Analytics Medium is required"
+            } else if (!formData.gaCampaignName?.trim()) {
+              errors.message = "Google Analytics Campaign Name is required"
+            }
+          }
         }
       }
     } else if (step === 3) {
@@ -1067,12 +1130,18 @@ export default function CampaignsCreatePage() {
         if (!formData.selectedFlowId) return false
         return true
       }
-      if (!formData.selectedSegmentId) return false
-      if (formData.selectedSegmentId === "all-contacts") {
-        return allContacts.length > 0
+
+      if (formData.recipientSource === "segments") {
+        if (!formData.selectedSegmentId) return false
+        if (formData.selectedSegmentId === "all-contacts") {
+          return allContacts.length > 0
+        }
+        const segment = segments.find(s => s.id === formData.selectedSegmentId)
+        return segment ? (segment.contact_ids?.length || 0) > 0 : false
       }
-      const segment = segments.find(s => s.id === formData.selectedSegmentId)
-      return segment ? (segment.contact_ids?.length || 0) > 0 : false
+
+      // For manual and upload, we just need recipients > 0
+      return formData.recipients > 0
     } else if (currentStep === 2) {
       // Validate Content step
       const hasSubject = formData.type !== "Email" || formData.subject.trim() !== ""
@@ -1886,19 +1955,128 @@ export default function CampaignsCreatePage() {
                               <Field>
                                 <FieldLabel>Upload sheet *</FieldLabel>
                                 <FieldContent>
-                                  <div className="flex flex-col gap-2 items-start">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setIsCsvImportDrawerOpen(true)}
-                                    >
-                                      Upload CSV
-                                    </Button>
-                                    {formErrors.upload && (
-                                      <FieldError>{formErrors.upload}</FieldError>
-                                    )}
-                                    <p className="text-sm text-muted-foreground">
-                                      Upload a CSV file to create a segment. You can then select it using the Segments option.
-                                    </p>
+                                  <div className="flex flex-col gap-6 items-start w-full">
+                                    <div className="flex flex-col gap-4 items-start w-full">
+                                      {/* Recipient Count Summary - Matches other sources */}
+                                      {formData.recipients > 0 && (uploadedFileName || selectedRecentFileId) && (
+                                        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg w-full">
+                                          <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                            <Users className="h-4 w-4" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-sm font-semibold text-primary">
+                                              {formData.recipients.toLocaleString()} contacts found
+                                            </p>
+                                            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                              <FileText className="h-3 w-3" />
+                                              {uploadedFileName || recentFiles.find(f => f.id === selectedRecentFileId)?.name}
+                                            </p>
+                                          </div>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                              handleInputChange("recipients", 0)
+                                              setUploadedFileName(null)
+                                              setSelectedRecentFileId(null)
+                                            }}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      )}
+
+                                      {/* Drag and Drop Zone */}
+                                      <div
+                                        className={cn(
+                                          "w-full border-2 border-dashed rounded-xl p-8 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer group",
+                                          isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30",
+                                          formData.recipients > 0 && (uploadedFileName || selectedRecentFileId) ? "hidden" : "flex"
+                                        )}
+                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                                        onDragLeave={() => setIsDragging(false)}
+                                        onDrop={(e) => {
+                                          e.preventDefault()
+                                          setIsDragging(false)
+                                          const file = e.dataTransfer.files[0]
+                                          if (file) {
+                                            setUploadedFileName(file.name)
+                                            handleInputChange("recipients", Math.floor(Math.random() * 5000) + 100) // Mock count
+                                            toast.success(`File "${file.name}" uploaded successfully`)
+                                          }
+                                        }}
+                                        onClick={() => setIsCsvImportDrawerOpen(true)}
+                                      >
+                                        <div className="size-12 rounded-full bg-muted flex items-center justify-center border group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                          <Upload className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-center">
+                                          <p className="text-sm font-semibold font-clash">Click or drag and drop to upload</p>
+                                          <p className="text-xs text-muted-foreground mt-1">CSV or XLSX files only (Max 10MB)</p>
+                                        </div>
+                                      </div>
+
+                                      {formErrors.upload && !formData.recipients && (
+                                        <FieldError>{formErrors.upload}</FieldError>
+                                      )}
+                                      <p className="text-sm text-muted-foreground">
+                                        Upload a CSV file to create a segment. You can then select it using the Segments option.
+                                      </p>
+                                    </div>
+
+                                    <div className="w-full space-y-3">
+                                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <Clock className="h-4 w-4" />
+                                        Recently used
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {recentFiles.map((file) => {
+                                          const isSelected = selectedRecentFileId === file.id
+                                          return (
+                                            <button
+                                              key={file.id}
+                                              type="button"
+                                              onClick={() => {
+                                                const newSelectedId = isSelected ? null : file.id
+                                                setSelectedRecentFileId(newSelectedId)
+                                                setUploadedFileName(null) // Clear manual upload if recent is picked
+                                                handleInputChange("recipients", isSelected ? 0 : file.count)
+                                                if (!isSelected) {
+                                                  toast.success(`Selected ${file.name} with ${file.count} contacts`)
+                                                }
+                                              }}
+                                              className={cn(
+                                                "flex flex-col items-start p-3 text-left border rounded-lg transition-all group relative",
+                                                isSelected ? "border-primary bg-primary/5 shadow-sm" : "hover:border-primary hover:bg-primary/5"
+                                              )}
+                                            >
+                                              <div className="flex items-center gap-2 w-full mb-1">
+                                                <div className={cn(
+                                                  "size-4 rounded-full border flex items-center justify-center transition-colors",
+                                                  isSelected ? "bg-primary border-primary" : "border-muted-foreground/30 group-hover:border-primary/50"
+                                                )}>
+                                                  {isSelected && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+                                                </div>
+                                                <span className={cn("text-sm font-medium truncate flex-1", isSelected && "text-primary")}>{file.name}</span>
+                                              </div>
+                                              <div className="flex items-center justify-between w-full text-[11px] text-muted-foreground pl-6">
+                                                <span>{file.date}</span>
+                                                <Badge
+                                                  variant="outline"
+                                                  className={cn(
+                                                    "text-[10px] py-0 h-4 transition-colors",
+                                                    isSelected ? "border-primary/30 bg-primary/10 text-primary" : "group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary"
+                                                  )}
+                                                >
+                                                  {file.count.toLocaleString()} contacts
+                                                </Badge>
+                                              </div>
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
                                   </div>
                                 </FieldContent>
                               </Field>
@@ -2264,96 +2442,225 @@ export default function CampaignsCreatePage() {
                           </div>
                         )}
 
-                        <Field>
-                          <FieldLabel>
-                            Message Content *
-                            {formData.type && (
-                              <span className="ml-2 text-xs text-muted-foreground font-normal">
-                                (Max {characterLimit.toLocaleString()} characters)
-                              </span>
-                            )}
-                          </FieldLabel>
-                          <FieldContent>
-                            {(formData.type === "Email" || formData.type === "SMS") ? (
-                              <div className="space-y-4">
-                                <MentionsTextarea
-                                  value={formData.message}
-                                  onChange={(val) => handleInputChange("message", val)}
-                                  placeholder={
-                                    formData.type === "Email"
-                                      ? "Write your email message here... (Type @ to insert attributes)"
-                                      : "Write your SMS message here... (Type @ to insert attributes)"
-                                  }
-                                  className={cn(
-                                    formErrors.message && "border-destructive",
-                                    isOverLimit && "border-destructive"
-                                  )}
-                                  mentions={[
-                                    { id: 'firstName', display: 'First Name' },
-                                    { id: 'lastName', display: 'Last Name' },
-                                    { id: 'phoneNumber', display: 'Phone Number' },
-                                    { id: 'email', display: 'Email' },
-                                    { id: 'companyName', display: 'Company Name' }
-                                  ]}
-                                />
-                                {formData.type === "SMS" && (
-                                  <div className="flex flex-col gap-3 p-3 border border-border rounded-md bg-muted/10">
-                                    <div className="flex items-center space-x-2">
-                                      <Switch
-                                        id="include-cta-link"
-                                        checked={formData.includeCtaLink || false}
-                                        onCheckedChange={(checked) => {
-                                          setFormData(prev => ({ ...prev, includeCtaLink: checked }))
-                                          setIsDirty(true)
-                                        }}
-                                      />
-                                      <Label htmlFor="include-cta-link" className="text-sm font-medium cursor-pointer">
-                                        Include Link Tracking/CTA
-                                      </Label>
-                                    </div>
-                                    {(formData.includeCtaLink || false) && (
-                                      <div className="pl-11 pr-2 pb-1">
-                                        <Input
-                                          placeholder="https://example.com/promo"
-                                          value={formData.ctaLinkUrl || ""}
-                                          onChange={(e) => {
-                                            setFormData(prev => ({ ...prev, ctaLinkUrl: e.target.value }))
-                                            setIsDirty(true)
-                                          }}
-                                          className="h-9 w-full sm:w-[320px]"
-                                        />
-                                        <p className="text-xs text-muted-foreground mt-1.5 flex items-center">
-                                          <Link2 className="h-3 w-3 mr-1" />
-                                          This link will be appended as a shortened URL to your message body.
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <Textarea
-                                id="message"
-                                value={formData.message}
-                                onChange={(e) => handleInputChange("message", e.target.value)}
-                                placeholder="Write your message here..."
-                                className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
-                                maxLength={characterLimit + 100}
-                              />
-                            )}
-                          </FieldContent>
-                          {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
-                          <FieldDescription>
-                            <span className={isOverLimit ? "text-destructive" : ""}>
-                              {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
-                              {formData.type === "SMS" && getMessageLength > 160 && (
-                                <span className="ml-2 text-muted-foreground">
-                                  ({Math.ceil(getMessageLength / 160)} SMS)
+                        {formData.type !== "Whatsapp" && (
+                          <Field>
+                            <FieldLabel>
+                              Message Content *
+                              {formData.type && (
+                                <span className="ml-2 text-muted-foreground font-normal">
+                                  (Max {characterLimit.toLocaleString()} characters)
                                 </span>
                               )}
-                            </span>
-                          </FieldDescription>
-                        </Field>
+                            </FieldLabel>
+                            <FieldContent>
+                              {(formData.type === "Email" || formData.type === "SMS") ? (
+                                <div className="space-y-4">
+
+                                  <MentionsTextarea
+                                    value={formData.message}
+                                    onChange={(val) => handleInputChange("message", val)}
+                                    placeholder={
+                                      formData.type === "Email"
+                                        ? "Write your email message here... (Type @ to insert attributes)"
+                                        : formData.isPersonalizationEnabled
+                                          ? "Write your SMS message here... (Type @ to insert attributes)"
+                                          : "Write your SMS message here..."
+                                    }
+                                    className={cn(
+                                      formErrors.message && "border-destructive",
+                                      isOverLimit && "border-destructive"
+                                    )}
+                                    rightActions={
+                                      formData.type === "SMS" && (
+                                        <>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                type="button"
+                                                variant="secondary"
+                                                size="sm"
+                                                className="h-7 text-xs px-2.5 text-primary bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
+                                                tabIndex={-1}
+                                              >
+                                                <Sparkles className="mr-1 h-3 w-3" />
+                                                AI Actions
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                                              <DropdownMenuItem onClick={() => { }}>Rephrase</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => { }}>Summarize</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => { }}>Expand</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => { }}>Simplify</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => { }}>Make it professional</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => { }}>Make it friendly</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground"
+                                            onClick={() => setIsSmsTemplateDialogOpen(true)}
+                                            tabIndex={-1}
+                                          >
+                                            <FileText className="mr-1 h-3 w-3" />
+                                            Use Template
+                                          </Button>
+                                        </>
+                                      )
+                                    }
+                                    mentions={
+                                      formData.type === "Email" || formData.isPersonalizationEnabled
+                                        ? [
+                                          { id: 'firstName', display: 'First Name' },
+                                          { id: 'lastName', display: 'Last Name' },
+                                          { id: 'phoneNumber', display: 'Phone Number' },
+                                          { id: 'email', display: 'Email' },
+                                          { id: 'companyName', display: 'Company Name' }
+                                        ]
+                                        : []
+                                    }
+                                  />
+                                  {formData.type === "SMS" && (
+                                    <div className="flex flex-col gap-3">
+                                      <div className="flex border border-border rounded-md bg-muted/10 p-3 items-start space-x-3">
+                                        <Switch
+                                          id="enable-personalization"
+                                          checked={formData.isPersonalizationEnabled || false}
+                                          onCheckedChange={(checked) => {
+                                            setFormData(prev => ({ ...prev, isPersonalizationEnabled: checked }))
+                                            setIsDirty(true)
+                                          }}
+                                          className="mt-0.5"
+                                        />
+                                        <div className="flex flex-col gap-1">
+                                          <Label htmlFor="enable-personalization" className="text-sm font-medium cursor-pointer">
+                                            Enable Personalization
+                                          </Label>
+                                          <p className="text-xs text-muted-foreground mr-4">
+                                            Use <span className="font-semibold text-foreground">@mention</span> formatting to easily add personalized attributes (e.g. First Name).
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col gap-3 p-3 border border-border rounded-md bg-muted/10">
+                                        <div className="flex items-center space-x-2">
+                                          <Switch
+                                            id="include-cta-link"
+                                            checked={formData.includeCtaLink || false}
+                                            onCheckedChange={(checked) => {
+                                              setFormData(prev => ({ ...prev, includeCtaLink: checked }))
+                                              setIsDirty(true)
+                                            }}
+                                          />
+                                          <Label htmlFor="include-cta-link" className="text-sm font-medium cursor-pointer">
+                                            Include Link Tracking/CTA
+                                          </Label>
+                                        </div>
+                                        {(formData.includeCtaLink || false) && (
+                                          <div className="pl-11 pr-2 pb-1 space-y-4">
+                                            <div>
+                                              <Input
+                                                placeholder="https://example.com/promo"
+                                                value={formData.ctaLinkUrl || ""}
+                                                onChange={(e) => {
+                                                  setFormData(prev => ({ ...prev, ctaLinkUrl: e.target.value }))
+                                                  setIsDirty(true)
+                                                }}
+                                                className="h-9 w-full sm:w-[320px]"
+                                              />
+                                              <p className="text-xs text-muted-foreground mt-1.5 flex items-center">
+                                                <Link2 className="h-3 w-3 mr-1" />
+                                                This link will be appended as a shortened URL to your message body.
+                                              </p>
+                                            </div>
+
+                                            <div className="border-t border-border pt-4">
+                                              <div className="flex items-center justify-between mb-3">
+                                                <Label className="text-sm font-medium text-foreground">Google Analytics Tracking</Label>
+                                                <Switch
+                                                  id="include-google-analytics"
+                                                  checked={formData.includeGoogleAnalytics || false}
+                                                  onCheckedChange={(checked) => {
+                                                    setFormData(prev => ({ ...prev, includeGoogleAnalytics: checked }))
+                                                    setIsDirty(true)
+                                                  }}
+                                                />
+                                              </div>
+                                              {(formData.includeGoogleAnalytics || false) && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                  <div className="space-y-1.5">
+                                                    <Label htmlFor="gaSource" className="text-xs text-muted-foreground">Source</Label>
+                                                    <Input
+                                                      id="gaSource"
+                                                      placeholder="e.g. cequens"
+                                                      value={formData.gaSource || ""}
+                                                      onChange={(e) => {
+                                                        setFormData(prev => ({ ...prev, gaSource: e.target.value }))
+                                                        setIsDirty(true)
+                                                      }}
+                                                      className="h-8 text-sm"
+                                                    />
+                                                  </div>
+                                                  <div className="space-y-1.5">
+                                                    <Label htmlFor="gaMedium" className="text-xs text-muted-foreground">Medium</Label>
+                                                    <Input
+                                                      id="gaMedium"
+                                                      placeholder="e.g. sms"
+                                                      value={formData.gaMedium || ""}
+                                                      onChange={(e) => {
+                                                        setFormData(prev => ({ ...prev, gaMedium: e.target.value }))
+                                                        setIsDirty(true)
+                                                      }}
+                                                      className="h-8 text-sm"
+                                                    />
+                                                  </div>
+                                                  <div className="space-y-1.5 lg:col-span-3">
+                                                    <Label htmlFor="gaCampaignName" className="text-xs text-muted-foreground">Campaign Name</Label>
+                                                    <Input
+                                                      id="gaCampaignName"
+                                                      placeholder="e.g. summer_promo_2024"
+                                                      value={formData.gaCampaignName || ""}
+                                                      onChange={(e) => {
+                                                        setFormData(prev => ({ ...prev, gaCampaignName: e.target.value }))
+                                                        setIsDirty(true)
+                                                      }}
+                                                      className="h-8 text-sm"
+                                                    />
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                  }
+                                </div>
+                              ) : (
+                                <Textarea
+                                  id="message"
+                                  value={formData.message}
+                                  onChange={(e) => handleInputChange("message", e.target.value)}
+                                  placeholder="Write your message here..."
+                                  className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
+                                  maxLength={characterLimit + 100}
+                                />
+                              )}
+                            </FieldContent>
+                            {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
+                            <FieldDescription>
+                              <span className={isOverLimit ? "text-destructive" : ""}>
+                                {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
+                                {formData.type === "SMS" && getMessageLength > 160 && (
+                                  <span className="ml-2 text-muted-foreground">
+                                    ({Math.ceil(getMessageLength / 160)} SMS)
+                                  </span>
+                                )}
+                              </span>
+                            </FieldDescription>
+                          </Field>
+                        )}
 
 
                       </CardContent>
@@ -2399,45 +2706,51 @@ export default function CampaignsCreatePage() {
                             >
                               <Field>
                                 <FieldLabel htmlFor="now" className="cursor-pointer">
-                                  <div data-slot="field" className="flex items-center gap-3">
-                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
-                                      <Send className="h-4 w-4" />
+                                  <div data-slot="field" className="flex items-center justify-between gap-3 w-full">
+                                    <div className="flex items-center gap-3">
+                                      <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                        <Send className="h-4 w-4" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm leading-tight">Send Now</p>
+                                        <p className="text-[11px] text-muted-foreground line-clamp-1">Immediate activation</p>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-sm leading-tight">Send Now</p>
-                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Immediate activation</p>
-                                    </div>
-                                    <RadioGroupItem value="now" id="now" />
+                                    <RadioGroupItem value="now" id="now" className="ml-auto" />
                                   </div>
                                 </FieldLabel>
                               </Field>
 
                               <Field>
                                 <FieldLabel htmlFor="scheduled" className="cursor-pointer">
-                                  <div data-slot="field" className="flex items-center gap-3">
-                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
-                                      <Calendar className="h-4 w-4" />
+                                  <div data-slot="field" className="flex items-center justify-between gap-3 w-full">
+                                    <div className="flex items-center gap-3">
+                                      <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                        <Calendar className="h-4 w-4" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm leading-tight">Schedule</p>
+                                        <p className="text-[11px] text-muted-foreground line-clamp-1">Specific date & time</p>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-sm leading-tight">Schedule</p>
-                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Specific date & time</p>
-                                    </div>
-                                    <RadioGroupItem value="scheduled" id="scheduled" />
+                                    <RadioGroupItem value="scheduled" id="scheduled" className="ml-auto" />
                                   </div>
                                 </FieldLabel>
                               </Field>
 
                               <Field>
                                 <FieldLabel htmlFor="recurring" className="cursor-pointer">
-                                  <div data-slot="field" className="flex items-center gap-3">
-                                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
-                                      <Clock className="h-4 w-4" />
+                                  <div data-slot="field" className="flex items-center justify-between gap-3 w-full">
+                                    <div className="flex items-center gap-3">
+                                      <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground group-has-data-[state=checked]/field-label:bg-primary/20 group-has-data-[state=checked]/field-label:text-primary transition-colors">
+                                        <Clock className="h-4 w-4" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm leading-tight">Recurring</p>
+                                        <p className="text-[11px] text-muted-foreground line-clamp-1">Custom weekly grid</p>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-sm leading-tight">Recurring</p>
-                                      <p className="text-[11px] text-muted-foreground line-clamp-1">Custom weekly grid</p>
-                                    </div>
-                                    <RadioGroupItem value="recurring" id="recurring" />
+                                    <RadioGroupItem value="recurring" id="recurring" className="ml-auto" />
                                   </div>
                                 </FieldLabel>
                               </Field>
@@ -2853,12 +3166,44 @@ export default function CampaignsCreatePage() {
                           </p>
                         </div>
                       )}
+
+                      {currentStep === 3 && (
+                        <div className="space-y-4 pt-2">
+                          <div className="space-y-2 text-center">
+                            <Button
+                              variant="outline"
+                              className="w-full text-xs font-medium h-9"
+                              onClick={handleSendTest}
+                              isLoading={isSendingTest}
+                              loadingText={formData.type === "Email" ? "Sending email..." : "Sending message..."}
+                            >
+                              <Send className="mr-2 h-3.5 w-3.5" />
+                              {formData.type === "Email" ? "Send test email" : "Send test message"}
+                            </Button>
+                            <p className="text-[10px] text-muted-foreground">
+                              This {formData.type === 'Email' ? 'email' : 'message'} will be sent to {formData.type === 'Email' ? 'ahmed.mustafa@example.com' : '+201011116131'}
+                            </p>
+                          </div>
+
+                          <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
+                            <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Estimated Cost</label>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <p className="text-xl font-bold text-primary">
+                                ${(formData.recipients * 0.025).toFixed(2)}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                ($0.025 / msg)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Preview - Show on Content step (step 2) for WhatsApp/SMS/Email */}
-                {currentStep === 2 && (formData.type === "Whatsapp" || formData.type === "SMS" || formData.type === "Email") && (
+                {/* Preview - Show on Content step (step 2) and Review step (step 3) */}
+                {(currentStep === 2 || currentStep === 3) && (formData.type === "Whatsapp" || formData.type === "SMS" || formData.type === "Email") && (
                   <Card className="pt-5 pb-0 gap-5 flex flex-col" style={{ height: '580px' }}>
                     <CardHeader>
                       <div className="flex items-center gap-2">
@@ -3115,6 +3460,56 @@ export default function CampaignsCreatePage() {
           </motion.div>
         )}
       </div>
+
+      {/* SMS Template Selection Dialog */}
+      <Dialog open={isSmsTemplateDialogOpen} onOpenChange={setIsSmsTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] min-h-[400px] max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Select SMS Template</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 mb-2">
+            <Input
+              leftIcon={<Search className="h-4 w-4" />}
+              placeholder="Search templates..."
+              value={smsTemplateSearch}
+              onChange={(e) => setSmsTemplateSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            {mockSmsTemplates
+              .filter(template => template.category !== "AUTHENTICATION")
+              .filter(template => template.name.toLowerCase().includes(smsTemplateSearch.toLowerCase()) || (template.description || "").toLowerCase().includes(smsTemplateSearch.toLowerCase()))
+              .map((template) => (
+                <div
+                  key={template.id}
+                  className="border rounded-md p-4 bg-background hover:border-primary/50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      message: template.content,
+                    }))
+                    setIsDirty(true)
+                    setIsSmsTemplateDialogOpen(false)
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-sm">{template.name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</h4>
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{template.category}</Badge>
+                  </div>
+                  {template.description && (
+                    <p className="text-xs text-muted-foreground mb-3">{template.description}</p>
+                  )}
+                  <div className="bg-muted min-h-[60px] p-3 rounded-md text-sm whitespace-pre-wrap">
+                    {template.content}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsSmsTemplateDialogOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper >
   )
 }

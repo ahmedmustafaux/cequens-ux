@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 interface FilterOption {
   value: string
   label: string
+  icon?: React.ReactNode
 }
 interface FilterSelectProps {
   placeholder: string
@@ -35,7 +36,7 @@ export function FilterSelect({
   onSelectionChange,
   onClear,
   className,
-  contentWidth = "w-48",
+  contentWidth = "w-auto min-w-[200px]",
   searchable = false,
   searchPlaceholder = "Search...",
   onSearchChange,
@@ -43,7 +44,7 @@ export function FilterSelect({
   filteredOptions,
 }: FilterSelectProps) {
   const displayOptions = searchable ? (filteredOptions || options) : options
-  
+
   const toggleSelection = (value: string) => {
     const newSelection = selectedValues.includes(value)
       ? selectedValues.filter(v => v !== value)
@@ -75,7 +76,7 @@ export function FilterSelect({
         >
           <div className="flex flex-wrap gap-1 items-center min-w-0 flex-1">
             <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
             </svg>
             <span className="truncate">{getButtonText()}</span>
             {selectedValues.length > 0 && (
@@ -89,14 +90,21 @@ export function FilterSelect({
                         variant="secondary"
                         className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-border"
                       >
-                        <span className="truncate max-w-[80px]">{option?.label || value}</span>
+                        <span className="truncate max-w-[80px] flex items-center gap-1.5 justify-between w-full">
+                          <span className="truncate">{option?.label || value}</span>
+                          {option?.icon && (
+                            <span className="text-muted-foreground flex-shrink-0 opacity-70">
+                              {option.icon}
+                            </span>
+                          )}
+                        </span>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-2 w-2 p-0 rounded-sm hover:"
                           onClick={(e) => removeFilter(value, e)}
                         >
-                          <X/>
+                          <X />
                         </Button>
                       </Badge>
                     )
@@ -107,8 +115,15 @@ export function FilterSelect({
                       variant="secondary"
                       className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-border"
                     >
-                      <span className="truncate max-w-[80px]">
-                        {options.find(opt => opt.value === selectedValues[0])?.label || selectedValues[0]}
+                      <span className="truncate max-w-[120px] flex items-center gap-1.5 justify-between w-full">
+                        <span className="truncate">
+                          {options.find(opt => opt.value === selectedValues[0])?.label || selectedValues[0]}
+                        </span>
+                        {options.find(opt => opt.value === selectedValues[0])?.icon && (
+                          <span className="text-muted-foreground flex-shrink-0 opacity-70">
+                            {options.find(opt => opt.value === selectedValues[0])?.icon}
+                          </span>
+                        )}
                       </span>
                       <Button
                         variant="ghost"
@@ -116,7 +131,7 @@ export function FilterSelect({
                         className="h-2 w-2 p-0 rounded-sm"
                         onClick={(e) => removeFilter(selectedValues[0], e)}
                       >
-                        <X/>
+                        <X />
                       </Button>
                     </Badge>
                     <span className="text-xs text-muted-foreground">
@@ -129,79 +144,80 @@ export function FilterSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className={cn("p-0", contentWidth)} 
+      <PopoverContent
+        className={cn("p-0", contentWidth)}
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="flex flex-col">
-            {/* Search input at the top */}
-            {searchable && onSearchChange ? (
-              <FilterSearchInput
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={onSearchChange}
-                autoFocus={false}
-              />
-            ) : (
-              /* Clear/All option - only show if not searchable */
-              <div className="p-1">
-                <div className="flex items-center space-x-2 p-2">
-                  <Checkbox
-                    id="select-all"
-                    checked={selectedValues.length === 0}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        onClear()
-                      }
-                    }}
-                  />
-                  <label
-                    htmlFor="select-all"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {placeholder}
-                  </label>
-                </div>
-                <div className="border-t border-border" />
+          {/* Search input at the top */}
+          {searchable && onSearchChange ? (
+            <FilterSearchInput
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={onSearchChange}
+              autoFocus={false}
+            />
+          ) : (
+            /* Clear/All option - only show if not searchable */
+            <div className="p-1">
+              <div className="flex items-center space-x-2 p-2">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedValues.length === 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      onClear()
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="select-all"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  {placeholder}
+                </label>
               </div>
-            )}
-            
-            {/* Options with native checkboxes */}
-            {displayOptions.length > 0 ? (
-              <div className="max-h-48 overflow-y-auto p-1">
-                {displayOptions.map((option) => {
-                  const isSelected = selectedValues.includes(option.value)
-                  return (
-                    <div key={option.value} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm">
-                      <Checkbox
-                        id={option.value}
-                        checked={isSelected}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            onSelectionChange([...selectedValues, option.value])
-                          } else {
-                            onSelectionChange(selectedValues.filter(v => v !== option.value))
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor={option.value}
-                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                      >
-                        {option.label}
-                      </label>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : searchable ? (
-              <div className="px-2 py-1 text-sm text-muted-foreground text-center">
-                No results found
-              </div>
-            ) : null}
+              <div className="border-t border-border" />
+            </div>
+          )}
+
+          {/* Options with native checkboxes */}
+          {displayOptions.length > 0 ? (
+            <div className="max-h-48 overflow-y-auto p-1">
+              {displayOptions.map((option) => {
+                const isSelected = selectedValues.includes(option.value)
+                return (
+                  <div key={option.value} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm">
+                    <Checkbox
+                      id={option.value}
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectionChange([...selectedValues, option.value])
+                        } else {
+                          onSelectionChange(selectedValues.filter(v => v !== option.value))
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={option.value}
+                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center justify-between gap-3"
+                    >
+                      <span className="truncate">{option.label}</span>
+                      {option.icon}
+                    </label>
+                  </div>
+                )
+              })}
+            </div>
+          ) : searchable ? (
+            <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+              No results found
+            </div>
+          ) : null}
         </div>
       </PopoverContent>
-    </Popover>
+    </Popover >
   )
 }

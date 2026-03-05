@@ -1812,3 +1812,69 @@ export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
     createdAt: new Date("2024-03-20")
   }
 ];
+
+// ============================================================================
+// SMS TEMPLATES DATA
+// ============================================================================
+
+export type SmsTemplateCategory = "MARKETING" | "UTILITY" | "AUTHENTICATION";
+
+export interface SmsTemplate {
+  id: string;
+  name: string;
+  category: SmsTemplateCategory;
+  content: string;
+  description?: string;
+}
+
+export const mockSmsTemplates: SmsTemplate[] = [
+  {
+    id: "sms-template-1",
+    name: "flash_sale",
+    category: "MARKETING",
+    description: "Announce a short-term sale",
+    content: "⚡ Flash Sale! Get 20% off all items today only at Acme Corp. Shop now: https://example.com/sale Reply STOP to opt out."
+  },
+  {
+    id: "sms-template-2",
+    name: "appointment_reminder",
+    category: "UTILITY",
+    description: "Remind customers of upcoming appointments",
+    content: "Hi @[First Name](firstName), this is a reminder for your appointment tomorrow at 10:00 AM. Reply 1 to confirm or call us to reschedule."
+  },
+  {
+    id: "sms-template-3",
+    name: "delivery_update",
+    category: "UTILITY",
+    description: "Update customers on their order delivery",
+    content: "Good news! Your order from @[Company Name](companyName) is out for delivery today. Track it here: https://example.com/track"
+  },
+  {
+    id: "sms-template-4",
+    name: "otp_verification",
+    category: "AUTHENTICATION",
+    description: "Send login codes",
+    content: "Your Acme Corp verification code is: {{otp_code}}. It will expire in 5 minutes. Do not share this code with anyone."
+  },
+  {
+    id: "sms-template-5",
+    name: "abandoned_cart",
+    category: "MARKETING",
+    description: "Remind customers about items in their cart",
+    content: "Hi @[First Name](firstName), you left some great items in your cart! Complete your purchase now and get 10% off with code CART10: https://example.com/checkout"
+  },
+  {
+    id: "sms-template-6",
+    name: "event_invitation",
+    category: "MARKETING",
+    description: "Invite users to an upcoming event",
+    content: "You're invited! Join us for our annual Summer Bash on July 15th. RSVP by replying YES to this message or visit our website for more details."
+  },
+  {
+    id: "sms-template-7",
+    name: "feedback_request",
+    category: "UTILITY",
+    description: "Ask customers for feedback after a service",
+    content: "Hi @[First Name](firstName), thanks for choosing Acme Corp! How was your recent experience? Please rate us 1-5 (5 being best) by replying to this message."
+  }
+];

@@ -91,6 +91,8 @@ function CampaignsPageContent() {
   const [typeSearchQuery, setTypeSearchQuery] = React.useState("")
   const [channelFilter, setChannelFilter] = React.useState<string[]>([])
   const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
+  const [senderFilter, setSenderFilter] = React.useState<string[]>([])
+  const [senderSearchQuery, setSenderSearchQuery] = React.useState("")
   const [selectedView, setSelectedView] = React.useState<string>("all")
 
   // Delete Campaign State
@@ -191,9 +193,17 @@ function CampaignsPageContent() {
   ]
 
   const channelOptions = [
-    { value: "Email", label: "Email" },
-    { value: "SMS", label: "SMS" },
-    { value: "Whatsapp", label: "Whatsapp" }
+    { value: "Email", label: "Email", icon: <EnvelopeSimple className="h-4 w-4 text-muted-foreground" weight="fill" /> },
+    { value: "SMS", label: "SMS", icon: <ChatText className="h-4 w-4 text-muted-foreground" weight="fill" /> },
+    { value: "Whatsapp", label: "Whatsapp", icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4 grayscale opacity-70" /> }
+  ]
+
+  const senderOptions = [
+    { value: "CEQUENS", label: "CEQUENS", icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4 grayscale opacity-70" /> },
+    { value: "Verify", label: "Verify", icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4 grayscale opacity-70" /> },
+    { value: "+1234567890", label: "+1234567890", icon: <ChatText className="h-4 w-4 text-muted-foreground" weight="fill" /> },
+    { value: "marketing@company.com", label: "marketing@company.com", icon: <EnvelopeSimple className="h-4 w-4 text-muted-foreground" weight="fill" /> },
+    { value: "support@company.com", label: "support@company.com", icon: <EnvelopeSimple className="h-4 w-4 text-muted-foreground" weight="fill" /> }
   ]
 
   // Filtered options based on search
@@ -203,6 +213,10 @@ function CampaignsPageContent() {
 
   const filteredChannelOptions = channelOptions.filter(option =>
     option.label.toLowerCase().includes(channelSearchQuery.toLowerCase())
+  )
+
+  const filteredSenderOptions = senderOptions.filter(option =>
+    option.label.toLowerCase().includes(senderSearchQuery.toLowerCase())
   )
 
   // Dynamic page title
@@ -245,8 +259,12 @@ function CampaignsPageContent() {
       newFilters.push({ id: 'channel', value: channelFilter })
     }
 
+    if (senderFilter.length > 0) {
+      newFilters.push({ id: 'senderId', value: senderFilter })
+    }
+
     setColumnFilters(newFilters)
-  }, [typeFilter, channelFilter])
+  }, [typeFilter, channelFilter, senderFilter])
 
   // Column definitions for the campaigns table
   const columns = React.useMemo<ColumnDef<Campaign>[]>(() => [
@@ -333,6 +351,25 @@ function CampaignsPageContent() {
           </div>
         );
       },
+    },
+    {
+      id: "senderId",
+      header: "Sender ID",
+      accessorFn: (row) => {
+        const val = (row as any).sender_id || (row as any).senderId;
+        if (val) return val;
+        // Mock based on channel
+        const channel = (row as any).channel || (row.type as string);
+        if (channel === "SMS") return "+1234567890";
+        if (channel === "Whatsapp") return "CEQUENS";
+        if (channel === "Email") return "marketing@company.com";
+        return "—";
+      },
+      cell: ({ row }) => (
+        <span className="text-muted-foreground whitespace-nowrap">
+          {row.getValue("senderId") as string}
+        </span>
+      ),
     },
     {
       accessorKey: "status",
@@ -561,6 +598,19 @@ function CampaignsPageContent() {
               searchQuery: channelSearchQuery,
               onSearchChange: setChannelSearchQuery,
               filteredOptions: filteredChannelOptions
+            },
+            {
+              key: "senderId",
+              label: "Sender ID",
+              options: senderOptions,
+              selectedValues: senderFilter,
+              onSelectionChange: setSenderFilter,
+              onClear: () => setSenderFilter([]),
+              searchable: true,
+              searchPlaceholder: "Search sender IDs...",
+              searchQuery: senderSearchQuery,
+              onSearchChange: setSenderSearchQuery,
+              filteredOptions: filteredSenderOptions
             }
           ]}
           pagination={{
