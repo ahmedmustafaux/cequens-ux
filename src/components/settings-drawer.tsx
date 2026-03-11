@@ -30,7 +30,8 @@ import {
     Zap,
     Smartphone,
     QrCode,
-    Settings2
+    Settings2,
+    Plus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -57,38 +58,43 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { SheetDescription } from "@/components/ui/sheet"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { TopupDialog } from "@/pages/Billing/components/TopupDialog"
+import { ArrowUpRight, TrendingUp } from "lucide-react"
 
 const settingsNav = [
     {
-        category: "General",
+        category: "Account",
         items: [
-            { id: "profile", title: "Account Information", icon: User, description: "Manage your personal details and preferences" },
-            { id: "company", title: "Company Details", icon: Building2, description: "Manage company information and branding" },
+            { id: "profile", title: "My details", icon: User, description: "Manage your personal information and preferences" },
+            { id: "security", title: "Password & Security", icon: Shield, description: "Configure 2FA, SSO and password policies" },
+            { id: "audit", title: "Login Activity", icon: FileText, description: "View recent login attempts and system activity" },
         ]
     },
     {
-        category: "Organization",
+        category: "Subscription",
         items: [
-            { id: "users", title: "Users & Permissions", icon: Users, description: "Manage team members and their roles" },
-            { id: "security", title: "Security", icon: Shield, description: "Configure 2FA, SSO and password policies" },
-            { id: "audit", title: "Audit Logs", icon: FileText, description: "View system activity and changes" },
-        ]
-    },
-    {
-        category: "Billing",
-        items: [
-            { id: "plans", title: "Plans & Features", icon: CreditCard, description: "Manage your subscription and limits" },
-            { id: "usage", title: "Usage & Credits", icon: Zap, description: "Monitor your consumption and credit balance" },
-            { id: "payments", title: "Payment Methods", icon: Wallet, description: "Manage credit cards and billing information" },
-            { id: "invoices", title: "Invoices", icon: Receipt, description: "View and download past invoices" },
-        ]
-    },
-    {
-        category: "Platform",
-        items: [
-            { id: "integrations", title: "Integrations", icon: Plug, description: "Connect with third-party services" },
-            { id: "notifications", title: "Notifications", icon: Bell, description: "Manage email and system alerts" },
-            { id: "api", title: "API Settings", icon: Database, description: "Manage API keys and webhooks" },
+            { id: "billing", title: "Billing", icon: Wallet, description: "Manage billing, plans, and payment methods" },
+            { id: "teams", title: "Teams", icon: Users, description: "Manage team members and organization structure" },
+            { id: "coverage", title: "Coverage & Prices", icon: Globe, description: "View service availability and pricing details" },
         ]
     }
 ]
@@ -126,6 +132,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
     const [isBouncing, setIsBouncing] = React.useState(false)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [highlightedItem, setHighlightedItem] = React.useState<string | null>(null)
+    const [isTopupOpen, setIsTopupOpen] = React.useState(false)
 
     // Filter search results
     const searchResults = React.useMemo(() => {
@@ -198,7 +205,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
             <SheetContent
                 side="bottom"
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="h-[94vh] rounded-t-xl p-0 overflow-hidden bg-secondary outline-none shadow-2xl"
+                className="h-[94vh] rounded-t-xl p-0 flex flex-col overflow-hidden bg-secondary outline-none shadow-2xl"
             >
                 <style>{`
                     @keyframes shake {
@@ -218,6 +225,12 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
 
                         {/* Left: Title - 2 cols (matches sidebar) */}
                         <div className="col-span-12 md:col-span-3 xl:col-span-2 flex items-center gap-3">
+                            <SheetHeader>
+                                <VisuallyHidden>
+                                    <SheetTitle>Settings</SheetTitle>
+                                    <SheetDescription>Manage your account settings and preferences.</SheetDescription>
+                                </VisuallyHidden>
+                            </SheetHeader>
                             <div className="size-8 bg-gray-100 rounded-lg flex items-center justify-center text-foreground shrink-0">
                                 <Settings className="size-4" />
                             </div>
@@ -300,14 +313,14 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                 </div>
 
                 {/* Main Body - Centered Grid Layout */}
-                <div className="flex-1 overflow-hidden bg-muted/10">
-                    <div className="h-full w-full py-8">
-                        <div className="grid grid-cols-12 gap-6 px-4 md:px-8 max-w-[1600px] mx-auto h-full min-h-0">
+                <div className="flex-1 overflow-y-auto bg-muted/10">
+                    <div className="w-full pb-8">
+                        <div className="grid grid-cols-12 gap-6 px-4 md:px-8 max-w-[1600px] mx-auto items-start">
                             {/* Spacer - 2 cols */}
                             <div className="col-span-2 hidden xl:block" />
 
-                            {/* Sidebar - 2 cols - Fixed scrolling */}
-                            <div className="col-span-12 md:col-span-3 xl:col-span-2 flex flex-col gap-6 h-full overflow-y-auto scrollbar-none">
+                            {/* Sidebar - 2 cols - Sticky positioning */}
+                            <div className="col-span-12 md:col-span-3 xl:col-span-2 flex flex-col gap-6 sticky top-4 h-fit pb-20">
                                 <div className="rounded-xl border bg-background shadow-sm overflow-hidden py-2 shrink-0">
                                     {settingsNav.map((group, i) => (
                                         <div key={i} className="mb-4 last:mb-0">
@@ -343,16 +356,16 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                 </div>
                             </div>
 
-                            {/* Content - 6 cols - Scrollable content area */}
-                            <div className="col-span-12 md:col-span-9 xl:col-span-6 flex flex-col gap-6 h-full min-h-0">
+                            {/* Content - 6 cols - Scrolls with parent */}
+                            <div className="col-span-12 md:col-span-9 xl:col-span-6 flex flex-col pt-8 pr-2">
                                 {searchQuery ? (
-                                    <div className="flex flex-col h-full">
-                                        <div className="mb-6 px-1 pt-4">
+                                    <div className="flex flex-col">
+                                        <div className="mb-6 px-1">
                                             <h2 className="text-xl font-semibold tracking-tight">Search Results</h2>
                                             <p className="text-muted-foreground mt-1 text-sm">Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"</p>
                                         </div>
 
-                                        <ScrollArea className="flex-1 -mx-1 px-1">
+                                        <div className="flex-1 -mx-1 px-1">
                                             <div className="space-y-4 pb-20">
                                                 {searchResults.length > 0 ? (
                                                     <div className="grid gap-4">
@@ -389,79 +402,140 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                     </div>
                                                 )}
                                             </div>
-                                        </ScrollArea>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col h-full">
-                                        <div className="mb-6 px-1 pt-4">
+                                    <div className="flex flex-col">
+                                        <div className="mb-6 px-1">
                                             <h2 className="text-xl font-semibold tracking-tight">{currentTab.title}</h2>
                                             <p className="text-muted-foreground mt-1 text-sm">{currentTab.description}</p>
                                         </div>
 
-                                        <ScrollArea className="flex-1 -mx-1 px-1">
+                                        <div className="flex-1 -mx-1 px-1">
                                             <div className="space-y-6 pb-20">
-                                                {currentTab.id === "profile" && (
-                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                                        <SettingsGroup title="Personal Information" action={<Button variant="outline" size="sm">Change Avatar</Button>}>
-                                                            <div className="space-y-8">
-                                                                <div className="flex items-center gap-4">
-                                                                    <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                                                                        <AvatarImage src="/placeholder-user.jpg" />
-                                                                        <AvatarFallback className="bg-primary/10 text-primary text-xl">JD</AvatarFallback>
-                                                                    </Avatar>
-                                                                    <div className="flex-1">
-                                                                        <h3 className="font-medium">John Doe</h3>
-                                                                        <p className="text-sm text-muted-foreground">Product Manager</p>
-                                                                    </div>
-                                                                </div>
+                                                {(activeTab === "profile" || activeTab === "company") && (
+                                                    <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                                        <SettingsGroup title="Personal Information" action={<Button variant="outline" size="sm">Change Avatar</Button>} contentClassName="p-1">
+                                                            <div className="space-y-1">
+                                                                <Item className="rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="space-y-8 p-4">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
+                                                                                    <AvatarImage src="/placeholder-user.jpg" />
+                                                                                    <AvatarFallback className="bg-primary/10 text-primary text-xl">JD</AvatarFallback>
+                                                                                </Avatar>
+                                                                                <div className="flex-1">
+                                                                                    <h3 className="font-medium">John Doe</h3>
+                                                                                    <p className="text-sm text-muted-foreground">Product Manager</p>
+                                                                                </div>
+                                                                            </div>
 
-                                                                <div className="grid gap-5">
-                                                                    <div className="grid gap-2">
-                                                                        <label className="text-sm font-medium">Display Name</label>
-                                                                        <Input defaultValue="John Doe" className="bg-background" />
-                                                                    </div>
-                                                                    <div className="grid gap-2">
-                                                                        <label className="text-sm font-medium">Email Address</label>
-                                                                        <Input defaultValue="john@cequens.com" className="bg-background" />
-                                                                    </div>
-                                                                    <div className="grid gap-2">
-                                                                        <label className="text-sm font-medium">Phone Number</label>
-                                                                        <Input defaultValue="+1 (555) 000-0000" className="bg-background" />
-                                                                    </div>
-                                                                </div>
+                                                                            <div className="grid gap-5">
+                                                                                <div className="grid gap-2">
+                                                                                    <label className="text-sm font-medium">Display Name</label>
+                                                                                    <Input defaultValue="John Doe" className="bg-background" />
+                                                                                </div>
+                                                                                <div className="grid gap-2">
+                                                                                    <label className="text-sm font-medium">Email Address</label>
+                                                                                    <Input defaultValue="john@cequens.com" className="bg-background" />
+                                                                                </div>
+                                                                                <div className="grid gap-2">
+                                                                                    <label className="text-sm font-medium">Phone Number</label>
+                                                                                    <Input defaultValue="+1 (555) 000-0000" className="bg-background" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+                                                            </div>
+                                                        </SettingsGroup>
+
+                                                        <SettingsGroup title="Organization Details" contentClassName="p-1">
+                                                            <div className="space-y-1">
+                                                                <Item className="rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="grid gap-5 p-4">
+                                                                            <div className="grid gap-2">
+                                                                                <label className="text-sm font-medium">Company Name</label>
+                                                                                <Input defaultValue="Cequens" className="bg-background" />
+                                                                            </div>
+                                                                            <div className="grid gap-2">
+                                                                                <label className="text-sm font-medium">Website</label>
+                                                                                <Input defaultValue="https://cequens.com" className="bg-background" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
                                                             </div>
                                                         </SettingsGroup>
                                                     </div>
                                                 )}
 
-                                                {currentTab.id === "company" && (
-                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                                        <SettingsGroup title="Organization Details">
-                                                            <div className="grid gap-5">
-                                                                <div className="grid gap-2">
-                                                                    <label className="text-sm font-medium">Company Name</label>
-                                                                    <Input defaultValue="Cequens" className="bg-background" />
-                                                                </div>
-                                                                <div className="grid gap-2">
-                                                                    <label className="text-sm font-medium">Website</label>
-                                                                    <Input defaultValue="https://cequens.com" className="bg-background" />
-                                                                </div>
-                                                                <div className="fixed-grid grid-cols-2 gap-4">
-                                                                    <div className="grid gap-2">
-                                                                        <label className="text-sm font-medium">Tax ID</label>
-                                                                        <Input defaultValue="TAX-123456789" className="bg-background" />
+                                                {activeTab === "billing" && (
+                                                    <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-8">
+                                                        <SettingsGroup title="Balance & Credit" action={<Button size="sm" onClick={() => setIsTopupOpen(true)}>Top up balance</Button>}>
+                                                            <div className="flex py-2 items-center space-x-4">
+                                                                <div className="flex flex-1 flex-col gap-0.5">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                                            <Wallet className="size-4" />
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-muted-foreground pt-0.5">Available Balance</span>
                                                                     </div>
-                                                                    <div className="grid gap-2">
-                                                                        <label className="text-sm font-medium">Currency</label>
-                                                                        <Input defaultValue="USD - US Dollar" disabled className="bg-muted" />
+                                                                    <span className="text-xl font-bold tracking-tight text-foreground pl-10">EGP 1,250.00</span>
+                                                                </div>
+
+                                                                <Separator orientation="vertical" className="h-10" />
+
+                                                                <div className="flex flex-1 flex-col gap-0.5">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-600 shrink-0">
+                                                                            <CreditCard className="size-4" />
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-muted-foreground pt-0.5">Credit Limit</span>
                                                                     </div>
+                                                                    <span className="text-xl font-bold tracking-tight text-orange-600 pl-10">EGP 5,000.00</span>
                                                                 </div>
                                                             </div>
                                                         </SettingsGroup>
+
+                                                        <SettingsGroup title="Billing History" contentClassName="p-0 overflow-hidden">
+                                                            <Table>
+                                                                <TableHeader className="bg-muted/50">
+                                                                    <TableRow>
+                                                                        <TableHead className="font-semibold w-[100px]">Invoice</TableHead>
+                                                                        <TableHead className="font-semibold">Date</TableHead>
+                                                                        <TableHead className="font-semibold">Status</TableHead>
+                                                                        <TableHead className="font-semibold text-right">Amount</TableHead>
+                                                                    </TableRow>
+                                                                </TableHeader>
+                                                                <TableBody>
+                                                                    {[
+                                                                        { id: "INV-001", date: "Mar 01, 2026", status: "Paid", amount: "$500.00" },
+                                                                        { id: "INV-002", date: "Feb 01, 2026", status: "Paid", amount: "$250.00" },
+                                                                        { id: "INV-003", date: "Jan 01, 2026", status: "Paid", amount: "$150.00" },
+                                                                    ].map((invoice) => (
+                                                                        <TableRow key={invoice.id} className="hover:bg-muted/30 transition-colors">
+                                                                            <TableCell className="font-medium text-sm">{invoice.id}</TableCell>
+                                                                            <TableCell className="text-sm text-muted-foreground">{invoice.date}</TableCell>
+                                                                            <TableCell>
+                                                                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-green-50 text-green-700 border-green-200 shadow-none font-medium">
+                                                                                    {invoice.status}
+                                                                                </Badge>
+                                                                            </TableCell>
+                                                                            <TableCell className="text-right text-sm font-bold">{invoice.amount}</TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </TableBody>
+                                                            </Table>
+                                                        </SettingsGroup>
+
+                                                        <TopupDialog open={isTopupOpen} onOpenChange={setIsTopupOpen} />
                                                     </div>
                                                 )}
 
-                                                {currentTab.id === "users" && (
+                                                {activeTab === "teams" && (
                                                     <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
                                                         <SettingsGroup
                                                             title="Team Members"
@@ -490,8 +564,8 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                     </div>
                                                 )}
 
-                                                {currentTab.id === "security" && (
-                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                                {activeTab === "security" && (
+                                                    <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-8">
                                                         <SettingsGroup title="Authentication" contentClassName="p-1">
                                                             <div className="space-y-1">
                                                                 <Item className="hover:bg-muted/50 transition-colors rounded-lg">
@@ -533,132 +607,186 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                             </div>
                                                         </SettingsGroup>
 
-                                                        <SettingsGroup title="Credentials" contentClassName="p-1">
-                                                            <Item className="rounded-lg">
-                                                                <ItemContent>
-                                                                    <div className="flex items-center justify-between p-2">
-                                                                        <div>
-                                                                            <ItemTitle>Password</ItemTitle>
-                                                                            <ItemDescription>Last changed 3 months ago</ItemDescription>
+                                                        <SettingsGroup title="Security Controls" contentClassName="p-1">
+                                                            <div className="space-y-1">
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="space-y-1 pr-4">
+                                                                                <label className="text-sm font-medium">Change password</label>
+                                                                                <p className="text-xs text-muted-foreground">Your password has not changed in the last 144 days.</p>
+                                                                            </div>
+                                                                            <Button variant="outline" size="sm" className="h-8 text-xs shrink-0">Change password</Button>
                                                                         </div>
-                                                                        <Button variant="outline" size="sm">Change Password</Button>
-                                                                    </div>
-                                                                </ItemContent>
-                                                            </Item>
-                                                        </SettingsGroup>
-                                                    </div>
-                                                )}
+                                                                    </ItemContent>
+                                                                </Item>
 
-                                                {currentTab.id === "plans" && (
-                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                                        <SettingsGroup title="Current Plan" action={<Badge className="bg-primary text-primary-foreground">Active</Badge>}>
-                                                            <div className="space-y-6">
-                                                                <div className="flex justify-between items-start mb-4">
-                                                                    <div>
-                                                                        <h3 className="text-lg font-bold text-primary">Pro Plan</h3>
-                                                                        <p className="text-sm text-muted-foreground">$29/month</p>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-2 text-sm text-muted-foreground">
-                                                                    <div className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Unlimited Projects</div>
-                                                                    <div className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Advanced Analytics</div>
-                                                                    <div className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Priority Support</div>
-                                                                </div>
-                                                                <Button className="w-full mt-6">Manage Subscription</Button>
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="space-y-1 pr-4">
+                                                                                <label className="text-sm font-medium">Enable auto logout</label>
+                                                                                <p className="text-xs text-muted-foreground">Enable auto logout after x minutes</p>
+                                                                            </div>
+                                                                            <Switch />
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="space-y-1 pr-4">
+                                                                                <label className="text-sm font-medium">Single Sign-On</label>
+                                                                                <p className="text-xs text-muted-foreground">Setup is done, if enabled users can use SSO now.</p>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-4 shrink-0">
+                                                                                <Button variant="outline" className="h-8 px-3 text-xs font-medium">Edit SSO Settings</Button>
+                                                                                <Switch defaultChecked />
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+                                                            </div>
+                                                        </SettingsGroup>
+
+                                                        <SettingsGroup title="Account Policies" contentClassName="p-1">
+                                                            <div className="space-y-1">
+                                                                {/* Incorrect Logins */}
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="flex flex-col pr-4">
+                                                                                <label className="text-sm font-medium">Set maximum number for incorrect logins</label>
+                                                                                <p className="text-xs text-muted-foreground mt-0.5">Users under this account who will exceed the limit will be automatically locked out.</p>
+                                                                            </div>
+                                                                            <div className="w-[80px] shrink-0">
+                                                                                <Select defaultValue="5">
+                                                                                    <SelectTrigger className="h-8 px-3 text-xs w-full">
+                                                                                        <SelectValue placeholder="Select" />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        <SelectItem value="3">3</SelectItem>
+                                                                                        <SelectItem value="5">5</SelectItem>
+                                                                                        <SelectItem value="10">10</SelectItem>
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+
+                                                                {/* Inactive User Policy */}
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="space-y-1 pr-4">
+                                                                                <label className="text-sm font-medium">Set inactive user policy</label>
+                                                                                <p className="text-xs text-muted-foreground">Users will be deactivated after not logging in for a specified period.</p>
+                                                                            </div>
+                                                                            <Switch />
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+
+                                                                {/* Password Expiry */}
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="flex flex-col pr-4">
+                                                                                <label className="text-sm font-medium">Set password expiry policy</label>
+                                                                                <p className="text-xs text-muted-foreground mt-0.5">Passwords for users under this account will expire after the specified number of days.</p>
+                                                                            </div>
+                                                                            <div className="w-[100px] shrink-0">
+                                                                                <Select defaultValue="90">
+                                                                                    <SelectTrigger className="h-8 px-3 text-xs w-full">
+                                                                                        <SelectValue placeholder="Select" />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        <SelectItem value="30">30 days</SelectItem>
+                                                                                        <SelectItem value="60">60 days</SelectItem>
+                                                                                        <SelectItem value="90">90 days</SelectItem>
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+
+                                                                {/* Auto Logout */}
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex flex-col p-2 space-y-4">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="space-y-1 pr-4">
+                                                                                    <label className="text-sm font-medium">Force auto logout after inactivity</label>
+                                                                                    <p className="text-xs text-muted-foreground">Users will be logged out automatically from the portal after being inactive.</p>
+                                                                                </div>
+                                                                                <Switch defaultChecked />
+                                                                            </div>
+                                                                            <div className="w-full xl:w-1/2">
+                                                                                <div className="flex items-center justify-between mb-3">
+                                                                                    <span className="text-[10px] uppercase font-semibold text-muted-foreground tabular-nums">Inactivity duration</span>
+                                                                                    <Badge variant="secondary" className="text-[10px] font-mono">40 Min</Badge>
+                                                                                </div>
+                                                                                <Slider defaultValue={[40]} max={120} step={5} className="py-2" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
+
+                                                                {/* IP Whitelist */}
+                                                                <Item className="hover:bg-muted/50 transition-colors rounded-lg">
+                                                                    <ItemContent>
+                                                                        <div className="flex items-center justify-between p-2">
+                                                                            <div className="space-y-1 pr-4">
+                                                                                <label className="text-sm font-medium">IP Whitelist</label>
+                                                                                <p className="text-xs text-muted-foreground">Limit your IP access list to ensure only authorized connections.</p>
+                                                                            </div>
+                                                                            <Button variant="outline" size="sm" className="h-8 text-xs">Edit List</Button>
+                                                                        </div>
+                                                                    </ItemContent>
+                                                                </Item>
                                                             </div>
                                                         </SettingsGroup>
                                                     </div>
                                                 )}
 
-                                                {currentTab.id === "notifications" && (
-                                                    <div className="grid gap-4 animate-in fade-in duration-300 slide-in-from-bottom-4">
-                                                        <div className="space-y-4">
-                                                            <SettingsGroup title="Notifications" contentClassName="p-1">
-                                                                <div className="space-y-1">
-                                                                    <Item size="default" className="cursor-pointer hover:bg-muted/50 transition-colors rounded-lg" onClick={() => { setNotificationSettings(prev => ({ ...prev, emailNotifications: !prev.emailNotifications })) }}>
-                                                                        <ItemContent>
-                                                                            <div className="px-4 py-3 flex items-start gap-3">
-                                                                                <Checkbox id="email-notifications" checked={notificationSettings.emailNotifications} onCheckedChange={(checked) => { setNotificationSettings(prev => ({ ...prev, emailNotifications: !!checked })) }} className="mt-0.5" />
-                                                                                <div>
-                                                                                    <ItemTitle>Email Notifications</ItemTitle>
-                                                                                    <ItemDescription className="text-xs mt-1">Receive notifications via email</ItemDescription>
-                                                                                </div>
-                                                                            </div>
-                                                                        </ItemContent>
-                                                                    </Item>
-                                                                    <Separator />
-                                                                    <Item size="default" className="cursor-pointer hover:bg-muted/50 transition-colors rounded-lg" onClick={() => { setNotificationSettings(prev => ({ ...prev, pushNotifications: !prev.pushNotifications })) }}>
-                                                                        <ItemContent>
-                                                                            <div className="px-4 py-3 flex items-start gap-3">
-                                                                                <Checkbox id="push-notifications" checked={notificationSettings.pushNotifications} onCheckedChange={(checked) => { setNotificationSettings(prev => ({ ...prev, pushNotifications: !!checked })) }} className="mt-0.5" />
-                                                                                <div>
-                                                                                    <ItemTitle>Push Notifications</ItemTitle>
-                                                                                    <ItemDescription className="text-xs mt-1">Show browser notifications</ItemDescription>
-                                                                                </div>
-                                                                            </div>
-                                                                        </ItemContent>
-                                                                    </Item>
-                                                                    <Separator />
-                                                                    <Item size="default" className="cursor-pointer hover:bg-muted/50 transition-colors rounded-lg" onClick={() => { setNotificationSettings(prev => ({ ...prev, autoArchive: !prev.autoArchive })) }}>
-                                                                        <ItemContent>
-                                                                            <div className="px-4 py-3 flex items-start gap-3">
-                                                                                <Checkbox id="auto-archive" checked={notificationSettings.autoArchive} onCheckedChange={(checked) => { setNotificationSettings(prev => ({ ...prev, autoArchive: !!checked })) }} className="mt-0.5" />
-                                                                                <div>
-                                                                                    <ItemTitle>Auto Archive</ItemTitle>
-                                                                                    <ItemDescription className="text-xs mt-1">Archive read notifications after 30 days</ItemDescription>
-                                                                                </div>
-                                                                            </div>
-                                                                        </ItemContent>
-                                                                    </Item>
-                                                                    <Separator />
-                                                                    <Item size="default" className="cursor-pointer hover:bg-muted/50 transition-colors rounded-lg" onClick={() => { setNotificationSettings(prev => ({ ...prev, showPriority: !prev.showPriority })) }}>
-                                                                        <ItemContent>
-                                                                            <div className="px-4 py-3 flex items-start gap-3">
-                                                                                <Checkbox id="show-priority" checked={notificationSettings.showPriority} onCheckedChange={(checked) => { setNotificationSettings(prev => ({ ...prev, showPriority: !!checked })) }} className="mt-0.5" />
-                                                                                <div>
-                                                                                    <ItemTitle>Show Priority Badges</ItemTitle>
-                                                                                    <ItemDescription className="text-xs mt-1">Display priority indicators</ItemDescription>
-                                                                                </div>
-                                                                            </div>
-                                                                        </ItemContent>
-                                                                    </Item>
-                                                                </div>
-                                                            </SettingsGroup>
-                                                        </div>
-
-
-                                                        <SettingsGroup title="Notification position">
-                                                            <RadioGroup value={notificationSettings.notificationPosition} onValueChange={(value) => { setNotificationSettings(prev => ({ ...prev, notificationPosition: value })); toast.info("Notification position preview", { description: "This is how notifications will appear", position: value as any }); }} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                                {["top-right", "bottom-right", "bottom-center"].map((pos) => (
-                                                                    <div key={pos} className="flex flex-col items-center">
-                                                                        <div className="w-full cursor-pointer group" onClick={() => { setNotificationSettings(prev => ({ ...prev, notificationPosition: pos })); toast.info("Notification position preview", { description: "This is how notifications will appear", position: pos as any }); }}>
-                                                                            <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
-                                                                                <div className="w-full h-full p-2">
-                                                                                    <div className="overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative">
-                                                                                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
-                                                                                        <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                                                                        <div className="absolute top-4 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                                                                        <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                                                                        <div className={cn("absolute m-0.5 w-1/3 h-3 bg-muted-foreground/40 rounded-sm border border-border-muted flex items-center justify-center group-hover:bg-primary/70 group-hover:border-border-primary transition-colors", pos === "top-right" && "top-0 right-0", pos === "bottom-right" && "bottom-0 right-0", pos === "bottom-center" && "bottom-0 left-1/2 transform -translate-x-1/2")}>
-                                                                                            <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex items-center space-x-2 justify-center mt-2">
-                                                                                <RadioGroupItem value={pos} id={pos} />
-                                                                                <label htmlFor={pos} className="text-sm capitalize">{pos.replace("-", " ")}</label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </RadioGroup>
+                                                {activeTab === "audit" && (
+                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                                        <SettingsGroup title="Login History" contentClassName="p-0 overflow-hidden">
+                                                            <Table>
+                                                                <TableHeader className="bg-muted/50">
+                                                                    <TableRow>
+                                                                        <TableHead className="font-semibold">User</TableHead>
+                                                                        <TableHead className="font-semibold">Date/Time</TableHead>
+                                                                        <TableHead className="font-semibold">IP</TableHead>
+                                                                        <TableHead className="font-semibold">OS</TableHead>
+                                                                        <TableHead className="font-semibold">Device</TableHead>
+                                                                    </TableRow>
+                                                                </TableHeader>
+                                                                <TableBody>
+                                                                    {[
+                                                                        { user: "BhramTest", time: "March 10th 2026, 6:10:45 pm", ip: "41.235.164.204", os: "Mac", device: "desktop" },
+                                                                        { user: "BhramTest", time: "March 10th 2026, 5:13:27 pm", ip: "41.235.164.204", os: "Mac", device: "desktop" },
+                                                                        { user: "BhramTest", time: "March 10th 2026, 12:13:26 pm", ip: "41.235.214.122", os: "Mac", device: "desktop" },
+                                                                    ].map((log, i) => (
+                                                                        <TableRow key={i} className="hover:bg-muted/30 transition-colors">
+                                                                            <TableCell className="text-sm">{log.user}</TableCell>
+                                                                            <TableCell className="text-sm text-muted-foreground">{log.time}</TableCell>
+                                                                            <TableCell className="text-sm font-mono text-muted-foreground">{log.ip}</TableCell>
+                                                                            <TableCell className="text-sm text-muted-foreground">{log.os}</TableCell>
+                                                                            <TableCell className="text-sm text-muted-foreground">{log.device}</TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </TableBody>
+                                                            </Table>
                                                         </SettingsGroup>
                                                     </div>
                                                 )}
 
                                                 {/* Catch-all for other tabs */}
-                                                {["profile", "company", "users", "security", "plans", "notifications"].indexOf(currentTab.id) === -1 && (
+                                                {["profile", "billing", "teams", "security", "audit", "company"].indexOf(activeTab) === -1 && (
                                                     <div className="p-10 rounded-xl border-2 border-dashed border-muted bg-muted/5 flex flex-col items-center justify-center text-center gap-2 text-muted-foreground">
                                                         <div className="size-12 rounded-full bg-muted/20 flex items-center justify-center">
                                                             <currentTab.icon className="size-6" />
@@ -668,7 +796,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                     </div>
                                                 )}
                                             </div>
-                                        </ScrollArea>
+                                        </div>
                                     </div>
                                 )}
                             </div>

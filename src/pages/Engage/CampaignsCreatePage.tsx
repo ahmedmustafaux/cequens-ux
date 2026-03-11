@@ -16,8 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { PageHeader } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check, CheckCircle2, AlertCircle, Upload, FileUp } from "lucide-react"
-import { EnvelopeSimple, ChatText } from "phosphor-react"
+import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check, CheckCircle2, AlertCircle, Upload, FileUp, Play, Pause, FileAudio, UploadCloud, Square } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone } from "phosphor-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
@@ -62,7 +62,7 @@ import { ContactsCsvImportDrawer } from "@/components/contacts-csv-import-drawer
 
 interface CampaignFormData {
   name: string
-  type: "Email" | "SMS" | "Whatsapp" | ""
+  type: "Email" | "SMS" | "Whatsapp" | "Voice" | ""
   campaignType: "broadcast" | "condition"
   status: "Draft" | "Active" | "Completed"
   senderId: string
@@ -95,6 +95,12 @@ interface CampaignFormData {
   gaSource?: string
   gaMedium?: string
   gaCampaignName?: string
+  voiceType?: "tts" | "upload"
+  voiceContent?: string
+  voiceFileUrl?: string
+  voiceVoiceId?: string
+  voiceSpeed?: string
+  voiceDelay?: string
 }
 
 // Helper to strip react-mentions markup for length and display
@@ -401,7 +407,13 @@ export default function CampaignsCreatePage() {
         includeGoogleAnalytics: false,
         gaSource: "",
         gaMedium: "",
-        gaCampaignName: ""
+        gaCampaignName: "",
+        voiceType: "tts",
+        voiceContent: "",
+        voiceFileUrl: "",
+        voiceVoiceId: "danielle_f_us",
+        voiceSpeed: "1 (Normal)",
+        voiceDelay: "No Delay"
       }
     }
 
@@ -446,7 +458,13 @@ export default function CampaignsCreatePage() {
       includeGoogleAnalytics: false,
       gaSource: "",
       gaMedium: "",
-      gaCampaignName: ""
+      gaCampaignName: "",
+      voiceType: "tts",
+      voiceContent: "",
+      voiceFileUrl: "",
+      voiceVoiceId: "danielle_f_us",
+      voiceSpeed: "1 (Normal)",
+      voiceDelay: "No Delay"
     }
   })
 
@@ -518,6 +536,9 @@ export default function CampaignsCreatePage() {
       try {
         // Get connected channels from database
         const channels = await getUserConnectedChannels(user.id)
+        if (!channels.includes("voice")) {
+          channels.push("voice")
+        }
         setConnectedChannels(channels)
 
         // Load sender IDs from configured channels
@@ -573,6 +594,16 @@ export default function CampaignsCreatePage() {
             id: "support@company.com",
             label: "support@company.com",
             channel: "email",
+            status: "verified"
+          })
+        }
+
+        // Load Voice sender IDs
+        if (channels.includes("voice")) {
+          allSenderIds.push({
+            id: "voice-main",
+            label: "Main Voice Line (+1234567890)",
+            channel: "voice",
             status: "verified"
           })
         }
@@ -784,12 +815,17 @@ export default function CampaignsCreatePage() {
         return 4096
       case "Email":
         return 10000
+      case "Voice":
+        return 5000
       default:
         return 10000
     }
   }
 
   const getMessageLength = (() => {
+    if (formData.type === "Voice") {
+      return formData.voiceType === "tts" ? (formData.voiceContent?.length || 0) : 0
+    }
     let len = getPlainTextMessage(formData.message).length
     if (formData.type === "SMS" && formData.includeCtaLink && formData.ctaLinkUrl) {
       len += 26 // \n\nhttps://cqns.lk/y7Xx9p (26 chars)
@@ -810,7 +846,7 @@ export default function CampaignsCreatePage() {
       errors.type = "Campaign type is required"
     }
 
-    if (!formData.senderId.trim()) {
+    if (!formData.senderId.trim() && formData.type !== "Voice") {
       errors.senderId = "Sender ID is required"
     }
 
@@ -857,6 +893,14 @@ export default function CampaignsCreatePage() {
           }
         })
       }
+    } else if (formData.type === "Voice") {
+      if (formData.voiceType === "tts" && !(formData.voiceContent || "").trim()) {
+        errors.message = "Speech text is required"
+      } else if (formData.voiceType === "upload" && !formData.voiceFileUrl) {
+        errors.message = "Voice record is required"
+      } else if (formData.voiceType === "tts" && isOverLimit) {
+        errors.message = `Speech text exceeds ${characterLimit} character limit`
+      }
     } else {
       // Message validation for non-WhatsApp campaigns
       if (!formData.message.trim()) {
@@ -888,7 +932,7 @@ export default function CampaignsCreatePage() {
       if (!formData.type) {
         errors.type = "Campaign type is required"
       }
-      if (!formData.senderId.trim()) {
+      if (!formData.senderId.trim() && formData.type !== "Voice") {
         errors.senderId = "Sender ID is required"
       }
     } else if (step === 1) {
@@ -938,6 +982,14 @@ export default function CampaignsCreatePage() {
               errors[`templateVar_${variable.name}`] = `${variable.name} is required`
             }
           })
+        }
+      } else if (formData.type === "Voice") {
+        if (formData.voiceType === "tts" && !(formData.voiceContent || "").trim()) {
+          errors.message = "Speech text is required"
+        } else if (formData.voiceType === "upload" && !formData.voiceFileUrl) {
+          errors.message = "Voice record is required"
+        } else if (formData.voiceType === "tts" && isOverLimit) {
+          errors.message = `Speech text exceeds ${characterLimit} character limit`
         }
       } else {
         // Message validation for non-WhatsApp campaigns
@@ -1095,6 +1147,8 @@ export default function CampaignsCreatePage() {
         return <ChatText className="h-4 w-4" weight="fill" />
       case "Whatsapp":
         return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4" />
+      case "Voice":
+        return <PhoneIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
       default:
         return null
     }
@@ -1122,7 +1176,7 @@ export default function CampaignsCreatePage() {
       // Sender ID is required if type is selected
       // If sender IDs are available in dropdown, one must be selected
       // If no sender IDs available, manual entry is required
-      const hasSenderId = formData.type ? formData.senderId.trim() !== "" : true
+      const hasSenderId = formData.type === "Voice" ? true : (formData.type ? formData.senderId.trim() !== "" : true)
       return hasName && hasType && hasSenderId
     } else if (currentStep === 1) {
       // Validate Recipients step
@@ -1159,7 +1213,16 @@ export default function CampaignsCreatePage() {
         return true
       }
 
-      // Message validation for non-WhatsApp
+      // Message validation for Voice
+      if (formData.type === "Voice") {
+        if (formData.voiceType === "tts") {
+          return (formData.voiceContent || "").trim() !== "" && !isOverLimit
+        } else {
+          return !!formData.voiceFileUrl
+        }
+      }
+
+      // Message validation for non-WhatsApp/Voice
       const hasMessage = formData.message.trim() !== "" && !isOverLimit
       return hasSubject && hasMessage
     } else if (currentStep === 3) {
@@ -1297,6 +1360,13 @@ export default function CampaignsCreatePage() {
         !v.required || formData.templateVariables[v.name]?.trim()
       )
       return hasBasicFields && hasTemplate && allRequiredVarsFilled && !createCampaignMutation.isPending
+    }
+
+    if (formData.type === "Voice") {
+      const isVoiceValid = formData.voiceType === "tts"
+        ? (formData.voiceContent || "").trim() !== "" && !isOverLimit
+        : !!formData.voiceFileUrl
+      return hasBasicFields && isVoiceValid && !createCampaignMutation.isPending
     }
 
     return hasBasicFields && getPlainTextMessage(formData.message).trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
@@ -1494,7 +1564,7 @@ export default function CampaignsCreatePage() {
                         <Field>
                           <FieldLabel>Channel *</FieldLabel>
                           <FieldContent>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                               {connectedChannels.includes("whatsapp") ? (
                                 <Card
                                   className={`cursor-pointer shadow-none ${formData.type === "Whatsapp"
@@ -1736,16 +1806,101 @@ export default function CampaignsCreatePage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
+
+                              {connectedChannels.includes("voice") ? (
+                                <Card
+                                  className={`cursor-pointer shadow-none ${formData.type === "Voice"
+                                    ? "border-primary border-2"
+                                    : formErrors.type
+                                      ? "border-destructive border-2"
+                                      : ""
+                                    }`}
+                                  onClick={() => {
+                                    handleInputChange("type", "Voice")
+                                    // Reset message and sender ID when type changes
+                                    if (formData.message) {
+                                      handleInputChange("message", "")
+                                    }
+                                    handleInputChange("senderId", "")
+                                  }}
+                                >
+                                    <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                      <Phone
+                                        className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                                        weight="fill"
+                                      />
+                                      <div className="flex flex-col items-left gap-1">
+                                      <span className="text-sm font-semibold text-foreground">
+                                        Voice
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        TTS or Audio Voice
+                                      </span>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>
+                                        <Card className="shadow-none cursor-not-allowed opacity-50">
+                                          <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                            <Phone
+                                              className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50"
+                                              weight="fill"
+                                            />
+                                            <div className="flex flex-col items-left gap-1">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-foreground opacity-50">
+                                                  Voice
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                  Not configured
+                                                </Badge>
+                                              </div>
+                                              <span className="text-xs text-muted-foreground opacity-50">
+                                                TTS or Audio Voice
+                                              </span>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="p-3">
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm">Voice channel needs to be configured</p>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          className="h-auto p-0 text-primary underline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate("/channels/voice")
+                                          }}
+                                        >
+                                          Configure
+                                        </Button>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+
                             </div>
                           </FieldContent>
                           {formErrors.type && <FieldError>{formErrors.type}</FieldError>}
                         </Field>
 
                         <Field>
-                          <FieldLabel>Sender ID *</FieldLabel>
+                          <FieldLabel>Sender ID {formData.type !== "Voice" && "*"}</FieldLabel>
                           <FieldContent>
-                            <div className="w-[30%]">
-                              {formData.type && availableSenderIds.length > 0 ? (
+                            <div className={formData.type === "Voice" ? "w-fit" : "w-[30%]"}>
+                              {formData.type === "Voice" ? (
+                                <div className="text-sm font-medium text-muted-foreground p-3 bg-muted/30 rounded-md border border-border/50 whitespace-nowrap">
+                                  Use Random numbers instead of Caller IDs
+                                </div>
+                              ) : formData.type && availableSenderIds.length > 0 ? (
                                 <Select
                                   value={formData.senderId}
                                   onValueChange={(value) => handleInputChange("senderId", value)}
@@ -2445,15 +2600,206 @@ export default function CampaignsCreatePage() {
                         {formData.type !== "Whatsapp" && (
                           <Field>
                             <FieldLabel>
-                              Message Content *
-                              {formData.type && (
+                              {formData.type === "Voice" ? "Voice Content *" : "Message Content *"}
+                              {formData.type && formData.type !== "Voice" && (
                                 <span className="ml-2 text-muted-foreground font-normal">
                                   (Max {characterLimit.toLocaleString()} characters)
                                 </span>
                               )}
                             </FieldLabel>
                             <FieldContent>
-                              {(formData.type === "Email" || formData.type === "SMS") ? (
+                              {formData.type === "Voice" ? (
+                                <div className="space-y-6">
+                                  <RadioGroup
+                                    value={formData.voiceType}
+                                    onValueChange={(val: "tts" | "upload") => {
+                                      setFormData(prev => ({ ...prev, voiceType: val }))
+                                      setIsDirty(true)
+                                    }}
+                                    className="flex items-center gap-6"
+                                  >
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="tts" id="r-tts" />
+                                      <Label htmlFor="r-tts">Text-to-Speech</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="upload" id="r-upload" />
+                                      <Label htmlFor="r-upload">Upload Record</Label>
+                                    </div>
+                                  </RadioGroup>
+
+                                  {formData.voiceType === "tts" ? (
+                                    <div className="space-y-4">
+                                      <Textarea
+                                        value={formData.voiceContent}
+                                        onChange={(e) => {
+                                          setFormData(prev => ({ ...prev, voiceContent: e.target.value }))
+                                          setIsDirty(true)
+                                        }}
+                                        placeholder="Type the message to be converted to speech..."
+                                        className={`min-h-[150px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
+                                        maxLength={characterLimit + 100}
+                                      />
+                                      
+                                      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 p-4 bg-muted/30 rounded-lg border">
+                                        <div className="flex items-center gap-2">
+                                          <Label className="text-sm font-medium whitespace-nowrap min-w-[50px]">Speed</Label>
+                                          <Select
+                                            value={formData.voiceSpeed}
+                                            onValueChange={(val) => {
+                                              setFormData(prev => ({ ...prev, voiceSpeed: val }))
+                                              setIsDirty(true)
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-[140px] h-9">
+                                              <SelectValue placeholder="Speed" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="0.5 (Slow)">0.5 (Slow)</SelectItem>
+                                              <SelectItem value="1 (Normal)">1 (Normal)</SelectItem>
+                                              <SelectItem value="1.5 (Fast)">1.5 (Fast)</SelectItem>
+                                              <SelectItem value="2.0 (Very Fast)">2.0 (Very Fast)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          <Label className="text-sm font-medium whitespace-nowrap min-w-[50px]">Speaker</Label>
+                                          <Select
+                                            value={formData.voiceVoiceId}
+                                            onValueChange={(val) => {
+                                              setFormData(prev => ({ ...prev, voiceVoiceId: val }))
+                                              setIsDirty(true)
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-[200px] h-9">
+                                              <SelectValue placeholder="Select Speaker" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="danielle_f_us">Danielle ( Female )</SelectItem>
+                                              <SelectItem value="joey_m_us">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Joey ( Male )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">US English</Badge>
+                                                </div>
+                                              </SelectItem>
+                                              <SelectItem value="ivy_f_us">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Ivy ( Female )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">US English</Badge>
+                                                </div>
+                                              </SelectItem>
+                                              <SelectItem value="zeina_f_ar">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Zeina ( Female )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">Arabic</Badge>
+                                                </div>
+                                              </SelectItem>
+                                              <SelectItem value="hala_f_gulf">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Hala ( Female )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">Gulf Arabic</Badge>
+                                                </div>
+                                              </SelectItem>
+                                              <SelectItem value="stephen_m_us">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Stephen ( Male )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">US English</Badge>
+                                                </div>
+                                              </SelectItem>
+                                              <SelectItem value="zayd_m_gulf">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                  <span>Zayd ( Male )</span>
+                                                  <Badge variant="secondary" className="ml-2 font-normal text-[10px] bg-green-100/50 text-green-700 hover:bg-green-100/50">Gulf Arabic</Badge>
+                                                </div>
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          <Label className="text-sm font-medium whitespace-nowrap min-w-[50px]">Delay audio</Label>
+                                          <Select
+                                            value={formData.voiceDelay}
+                                            onValueChange={(val) => {
+                                              setFormData(prev => ({ ...prev, voiceDelay: val }))
+                                              setIsDirty(true)
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-[140px] h-9">
+                                              <SelectValue placeholder="Delay" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="No Delay">No Delay</SelectItem>
+                                              <SelectItem value="1 second">1 second</SelectItem>
+                                              <SelectItem value="2 seconds">2 seconds</SelectItem>
+                                              <SelectItem value="5 seconds">5 seconds</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center text-center bg-muted/10">
+                                      {formData.voiceFileUrl ? (
+                                        <div className="space-y-4 w-full max-w-sm flex flex-col items-center">
+                                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <FileAudio className="h-6 w-6 text-primary" />
+                                          </div>
+                                          <div>
+                                            <p className="font-medium text-sm">Recording attached</p>
+                                            <p className="text-xs text-muted-foreground mt-1 text-center truncate max-w-[200px]">
+                                              {formData.voiceFileUrl.split('/').pop()}
+                                            </p>
+                                          </div>
+                                          <div className="flex gap-2 mt-2">
+                                            <Button
+                                              variant="secondary"
+                                              size="sm"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                toast.success("Playing recording...");
+                                              }}
+                                            >
+                                              <Play className="h-4 w-4 mr-2" /> Play
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                setFormData(prev => ({ ...prev, voiceFileUrl: "" }));
+                                                setIsDirty(true);
+                                              }}
+                                            >
+                                              Remove
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                            <UploadCloud className="h-6 w-6 text-primary" />
+                                          </div>
+                                          <p className="font-medium">Upload audio file</p>
+                                          <p className="text-sm text-muted-foreground mt-1 mb-6">
+                                            Supports MP3, WAV, M4A up to 10MB
+                                          </p>
+                                          <Button onClick={(e) => {
+                                            e.preventDefault();
+                                            setFormData(prev => ({...prev, voiceFileUrl: "https://example.com/audio_record_2024.mp3"}));
+                                            setIsDirty(true);
+                                            toast.success("File uploaded successfully");
+                                          }}>
+                                            <UploadCloud className="h-4 w-4 mr-2" />
+                                            Select File
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (formData.type === "Email" || formData.type === "SMS") ? (
                                 <div className="space-y-4">
 
                                   <MentionsTextarea
@@ -3201,6 +3547,63 @@ export default function CampaignsCreatePage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Voice Playback Controls rendered in place of Preview */}
+                {(currentStep === 2 || currentStep === 3) && formData.type === "Voice" && (
+                  <Card className="pt-5 pb-5 gap-5 flex flex-col">
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Play className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle>Voice Feedback</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="px-5 space-y-4">
+                      {formData.voiceType === 'tts' && !formData.voiceContent ? (
+                        <div className="text-sm text-center text-muted-foreground p-4 bg-muted/20 rounded-md border border-dashed">
+                          Please enter text to preview speech.
+                        </div>
+                      ) : formData.voiceType === 'upload' && !formData.voiceFileUrl ? (
+                         <div className="text-sm text-center text-muted-foreground p-4 bg-muted/20 rounded-md border border-dashed">
+                          Please upload a recording to preview.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                            <div className="flex items-center gap-4 flex-1">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-10 w-10 shrink-0 rounded-full"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  toast.success("Playing audio preview...");
+                                }}
+                              >
+                                <Play className="h-4 w-4 fill-current ml-0.5" />
+                              </Button>
+                              <div className="flex items-center gap-0.5 h-8 w-full max-w-[200px] px-1">
+                                {[...Array(24)].map((_, i) => (
+                                  <div 
+                                    key={i} 
+                                    className="flex-1 bg-primary/40 rounded-full"
+                                    style={{ 
+                                      height: `${Math.max(20, Math.random() * 100)}%`,
+                                      opacity: i < 8 ? 1 : 0.5 
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium bg-background px-3 py-1.5 rounded-md border ml-4">
+                              <Clock className="h-4 w-4" />
+                              <span>~ 00:15</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Preview - Show on Content step (step 2) and Review step (step 3) */}
                 {(currentStep === 2 || currentStep === 3) && (formData.type === "Whatsapp" || formData.type === "SMS" || formData.type === "Email") && (

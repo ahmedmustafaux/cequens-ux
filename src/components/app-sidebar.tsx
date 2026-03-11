@@ -178,7 +178,7 @@ const data = {
   navSecondary: [
     {
       title: "Developer Hub",
-      url: "/developer-apis",
+      url: "/developer-apis/keys",
       icon: Code,
       items: [
         {
@@ -186,45 +186,21 @@ const data = {
           url: "/developer-apis/keys",
         },
         {
-          title: "Webhooks",
-          url: "/developer-apis/webhooks",
+          title: "Dataset & Knowledge",
+          url: "/developer-apis/dataset-apis",
         },
         {
           title: "Documentation",
-          url: "/developer-apis/docs",
-        },
-        {
-          title: "API Logs",
-          url: "/developer-apis/logs",
+          url: "https://developer.cequens.com/",
+          external: true,
         },
       ],
     },
     {
       title: "Settings",
-      url: "/settings",
+      url: "#",
       icon: Settings,
-      items: [
-        {
-          title: "Account Information",
-          url: "/settings/profile",
-        },
-        {
-          title: "Company & Compliance",
-          url: "/settings/company",
-        },
-        {
-          title: "Team Management",
-          url: "/settings/organization",
-        },
-        {
-          title: "Security & Logs",
-          url: "/settings/security",
-        },
-        {
-          title: "Integrations",
-          url: "/settings/plugins",
-        },
-      ],
+      onClick: () => {}, // Will be handled in the component
     },
 
   ],
@@ -307,8 +283,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       if (item.title === "Settings") {
         return {
           ...item,
-          items: [], // Remove sub-items as requested
-          url: "#", // Prevent navigation
+          items: [], 
+          url: "#", 
           onClick: () => setSettingsOpen(true),
         }
       }

@@ -103,8 +103,7 @@ import DeveloperApisPushPage from '@/pages/Developer/DeveloperApisPushPage'
 import DeveloperApisOtpPage from '@/pages/Developer/DeveloperApisOtpPage'
 import DeveloperApisBotsPage from '@/pages/Developer/DeveloperApisBotsPage'
 import DeveloperApisKeysPage from '@/pages/Developer/DeveloperApisKeysPage'
-import DeveloperApisWebhooksPage from '@/pages/Developer/DeveloperApisWebhooksPage'
-import DeveloperApisLogsPage from '@/pages/Developer/DeveloperApisLogsPage'
+import DeveloperApisDatasetKnowledgePage from '@/pages/Developer/DeveloperApisDatasetKnowledgePage'
 
 // Billing
 import BillingPage from '@/pages/Billing/BillingPage'
@@ -554,15 +553,7 @@ function App() {
             </ProtectedRoute>
           } />
           {/* Developer APIs Routes */}
-          <Route path="/developer-apis" element={
-            <ProtectedRoute>
-              <RootLayout>
-                <DashboardLayout>
-                  <DeveloperApisPage />
-                </DashboardLayout>
-              </RootLayout>
-            </ProtectedRoute>
-          } />
+          <Route path="/developer-apis" element={<Navigate to="/developer-apis/keys" replace />} />
           <Route path="/developer-apis/listing" element={
             <ProtectedRoute>
               <RootLayout>
@@ -590,24 +581,16 @@ function App() {
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/developer-apis/webhooks" element={
+          <Route path="/developer-apis/dataset-apis" element={
             <ProtectedRoute>
               <RootLayout>
                 <DashboardLayout>
-                  <DeveloperApisWebhooksPage />
+                  <DeveloperApisDatasetKnowledgePage />
                 </DashboardLayout>
               </RootLayout>
             </ProtectedRoute>
           } />
-          <Route path="/developer-apis/logs" element={
-            <ProtectedRoute>
-              <RootLayout>
-                <DashboardLayout>
-                  <DeveloperApisLogsPage />
-                </DashboardLayout>
-              </RootLayout>
-            </ProtectedRoute>
-          } />
+
           <Route path="/developer-apis/sms" element={
             <ProtectedRoute>
               <RootLayout>

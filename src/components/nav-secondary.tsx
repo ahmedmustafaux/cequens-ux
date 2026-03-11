@@ -1,5 +1,5 @@
 import * as React from "react"
-import { type LucideIcon, ChevronDown, ChevronRight } from "lucide-react"
+import { type LucideIcon, ChevronDown, ChevronRight, ArrowUpRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import {
   SidebarGroup,
@@ -23,10 +23,12 @@ export function NavSecondary({
     url: string
     icon: LucideIcon
     onClick?: () => void
+    external?: boolean
     items?: {
       title: string
       url: string
       icon?: LucideIcon
+      external?: boolean
     }[]
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
@@ -58,13 +60,18 @@ export function NavSecondary({
     )
   }
 
-  const handleNavigation = (e: React.MouseEvent, item: any) => {
+  const handleNavigation = (e: React.MouseEvent, item: any, external?: boolean) => {
     e.preventDefault()
     if (item.onClick) {
       item.onClick()
       return
     }
-    navigateTo(item.url)
+    const targetUrl = typeof item === "string" ? item : item.url
+    if (external) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer")
+      return
+    }
+    navigateTo(targetUrl)
   }
 
   return (
@@ -118,9 +125,14 @@ export function NavSecondary({
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
                               isActive={isSubActive}
-                              onClick={(e) => handleNavigation(e, subItem.url)}
+                              onClick={(e) => handleNavigation(e, subItem.url, subItem.external)}
                             >
                               <span>{subItem.title}</span>
+                              {subItem.external && (
+                                <div className="ml-auto flex items-center justify-center size-4">
+                                  <ArrowUpRight className="size-4 text-muted-foreground" />
+                                </div>
+                              )}
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         )
@@ -130,10 +142,15 @@ export function NavSecondary({
                 ) : (
                   <SidebarMenuButton
                     isActive={itemIsActive}
-                    onClick={(e) => handleNavigation(e, item)}
+                    onClick={(e) => handleNavigation(e, item, item.external)}
                   >
                     <item.icon />
                     <span>{item.title}</span>
+                    {item.external && (
+                      <div className="ml-auto flex items-center justify-center size-4">
+                        <ArrowUpRight className="size-4 text-muted-foreground" />
+                      </div>
+                    )}
                   </SidebarMenuButton>
                 )}
               </SidebarMenuItem>
