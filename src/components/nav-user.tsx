@@ -4,6 +4,7 @@ import {
   LogOut,
   Bell,
   UserCircle,
+  Zap,
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import {
@@ -28,12 +29,14 @@ import {
 } from "@/components/ui/sidebar"
 export function NavUser({
   user,
+  onOpenSettings,
 }: {
   user: {
     name: string
     email: string
     avatar: string
   }
+  onOpenSettings?: (tabId: string) => void
 }) {
   const { isMobile } = useSidebar()
   const { logout } = useAuth()
@@ -91,11 +94,15 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenSettings?.("profile")}>
                 <UserCircle />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenSettings?.("plans")}>
+                <Zap />
+                Plans
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenSettings?.("billing")}>
                 <CreditCard />
                 Billing
               </DropdownMenuItem>

@@ -32,6 +32,13 @@ import {
     QrCode,
     Settings2,
     Plus,
+    MessageSquare,
+    Phone,
+    Mail,
+    ShieldCheck,
+    AlertCircle,
+    Inbox,
+    Activity
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -78,6 +85,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { TopupDialog } from "@/pages/Billing/components/TopupDialog"
+import { BalanceTransferDialog } from "@/pages/Billing/components/BalanceTransferDialog"
+import { PlanSelectionDialog } from "@/pages/Billing/components/PlanSelectionDialog"
 import { ArrowUpRight, TrendingUp } from "lucide-react"
 
 const settingsNav = [
@@ -92,7 +101,8 @@ const settingsNav = [
     {
         category: "Subscription",
         items: [
-            { id: "billing", title: "Billing", icon: Wallet, description: "Manage billing, plans, and payment methods" },
+            { id: "plans", title: "Plans", icon: Zap, description: "Manage your product plans and subscriptions" },
+            { id: "billing", title: "Billing", icon: Wallet, description: "Manage billing, payments, and invoices" },
             { id: "teams", title: "Teams", icon: Users, description: "Manage team members and organization structure" },
             { id: "coverage", title: "Coverage & Prices", icon: Globe, description: "View service availability and pricing details" },
         ]
@@ -108,10 +118,11 @@ const searchIndex = [
     { id: "security", title: "Security Settings", description: "2FA and Password", tabId: "security", keywords: ["password", "mfa", "sso"] },
     { id: "audit", title: "Audit Logs", description: "System activity", tabId: "audit", keywords: ["logs", "history"] },
     // Billing
-    { id: "plans", title: "Plans & Features", description: "Subscription details", tabId: "plans", keywords: ["upgrade", "tier", "pro"] },
-    { id: "usage", title: "Usage & Credits", description: "Consumption stats", tabId: "usage", keywords: ["limit", "quota"] },
-    { id: "payments", title: "Payment Methods", description: "Credit cards", tabId: "payments", keywords: ["card", "visa", "mastercard"] },
-    { id: "invoices", title: "Invoices", description: "Billing history", tabId: "invoices", keywords: ["receipt", "bill"] },
+    { id: "plans", title: "Plans & Subscriptions", description: "Product pricing tiers", tabId: "plans", keywords: ["upgrade", "tier", "pro", "sms", "whatsapp", "voice", "email"] },
+    { id: "billing", title: "Billing & Payments", description: "Manage your balance", tabId: "billing", keywords: ["balance", "topup", "transfer", "wallet"] },
+    { id: "usage", title: "Usage & Credits", description: "Consumption stats", tabId: "billing", keywords: ["limit", "quota"] },
+    { id: "payments", title: "Payment Methods", description: "Credit cards", tabId: "billing", keywords: ["card", "visa", "mastercard"] },
+    { id: "invoices", title: "Invoices", description: "Billing history", tabId: "billing", keywords: ["receipt", "bill"] },
     // Platform
     { id: "integrations", title: "Integrations", description: "Third-party apps", tabId: "integrations", keywords: ["slack", "salesforce", "hubspot"] },
     { id: "notifications-email", title: "Email Notifications", description: "Email alert settings", tabId: "notifications", keywords: ["email", "alert"] },
@@ -124,15 +135,20 @@ import { SettingsGroup } from "@/components/settings-group"
 interface SettingsDrawerProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    defaultTab?: string
 }
 
 
-export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
-    const [activeTab, setActiveTab] = React.useState("company")
+export function SettingsDrawer({ open, onOpenChange, defaultTab }: SettingsDrawerProps) {
+    const [activeTab, setActiveTab] = React.useState(defaultTab || "company")
     const [isBouncing, setIsBouncing] = React.useState(false)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [highlightedItem, setHighlightedItem] = React.useState<string | null>(null)
     const [isTopupOpen, setIsTopupOpen] = React.useState(false)
+    const [isTransferOpen, setIsTransferOpen] = React.useState(false)
+    const [isPlanDialogOpen, setIsPlanDialogOpen] = React.useState(false)
+    const [selectedProduct, setSelectedProduct] = React.useState<any>(null)
+    const [selectionType, setSelectionType] = React.useState<"plan" | "product">("plan")
 
     // Filter search results
     const searchResults = React.useMemo(() => {
@@ -182,9 +198,9 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
     // Reset to first tab when opening
     React.useEffect(() => {
         if (open) {
-            setActiveTab(settingsNav[0].items[0].id)
+            setActiveTab(defaultTab || settingsNav[0].items[0].id)
         }
-    }, [open])
+    }, [open, defaultTab])
 
     // Find current tab details
     const currentTab = settingsNav
@@ -205,7 +221,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
             <SheetContent
                 side="bottom"
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="h-[94vh] rounded-t-xl p-0 flex flex-col overflow-hidden bg-secondary outline-none shadow-2xl"
+                className="h-[94vh] rounded-lg p-0 flex flex-col overflow-hidden bg-secondary outline-none shadow-2xl"
             >
                 <style>{`
                     @keyframes shake {
@@ -474,7 +490,15 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
 
                                                 {activeTab === "billing" && (
                                                     <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-8">
-                                                        <SettingsGroup title="Balance & Credit" action={<Button size="sm" onClick={() => setIsTopupOpen(true)}>Top up balance</Button>}>
+                                                        <SettingsGroup
+                                                            title="Balance & Credit"
+                                                            action={
+                                                                <div className="flex items-center gap-2">
+                                                                    <Button variant="outline" size="sm" onClick={() => setIsTransferOpen(true)}>Balance transfer</Button>
+                                                                    <Button size="sm" onClick={() => setIsTopupOpen(true)}>Top up balance</Button>
+                                                                </div>
+                                                            }
+                                                        >
                                                             <div className="flex py-2 items-center space-x-4">
                                                                 <div className="flex flex-1 flex-col gap-0.5">
                                                                     <div className="flex items-center gap-2">
@@ -532,6 +556,7 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                         </SettingsGroup>
 
                                                         <TopupDialog open={isTopupOpen} onOpenChange={setIsTopupOpen} />
+                                                        <BalanceTransferDialog open={isTransferOpen} onOpenChange={setIsTransferOpen} />
                                                     </div>
                                                 )}
 
@@ -692,23 +717,21 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                                 {/* Password Expiry */}
                                                                 <Item className="hover:bg-muted/50 transition-colors rounded-lg">
                                                                     <ItemContent>
-                                                                        <div className="flex items-center justify-between p-2">
-                                                                            <div className="flex flex-col pr-4">
-                                                                                <label className="text-sm font-medium">Set password expiry policy</label>
-                                                                                <p className="text-xs text-muted-foreground mt-0.5">Passwords for users under this account will expire after the specified number of days.</p>
-                                                                            </div>
-                                                                            <div className="w-[100px] shrink-0">
-                                                                                <Select defaultValue="90">
-                                                                                    <SelectTrigger className="h-8 px-3 text-xs w-full">
-                                                                                        <SelectValue placeholder="Select" />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent>
-                                                                                        <SelectItem value="30">30 days</SelectItem>
-                                                                                        <SelectItem value="60">60 days</SelectItem>
-                                                                                        <SelectItem value="90">90 days</SelectItem>
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                            </div>
+                                                                        <div className="flex flex-col pr-4">
+                                                                            <label className="text-sm font-medium">Set password expiry policy</label>
+                                                                            <p className="text-xs text-muted-foreground mt-0.5">Passwords for users under this account will expire after the specified number of days.</p>
+                                                                        </div>
+                                                                        <div className="w-[100px] shrink-0">
+                                                                            <Select defaultValue="90">
+                                                                                <SelectTrigger className="h-8 px-3 text-xs w-full">
+                                                                                    <SelectValue placeholder="Select" />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    <SelectItem value="30">30 days</SelectItem>
+                                                                                    <SelectItem value="60">60 days</SelectItem>
+                                                                                    <SelectItem value="90">90 days</SelectItem>
+                                                                                </SelectContent>
+                                                                            </Select>
                                                                         </div>
                                                                     </ItemContent>
                                                                 </Item>
@@ -785,8 +808,192 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                                                     </div>
                                                 )}
 
+                                                {activeTab === "plans" && (
+                                                    <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-8">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                                            {[
+                                                                {
+                                                                    id: "starter",
+                                                                    name: "Starter",
+                                                                    price: "Pay-as-you-go",
+                                                                    description: "Ideal for startups and developers getting started with messaging.",
+                                                                    features: ["All 4 Channels included", "Pay-per-unit pricing", "Shared Short-codes", "Basic Support"],
+                                                                    status: "active",
+                                                                    current: true,
+                                                                    color: "blue",
+                                                                    rates: [
+                                                                        { name: "SMS", rate: "0.15", unit: "msg" },
+                                                                        { name: "WhatsApp", rate: "0.40", unit: "msg" },
+                                                                        { name: "Voice", rate: "0.50", unit: "min" },
+                                                                        { name: "Email", rate: "0.05", unit: "email" },
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    id: "growth",
+                                                                    name: "Growth",
+                                                                    price: "$299/mo",
+                                                                    description: "Scale your engagement with bundled credits and dedicated support.",
+                                                                    features: ["10x Higher Throughput", "Dedicated Account Manager", "Bundled Credits included", "24/7 Priority Support", "Advanced Analytics"],
+                                                                    popular: true,
+                                                                    status: "upgrade",
+                                                                    color: "green",
+                                                                    rates: [
+                                                                        { name: "SMS", rate: "0.12", unit: "msg" },
+                                                                        { name: "WhatsApp", rate: "0.35", unit: "msg" },
+                                                                        { name: "Voice", rate: "0.45", unit: "min" },
+                                                                        { name: "Email", rate: "0.04", unit: "email" },
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    id: "enterprise",
+                                                                    name: "Enterprise",
+                                                                    price: "Custom",
+                                                                    description: "High-volume solutions tailored for large global operations.",
+                                                                    features: ["Custom Throughput", "Dedicated Connectivity", "White-label Options", "Premium Support SLA", "Custom Security Controls"],
+                                                                    status: "contact",
+                                                                    color: "purple",
+                                                                    rates: [
+                                                                        { name: "SMS", rate: "Custom", unit: "msg" },
+                                                                        { name: "WhatsApp", rate: "Custom", unit: "msg" },
+                                                                        { name: "Voice", rate: "Custom", unit: "min" },
+                                                                        { name: "Email", rate: "Custom", unit: "email" },
+                                                                    ]
+                                                                }
+                                                            ].map((tier) => (
+                                                                <div key={tier.id} className={cn(
+                                                                    "group relative flex flex-col rounded-2xl border bg-background transition-all duration-300 shadow-sm",
+                                                                    tier.popular ? "border-primary/50 ring-1 ring-primary/20 z-10" : "hover:border-primary/30",
+                                                                    tier.id === "enterprise" && "lg:col-span-2"
+                                                                )}>
+                                                                    {tier.popular && (
+                                                                        <Badge className="absolute -top-3 left-6 bg-primary text-primary-foreground border-none text-[10px] uppercase font-bold tracking-widest px-3 py-1 shadow-md w-fit justify-center z-20">
+                                                                            Most Popular
+                                                                        </Badge>
+                                                                    )}
+                                                                    <div className="p-5 pb-0 flex-1">
+                                                                        <div className="flex items-center justify-between mb-3">
+                                                                            <h3 className="text-base font-bold tracking-tight">{tier.name}</h3>
+                                                                            {tier.current && (
+                                                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[9px] uppercase font-bold px-1.5 h-4">
+                                                                                    Current
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="mb-4">
+                                                                            <span className="text-2xl font-black">{tier.price}</span>
+                                                                            {tier.id === "growth" && <span className="text-xs text-muted-foreground font-medium ml-1">/mo</span>}
+                                                                        </div>
+                                                                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-4 h-8 line-clamp-2 italic">
+                                                                            {tier.description}
+                                                                        </p>
+
+                                                                        <div className="space-y-2 mb-6">
+                                                                            <div className="flex items-center gap-2 mb-2">
+                                                                                <div className="flex -space-x-2">
+                                                                                    {[Smartphone, MessageSquare, Phone, Mail].map((Icon, idx) => (
+                                                                                        <div key={idx} className="size-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                                                                                            <Icon className="size-3 text-muted-foreground" />
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Channels & Rates</span>
+                                                                            </div>
+
+                                                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 p-3 rounded-xl bg-muted/30 border border-border/50">
+                                                                                {tier.rates.map((rate) => (
+                                                                                    <div key={rate.name} className="flex flex-col">
+                                                                                        <span className="text-[9px] font-bold text-muted-foreground uppercase">{rate.name}</span>
+                                                                                        <span className="text-xs font-bold">
+                                                                                            {rate.rate === "Custom" ? "Custom" : `EGP ${rate.rate}`}
+                                                                                            {rate.rate !== "Custom" && <span className="text-[10px] font-medium text-muted-foreground">/{rate.unit}</span>}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+
+                                                                            {tier.features.map((feature, i) => (
+                                                                                <div key={i} className="flex items-start gap-2.5">
+                                                                                    <Check className="size-3.5 text-green-500 mt-0.5 shrink-0" />
+                                                                                    <span className="text-xs text-foreground/80 font-medium">{feature}</span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="p-5 pt-0 mt-auto">
+                                                                        <Button
+                                                                            className="w-full font-semibold"
+                                                                            variant={tier.current ? "outline" : "default"}
+                                                                            disabled={tier.current}
+                                                                            onClick={() => {
+                                                                                setSelectionType("plan")
+                                                                                setSelectedProduct(tier)
+                                                                                setIsPlanDialogOpen(true)
+                                                                            }}
+                                                                        >
+                                                                            {tier.status === "active" ? "Current Plan" : tier.status === "contact" ? "Contact Sales" : "Upgrade Now"}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <SettingsGroup title="Product Add-Ons" contentClassName="p-1">
+                                                            <div className="space-y-1">
+                                                                {[
+                                                                    { id: "inbox", name: "Inbox", price: "$49/mo", desc: "Unified workspace for all your communication channels.", icon: Inbox, color: "text-blue-500", bg: "bg-blue-500/10" },
+                                                                    { id: "verify", name: "Verify", price: "$19/mo", desc: "Instant OTP and secure user authentication services.", icon: Shield, color: "text-green-500", bg: "bg-green-500/10" },
+                                                                    { id: "journey", name: "Journey Builder", price: "$99/mo", desc: "Design automated customer engagement workflows.", icon: Activity, color: "text-orange-500", bg: "bg-orange-500/10" }
+                                                                ].map((addon, index, array) => (
+                                                                    <React.Fragment key={addon.id}>
+                                                                        <Item
+                                                                            onClick={() => {
+                                                                                setSelectionType("product")
+                                                                                setSelectedProduct({
+                                                                                    ...addon,
+                                                                                    features: ["Product Activation", "24/7 Support", "Dashboard Access"],
+                                                                                    rates: { sms: "0.15", whatsapp: "0.40", voice: "0.50", email: "0.05" }
+                                                                                } as any)
+                                                                                setIsPlanDialogOpen(true)
+                                                                            }}
+                                                                            className="hover:bg-muted/50 transition-colors rounded-lg cursor-pointer"
+                                                                        >
+                                                                            <ItemContent>
+                                                                                <div className="flex items-center justify-between p-2">
+                                                                                    <div className="flex items-center gap-4 flex-1 pr-4">
+                                                                                        <div className={cn("size-10 rounded-xl flex items-center justify-center shrink-0", addon.bg)}>
+                                                                                            <addon.icon className={cn("size-5", addon.color)} />
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <h4 className="text-sm font-bold tracking-tight">{addon.name}</h4>
+                                                                                            </div>
+                                                                                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{addon.desc}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="flex flex-col items-end gap-1">
+                                                                                        <span className="text-sm font-bold text-primary">{addon.price}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </ItemContent>
+                                                                        </Item>
+                                                                        {index < array.length - 1 && <Separator className="my-1 opacity-50" />}
+                                                                    </React.Fragment>
+                                                                ))}
+                                                            </div>
+                                                        </SettingsGroup>
+
+                                                        <PlanSelectionDialog
+                                                            open={isPlanDialogOpen}
+                                                            onOpenChange={setIsPlanDialogOpen}
+                                                            product={selectedProduct}
+                                                            type={selectionType}
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 {/* Catch-all for other tabs */}
-                                                {["profile", "billing", "teams", "security", "audit", "company"].indexOf(activeTab) === -1 && (
+                                                {["profile", "billing", "teams", "security", "audit", "plans", "company"].indexOf(activeTab) === -1 && (
                                                     <div className="p-10 rounded-xl border-2 border-dashed border-muted bg-muted/5 flex flex-col items-center justify-center text-center gap-2 text-muted-foreground">
                                                         <div className="size-12 rounded-full bg-muted/20 flex items-center justify-center">
                                                             <currentTab.icon className="size-6" />

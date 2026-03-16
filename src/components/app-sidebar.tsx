@@ -269,6 +269,12 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> { }
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth()
   const [settingsOpen, setSettingsOpen] = React.useState(false)
+  const [settingsTab, setSettingsTab] = React.useState<string | undefined>(undefined)
+
+  const handleOpenSettings = (tabId?: string) => {
+    setSettingsTab(tabId)
+    setSettingsOpen(true)
+  }
 
   // Create user data for NavUser component
   const userData = {
@@ -285,7 +291,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           ...item,
           items: [], 
           url: "#", 
-          onClick: () => setSettingsOpen(true),
+          onClick: () => handleOpenSettings(),
         }
       }
       return item
@@ -328,10 +334,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </div>
         </SidebarContent>
         <SidebarFooter>
-          <NavUser user={userData} />
+          <NavUser user={userData} onOpenSettings={handleOpenSettings} />
         </SidebarFooter>
       </Sidebar>
-      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} defaultTab={settingsTab} />
     </>
   )
 }
